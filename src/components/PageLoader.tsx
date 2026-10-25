@@ -5,21 +5,17 @@ import { useEffect, useState } from "react";
 function waitForImage(image: HTMLImageElement): Promise<void> {
   return new Promise((resolve) => {
     let settled = false;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
 
-    const finish = async () => {
+    const finish = () => {
       if (settled) return;
       settled = true;
+      if (timeout) clearTimeout(timeout);
       image.removeEventListener("load", finish);
       image.removeEventListener("error", finish);
 
       if (image.naturalWidth === 0) {
         console.warn("Could not load page image:", image.currentSrc || image.src);
-      } else {
-        try {
-          await image.decode();
-        } catch (error) {
-          console.warn("Could not decode page image:", image.currentSrc || image.src, error);
-        }
       }
 
       resolve();
@@ -33,6 +29,13 @@ function waitForImage(image: HTMLImageElement): Promise<void> {
     image.addEventListener("load", finish, { once: true });
     image.addEventListener("error", finish, { once: true });
     image.loading = "eager";
+    timeout = setTimeout(() => {
+      console.warn(
+        "A page image is taking too long to load; showing the page while it continues in the background:",
+        image.currentSrc || image.src,
+      );
+      finish();
+    }, 12_000);
   });
 }
 
@@ -42,10 +45,14 @@ function waitForVideo(
 ): Promise<void> {
   return new Promise((resolve) => {
     let settled = false;
+    let progressTimer: ReturnType<typeof setInterval> | undefined;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
 
     const finish = () => {
       if (settled) return;
       settled = true;
+      if (progressTimer) clearInterval(progressTimer);
+      if (timeout) clearTimeout(timeout);
       video.removeEventListener("loadedmetadata", checkProgress);
       video.removeEventListener("durationchange", checkProgress);
       video.removeEventListener("progress", checkProgress);
@@ -110,6 +117,16 @@ function waitForVideo(
     video.preload = "auto";
     video.load();
     checkProgress();
+    if (!settled) progressTimer = setInterval(checkProgress, 250);
+    if (!settled) {
+      timeout = setTimeout(() => {
+        console.warn(
+          "The page video is taking too long to load; showing the page while it continues in the background:",
+          video.currentSrc || video.src,
+        );
+        finish();
+      }, 12_000);
+    }
   });
 }
 
