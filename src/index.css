@@ -37,33 +37,33 @@ section[id] { scroll-margin-top: 5rem; }
   width: clamp(24rem, 58vw, 58rem);
   aspect-ratio: 1.5;
   border-radius: 50%;
-  background: radial-gradient(ellipse, rgb(255 255 255 / 78%) 0%, rgb(255 255 255 / 35%) 42%, transparent 72%);
+  background: radial-gradient(ellipse, rgb(255 255 255 / 88%) 0%, rgb(221 217 207 / 42%) 48%, transparent 76%);
   filter: blur(22px);
   animation: loader-cloud-drift 9s ease-in-out infinite alternate;
   transition: opacity 1.25s ease, transform 1.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .page-loader__cloud--one {
-  top: -34%;
-  left: -18%;
+  top: -18%;
+  left: 5%;
 }
 
 .page-loader__cloud--two {
-  right: -22%;
-  bottom: -40%;
+  right: -18%;
+  bottom: -24%;
   animation-delay: -3s;
 }
 
 .page-loader__cloud--three {
-  top: 18%;
-  right: -35%;
+  top: 5%;
+  right: -24%;
   width: clamp(20rem, 45vw, 46rem);
   animation-delay: -5s;
 }
 
 .page-loader__cloud--four {
-  bottom: 10%;
-  left: -35%;
+  bottom: -16%;
+  left: -20%;
   width: clamp(20rem, 45vw, 46rem);
   animation-delay: -7s;
 }

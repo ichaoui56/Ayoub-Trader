@@ -36,10 +36,22 @@ function waitForImage(image: HTMLImageElement): Promise<void> {
   });
 }
 
-function waitForVideo(video: HTMLVideoElement): Promise<void> {
+function waitForVideo(
+  video: HTMLVideoElement,
+  onProgress: (progress: number) => void,
+): Promise<void> {
   return new Promise((resolve) => {
+    let settled = false;
+
     const finish = () => {
-      video.removeEventListener("loadeddata", finish);
+      if (settled) return;
+      settled = true;
+      video.removeEventListener("loadedmetadata", checkProgress);
+      video.removeEventListener("durationchange", checkProgress);
+      video.removeEventListener("progress", checkProgress);
+      video.removeEventListener("loadeddata", checkProgress);
+      video.removeEventListener("canplaythrough", checkProgress);
+      video.removeEventListener("suspend", checkProgress);
       video.removeEventListener("error", finish);
 
       if (video.error) {
@@ -50,18 +62,54 @@ function waitForVideo(video: HTMLVideoElement): Promise<void> {
         );
       }
 
+      onProgress(1);
       resolve();
     };
 
-    if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA || video.error) {
+    const checkProgress = () => {
+      if (video.error) {
+        finish();
+        return;
+      }
+
+      const duration = video.duration;
+      let bufferedUntil = 0;
+
+      if (Number.isFinite(duration) && duration > 0) {
+        for (let index = 0; index < video.buffered.length; index += 1) {
+          const start = video.buffered.start(index);
+          const end = video.buffered.end(index);
+          if (start > bufferedUntil + 0.1) break;
+          bufferedUntil = Math.max(bufferedUntil, end);
+        }
+
+        const progress = Math.min(bufferedUntil / duration, 0.99);
+        onProgress(progress);
+
+        if (
+          video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
+          bufferedUntil >= duration - 0.1
+        ) {
+          finish();
+        }
+      }
+    };
+
+    if (video.error) {
       finish();
       return;
     }
 
-    video.addEventListener("loadeddata", finish, { once: true });
+    video.addEventListener("loadedmetadata", checkProgress);
+    video.addEventListener("durationchange", checkProgress);
+    video.addEventListener("progress", checkProgress);
+    video.addEventListener("loadeddata", checkProgress);
+    video.addEventListener("canplaythrough", checkProgress);
+    video.addEventListener("suspend", checkProgress);
     video.addEventListener("error", finish, { once: true });
     video.preload = "auto";
     video.load();
+    checkProgress();
   });
 }
 
@@ -69,6 +117,7 @@ export default function PageLoader() {
   const [visible, setVisible] = useState(true);
   const [leaving, setLeaving] = useState(false);
   const [completed, setCompleted] = useState(0);
+  const [videoProgress, setVideoProgress] = useState(0);
   const [total, setTotal] = useState(1);
 
   useEffect(() => {
@@ -95,19 +144,25 @@ export default function PageLoader() {
     const resources = [
       ...images.map(waitForImage),
       ...posterImages.map(waitForImage),
-      ...videos.map(waitForVideo),
       document.fonts.ready.then(() => undefined),
     ];
     const exitDuration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 80 : 1400;
 
-    setTotal(resources.length);
+    setTotal(resources.length + videos.length || 1);
 
     void Promise.all(
-      resources.map((resource) =>
-        resource.then(() => {
-          if (!cancelled) setCompleted((count) => count + 1);
-        }),
-      ),
+      [
+        ...resources.map((resource) =>
+          resource.then(() => {
+            if (!cancelled) setCompleted((count) => count + 1);
+          }),
+        ),
+        ...videos.map((video) =>
+          waitForVideo(video, (progress) => {
+            if (!cancelled) setVideoProgress(progress);
+          }),
+        ),
+      ],
     ).then(() => {
       if (cancelled) return;
 
@@ -127,7 +182,7 @@ export default function PageLoader() {
 
   if (!visible) return null;
 
-  const progress = Math.round((completed / total) * 100);
+  const progress = Math.round(Math.min((completed + videoProgress) / total, 1) * 100);
 
   return (
     <div
