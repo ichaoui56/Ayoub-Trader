@@ -68,7 +68,7 @@ export default function ScrollFilm() {
           disablePictureInPicture
           tabIndex={-1}
           aria-hidden="true"
-          className="hero-film absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-ink/65 via-ink/15 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-ink/35 via-transparent to-ink/20" />

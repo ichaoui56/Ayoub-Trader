@@ -74,18 +74,26 @@ export function useScrollFilm(
     v.pause();
     v.addEventListener("play", stop);
     v.addEventListener("loadedmetadata", kick);
+    v.addEventListener("loadeddata", kick);
+    v.addEventListener("canplay", kick);
     v.addEventListener("seeked", kick);
     window.addEventListener("scroll", kick, { passive: true });
     window.addEventListener("resize", kick);
+    window.addEventListener("pageshow", kick);
+    document.addEventListener("visibilitychange", kick);
     kick();
 
     return () => {
       cancelAnimationFrame(raf);
       v.removeEventListener("play", stop);
       v.removeEventListener("loadedmetadata", kick);
+      v.removeEventListener("loadeddata", kick);
+      v.removeEventListener("canplay", kick);
       v.removeEventListener("seeked", kick);
       window.removeEventListener("scroll", kick);
       window.removeEventListener("resize", kick);
+      window.removeEventListener("pageshow", kick);
+      document.removeEventListener("visibilitychange", kick);
     };
   }, [runway, video, enabled]);
 

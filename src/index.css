@@ -531,11 +531,6 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
   font-weight: 800;
 }
 
-.hero-film {
-  backface-visibility: hidden;
-  transform: translateZ(0);
-}
-
 @media (max-height: 650px) {
   .hero-copy {
     top: 51%;
