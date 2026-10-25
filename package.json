@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "ily": "rm -rf .next && next build && next start"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.3.3",
