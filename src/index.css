@@ -1,0 +1,495 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #1e2222;
+  --color-paper: #f4f1e9;
+  --color-cloud: #e8e3d9;
+  --color-signal: #f15b40;
+  --font-display: "Barlow Condensed", Impact, sans-serif;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+html { background: var(--color-paper); scroll-behavior: smooth; }
+body { font-family: var(--font-sans); background: var(--color-paper); color: var(--color-ink); -webkit-font-smoothing: antialiased; }
+section[id] { scroll-margin-top: 5rem; }
+
+:focus-visible { outline: 3px solid var(--color-signal); outline-offset: 3px; border-radius: 2px; }
+.on-light:focus-visible { outline-color: var(--color-ink); }
+
+dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transparent); backdrop-filter: blur(4px); }
+
+.travel-section {
+  width: min(100%, 1600px);
+  margin-inline: auto;
+  padding: clamp(4rem, 8vw, 8rem) clamp(1.25rem, 4vw, 4rem);
+}
+
+.travel-section:not(#contact) {
+  position: relative;
+}
+
+.section-heading-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(15rem, 0.6fr);
+  gap: 2rem;
+}
+
+.eyebrow {
+  color: var(--color-signal);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.35rem, 5.4vw, 5rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+
+.transfer-panel {
+  border: 1px solid color-mix(in srgb, var(--color-ink) 12%, transparent);
+  background: color-mix(in srgb, white 28%, var(--color-paper));
+  box-shadow: 0 20px 70px rgb(30 34 34 / 5%);
+  padding: clamp(1.25rem, 4vw, 2.75rem);
+}
+
+.arrival-section {
+  width: min(100%, 1600px);
+  margin-inline: auto;
+  padding: clamp(1.5rem, 4vw, 3.75rem) clamp(1.25rem, 4vw, 4rem) 4.5rem;
+}
+
+.arrival-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
+  align-items: center;
+  gap: clamp(1.25rem, 4vw, 4rem);
+}
+
+.arrival-copy {
+  position: relative;
+  z-index: 1;
+}
+
+.arrival-title {
+  display: grid;
+  margin-top: 0.9rem;
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 5.25vw, 5.7rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 0.86;
+  text-transform: uppercase;
+}
+
+.arrival-title span {
+  white-space: nowrap;
+}
+
+.arrival-title em {
+  color: var(--color-signal);
+  font-style: normal;
+}
+
+.arrival-intro {
+  max-width: 24rem;
+  margin-top: 1.2rem;
+  color: color-mix(in srgb, var(--color-ink) 68%, transparent);
+  font-size: clamp(0.75rem, 1.2vw, 0.95rem);
+  line-height: 1.65;
+}
+
+.arrival-text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-top: 1.15rem;
+  color: var(--color-ink);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.arrival-text-link span {
+  color: var(--color-signal);
+  transition: transform 180ms ease;
+}
+
+.arrival-text-link:hover span {
+  transform: translateY(3px);
+}
+
+.arrival-visuals {
+  position: relative;
+  height: clamp(15rem, 37vw, 27rem);
+  min-width: 0;
+}
+
+.arrival-visual {
+  position: absolute;
+  overflow: hidden;
+  margin: 0;
+  background: var(--color-cloud);
+  box-shadow: 0 18px 45px rgb(30 34 34 / 16%);
+}
+
+.arrival-visual--film {
+  inset: 0 auto 4% 0;
+  width: 68%;
+}
+
+.arrival-visual--riad {
+  inset: 7% 0 0 auto;
+  width: 47%;
+}
+
+.arrival-image {
+  object-fit: cover;
+}
+
+.arrival-visual--film .arrival-image {
+  object-position: center;
+}
+
+.arrival-visual--riad .arrival-image {
+  object-position: 64% center;
+}
+
+.arrival-photo-caption {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 0.6rem;
+  padding: 2.25rem 0.8rem 0.65rem;
+  background: linear-gradient(transparent, rgb(0 0 0 / 64%));
+  color: white;
+}
+
+.arrival-photo-caption span {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-style: italic;
+  font-weight: 600;
+}
+
+.arrival-photo-caption a {
+  color: rgb(255 255 255 / 82%);
+  font-size: 0.48rem;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.arrival-booking {
+  margin-top: clamp(2rem, 4vw, 3.25rem);
+  border: 1px solid color-mix(in srgb, var(--color-ink) 13%, transparent);
+  background: color-mix(in srgb, white 34%, var(--color-paper));
+  padding: clamp(1.1rem, 2.5vw, 2rem);
+  box-shadow: 0 22px 60px rgb(30 34 34 / 5%);
+}
+
+.arrival-booking-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.arrival-booking-title {
+  margin-top: 0.45rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.65rem, 3.3vw, 3.25rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.arrival-booking-title span {
+  color: color-mix(in srgb, var(--color-ink) 62%, transparent);
+}
+
+.arrival-assurance {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.3rem;
+  color: color-mix(in srgb, var(--color-ink) 60%, transparent);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.arrival-assurance span {
+  color: var(--color-signal);
+  font-size: 1rem;
+}
+
+.arrival-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.9fr) minmax(0, 0.85fr) auto;
+  align-items: end;
+  gap: 0.6rem;
+  margin-top: 1.3rem;
+}
+
+.arrival-field {
+  display: block;
+  min-width: 0;
+  color: var(--color-ink);
+  font-size: 0.61rem;
+  font-weight: 700;
+}
+
+.arrival-input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 2.7rem;
+  margin-top: 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--color-ink) 16%, transparent);
+  border-radius: 0;
+  background: var(--color-paper);
+  padding: 0 0.6rem;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 500;
+  outline: none;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.arrival-input:focus {
+  border-color: var(--color-signal);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-signal) 18%, transparent);
+}
+
+.arrival-submit {
+  min-width: max-content;
+}
+
+.arrival-submit .button-dark {
+  min-height: 2.7rem;
+  padding: 0.7rem 0.8rem;
+  font-size: 0.57rem;
+}
+
+.arrival-status {
+  max-width: 13rem;
+  margin-top: 0.45rem;
+  color: color-mix(in srgb, var(--color-ink) 68%, transparent);
+  font-size: 0.62rem;
+  line-height: 1.4;
+}
+
+.arrival-concierge {
+  margin-top: 1rem;
+  color: color-mix(in srgb, var(--color-ink) 58%, transparent);
+  font-size: 0.65rem;
+}
+
+.arrival-concierge a {
+  color: var(--color-ink);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: var(--color-signal);
+  text-underline-offset: 3px;
+}
+
+.button-dark,
+.button-signal,
+.button-outline {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 0.85rem 1.25rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease;
+}
+
+.button-dark {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+
+.button-dark:hover {
+  background: var(--color-signal);
+  color: var(--color-ink);
+}
+
+.button-signal {
+  background: var(--color-signal);
+  color: white;
+}
+
+.button-signal:hover {
+  background: var(--color-ink);
+}
+
+.button-outline {
+  border: 1px solid color-mix(in srgb, var(--color-ink) 55%, transparent);
+}
+
+.button-outline:hover {
+  border-color: var(--color-signal);
+  color: var(--color-signal);
+}
+
+.travel-frame {
+  overflow: hidden;
+  background: var(--color-cloud);
+  box-shadow: 0 18px 45px rgb(30 34 34 / 10%);
+}
+
+.travel-frame img {
+  display: block;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+#experiences {
+  position: relative;
+  isolation: isolate;
+  margin-top: 1rem;
+  padding-top: clamp(5rem, 9vw, 8rem);
+}
+
+#experiences::before {
+  position: absolute;
+  z-index: -1;
+  top: -2.5rem;
+  left: 0;
+  width: 100%;
+  height: 5rem;
+  background: var(--color-ink);
+  clip-path: ellipse(78% 100% at 50% 100%);
+  content: "";
+}
+
+.journey-step {
+  border-top: 1px solid color-mix(in srgb, var(--color-ink) 20%, transparent);
+  padding-top: 1rem;
+}
+
+.step-number {
+  display: inline-grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--color-signal);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.hero-film {
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+@media (max-height: 650px) {
+  .hero-copy {
+    top: 51%;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+  }
+
+  .hero-copy > p:not(.eyebrow) {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+
+  .hero-copy > a {
+    margin-top: 1rem;
+  }
+}
+
+@keyframes ff-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.route-draw { stroke-dasharray: 1; animation: ff-draw 900ms ease-out both; }
+
+@media (max-width: 767px) {
+  .section-heading-grid { grid-template-columns: 1fr; }
+
+  #experiences::before {
+    top: -1.5rem;
+    height: 3rem;
+  }
+}
+
+@media (max-width: 660px) {
+  .arrival-section {
+    padding-top: 1.5rem;
+  }
+
+  .arrival-hero {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .arrival-title {
+    font-size: clamp(2.8rem, 11vw, 4.6rem);
+  }
+
+  .arrival-intro {
+    margin-top: 0.9rem;
+  }
+
+  .arrival-visuals {
+    height: clamp(16rem, 70vw, 25rem);
+    margin-inline: 0.1rem;
+  }
+
+  .arrival-booking {
+    margin-top: 2rem;
+  }
+
+  .arrival-booking-heading {
+    align-items: start;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .arrival-assurance {
+    padding-bottom: 0;
+  }
+
+  .arrival-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.8rem;
+    margin-top: 1rem;
+  }
+
+  .arrival-submit {
+    grid-column: 1 / -1;
+  }
+
+  .arrival-submit .button-dark {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
