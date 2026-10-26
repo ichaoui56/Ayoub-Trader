@@ -9,17 +9,17 @@ import Chapter from "./Chapter";
 function HeroCopy({ opacity = 1 }: { opacity?: number }) {
   return (
     <div
-      className="hero-copy absolute inset-x-5 top-[54%] text-paper md:left-[7vw] md:right-auto md:max-w-[min(58vw,58rem)]"
+      className="hero-copy absolute inset-x-5 top-[54%] text-paper md:left-[7vw] md:right-auto"
       style={{ opacity, transform: `translateY(calc(-50% + ${(1 - opacity) * -20}px))` }}
     >
       <p className="mb-4 flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.22em] text-paper/90 md:mb-6">
         <span className="h-px w-7 bg-signal" /> Travel / Concierge
       </p>
-      <h1 className="font-display text-[clamp(3rem,7.2vw,7.6rem)] font-extrabold uppercase leading-[0.82] tracking-[-0.045em]">
+      <h1 className="hero-title font-display font-extrabold uppercase">
         <span className="block whitespace-nowrap">Your Morocco</span>
-        <span className="block whitespace-nowrap"><span className="text-signal">Adventure</span> starts</span>
-        <span className="block whitespace-nowrap">the moment you</span>
-        <span className="block text-signal">land.</span>
+        <span className="block whitespace-nowrap text-signal">Adventure</span>
+        <span className="block whitespace-nowrap">starts the moment</span>
+        <span className="block whitespace-nowrap">you <span className="text-signal">land.</span></span>
       </h1>
       <p className="mt-5 max-w-md text-sm leading-relaxed text-paper/90 [text-shadow:0_1px_8px_rgb(0_0_0/35%)] md:mt-7 md:text-base">
         Seamless airport pickup, handpicked stays and unforgettable experiences—all in one premium concierge service.
@@ -42,7 +42,7 @@ export default function ScrollFilm() {
       <section id="top" aria-label="Morocco Journeys introduction" className="bg-ink">
         <div className="relative min-h-svh overflow-hidden">
           <img src={MEDIA.poster} alt="An aerial view of a private car approaching a Moroccan resort" className="absolute inset-0 h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-ink/70 via-ink/20 to-ink/5" />
+          <div className="absolute inset-0 bg-gradient-to-r from-ink/80 via-ink/25 to-transparent" />
           <HeroCopy />
         </div>
         <div className="grid gap-12 px-5 py-20 md:grid-cols-3 md:px-[6vw]">
@@ -70,7 +70,7 @@ export default function ScrollFilm() {
           aria-hidden="true"
           className="absolute inset-0 h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-ink/65 via-ink/15 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-ink/80 via-ink/20 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-ink/35 via-transparent to-ink/20" />
         <div className="absolute inset-x-0 top-0 z-10 h-[2px] bg-paper/20">
           <div className="h-full origin-left bg-signal" style={{ transform: `scaleX(${p})` }} />
@@ -87,7 +87,7 @@ export default function ScrollFilm() {
           );
         })}
 
-        <div className="absolute bottom-6 left-5 flex items-center gap-3 text-xs text-paper/80 md:left-[6vw]" style={{ opacity: clamp((0.06 - p) / 0.03) }}>
+        <div className="hero-scroll-hint absolute bottom-6 left-5 flex items-center gap-3 text-xs text-paper/80 md:left-[6vw]" style={{ opacity: clamp((0.06 - p) / 0.03) }}>
           <span className="block h-px w-10 bg-signal" /> Scroll to explore Morocco
         </div>
         <p className="absolute bottom-6 right-5 hidden text-right text-xs text-paper/70 md:block md:right-[4vw]">

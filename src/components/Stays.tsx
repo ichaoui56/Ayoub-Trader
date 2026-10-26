@@ -21,40 +21,45 @@ const stays = [
 
 export default function Stays() {
   return (
-    <section id="stays" className="travel-section">
-      <div className="section-heading-grid">
-        <div data-reveal>
-          <p className="eyebrow">Places to stay</p>
-          <h2 className="section-title mt-3 max-w-3xl">The right place.<br />The right feeling.</h2>
+    <section id="stays" className="stays-section text-paper">
+      <div className="stays-section__inner">
+        <div className="section-heading-grid">
+          <div data-reveal>
+            <p className="eyebrow">Places to stay</p>
+            <h2 className="section-title mt-3 max-w-3xl">The right place.<br />The right feeling.</h2>
+          </div>
+          <div className="max-w-sm self-end pb-1" data-reveal>
+            <p className="text-sm leading-relaxed text-paper/65">
+              From traditional riads to boutique hotels and beachside retreats, we’ll help find the kind of stay that feels like home—with a touch of Morocco.
+            </p>
+            <span className="mt-5 block h-0.5 w-9 bg-signal" />
+          </div>
         </div>
-        <div className="max-w-sm self-end pb-1" data-reveal>
-          <p className="text-sm leading-relaxed text-ink/65">
-            From traditional riads to boutique hotels and beachside retreats, we’ll help find the kind of stay that feels like home—with a touch of Morocco.
-          </p>
-          <span className="mt-5 block h-0.5 w-9 bg-signal" />
+        <div className="stays-section__grid" data-stagger>
+          {stays.map((stay, index) => (
+            <a key={stay.name} href="#concierge" className="stay-card group" data-card>
+              <figure data-frame className="stay-card__image">
+                <img
+                  data-frame-image
+                  src={`https://images.unsplash.com/${stay.image}?auto=format&fit=crop&w=1000&q=85`}
+                  alt={`${stay.name} in ${stay.location}`}
+                  loading="lazy"
+                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                />
+                <span className="stay-card__number">0{index + 1}</span>
+                <figcaption className="stay-card__caption">
+                  <span>{stay.location}</span>
+                  <h3>{stay.name}</h3>
+                  <p>{stay.detail}</p>
+                </figcaption>
+                <span className="stay-card__arrow" aria-hidden="true">↗</span>
+              </figure>
+            </a>
+          ))}
         </div>
-      </div>
-      <div className="mt-9 grid gap-5 md:grid-cols-3" data-stagger>
-        {stays.map((stay) => (
-          <a key={stay.name} href="#concierge" className="group block" data-card>
-            <figure data-frame className="travel-frame aspect-[1.42]">
-              <img
-                data-frame-image
-                src={`https://images.unsplash.com/${stay.image}?auto=format&fit=crop&w=1000&q=85`}
-                alt={`${stay.name} in ${stay.location}`}
-                loading="lazy"
-                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
-              />
-            </figure>
-            <div className="mt-3 flex items-start justify-between gap-4">
-              <div>
-                <h3 className="font-display text-xl font-bold uppercase">{stay.name}</h3>
-                <p className="mt-1 text-xs text-ink/60">{stay.detail}</p>
-              </div>
-              <span aria-hidden="true" className="text-xl transition-transform group-hover:translate-x-1">→</span>
-            </div>
-          </a>
-        ))}
+        <p className="stays-section__footnote">
+          A handpicked place to land makes every part of the journey feel better.
+        </p>
       </div>
     </section>
   );

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "../src/index.css";
+import { ActivityReservationProvider } from "../src/components/ActivityReservations";
 
 export const metadata: Metadata = {
   title: "Morocco Journeys — Every arrival, considered.",
@@ -27,7 +28,9 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <ActivityReservationProvider>{children}</ActivityReservationProvider>
+      </body>
     </html>
   );
 }

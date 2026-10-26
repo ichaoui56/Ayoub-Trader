@@ -15,6 +15,35 @@ export default function ScrollMotion({ children }: { children: ReactNode }) {
 
     const media = gsap.matchMedia(element);
     media.add("(prefers-reduced-motion: no-preference)", () => {
+      const sections = element.querySelectorAll<HTMLElement>("section[id]");
+      sections.forEach((section) => {
+        section.classList.add("scroll-frame-section");
+        gsap.fromTo(
+          section,
+          {
+            y: 64,
+            scale: 0.95,
+            clipPath: "inset(2% 1.5% round 1.25rem)",
+            "--scroll-frame-inset": "1.25rem",
+            "--scroll-frame-opacity": 0.9,
+          },
+          {
+            y: 0,
+            scale: 1,
+            clipPath: "inset(0% 0% round 0px)",
+            "--scroll-frame-inset": "0px",
+            "--scroll-frame-opacity": 0,
+            ease: "none",
+            scrollTrigger: {
+              trigger: section,
+              start: "top 96%",
+              end: "top 18%",
+              scrub: 1.2,
+            },
+          },
+        );
+      });
+
       gsap.utils.toArray<HTMLElement>("[data-reveal]").forEach((item) => {
         gsap.fromTo(
           item,
@@ -73,7 +102,12 @@ export default function ScrollMotion({ children }: { children: ReactNode }) {
       });
     });
 
-    return () => media.revert();
+    return () => {
+      media.revert();
+      element.querySelectorAll(".scroll-frame-section").forEach((section) => {
+        section.classList.remove("scroll-frame-section");
+      });
+    };
   }, []);
 
   return <div ref={root}>{children}</div>;

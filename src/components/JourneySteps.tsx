@@ -6,21 +6,30 @@ const steps = [
 
 export default function JourneySteps() {
   return (
-    <section id="journey" className="travel-section pt-4">
+    <section id="journey" className="travel-section journey-section pt-4">
       <div data-reveal>
         <p className="eyebrow">How it works</p>
         <h2 className="section-title mt-3">From arrival to adventure.</h2>
       </div>
-      <ol className="journey-steps mt-10 grid gap-8 md:grid-cols-3" data-stagger>
+      <ol className="journey-steps mt-10" data-stagger>
         {steps.map((step) => (
           <li key={step.number} className="journey-step" data-card>
-            <div className="flex items-center gap-4">
-              <span className="step-number">{step.number}</span>
-              <span className="text-2xl" aria-hidden="true">{step.icon}</span>
-              <span className="hidden h-px flex-1 bg-signal/70 md:block" />
+            <div className="journey-step__marker" aria-hidden="true">
+              <span>{step.icon}</span>
+              <i />
             </div>
-            <h3 className="mt-4 font-display text-2xl font-bold uppercase">{step.title}</h3>
-            <p className="mt-2 max-w-xs text-sm leading-relaxed text-ink/60">{step.detail}</p>
+            {step.number !== "03" && (
+              <span className="journey-step__connector" aria-hidden="true">
+                <i />
+                <b>›</b>
+              </span>
+            )}
+            <div className="journey-step__card">
+              <span className="journey-step__number">STEP {step.number}</span>
+              <h3>{step.title}</h3>
+              <p>{step.detail}</p>
+              <span className="journey-step__accent" aria-hidden="true">{step.number}</span>
+            </div>
           </li>
         ))}
       </ol>

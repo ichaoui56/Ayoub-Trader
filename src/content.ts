@@ -13,7 +13,7 @@ export const NAV_LINKS = [
   { label: "Airport transfers", href: "#transfer" },
   { label: "Places to stay", href: "#stays" },
   { label: "Experiences", href: "#experiences" },
-  { label: "About", href: "#concierge" },
+  { label: "Notre Histoire", href: "#concierge" },
 ];
 
 export const MENU_LINKS = [

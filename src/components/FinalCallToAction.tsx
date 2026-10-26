@@ -19,7 +19,7 @@ export default function FinalCallToAction() {
           <Link href="#transfer">Airport transfers</Link>
           <Link href="#stays">Places to stay</Link>
           <Link href="#experiences">Experiences</Link>
-          <Link href="#concierge">About</Link>
+          <Link href="#concierge">Notre Histoire</Link>
         </nav>
         <p>More than a trip. A journey.</p>
       </footer>
