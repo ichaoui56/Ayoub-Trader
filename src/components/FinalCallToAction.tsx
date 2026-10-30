@@ -10,7 +10,7 @@ export default function FinalCallToAction() {
         </h2>
         <div className="flex flex-wrap gap-3">
           <Link href="#transfer" className="button-signal">Reserve your pickup <span aria-hidden="true">→</span></Link>
-          <Link href="#destinations" className="button-outline">Discover Morocco <span aria-hidden="true">→</span></Link>
+          <Link href="/blog" className="button-outline">Read the journal <span aria-hidden="true">→</span></Link>
         </div>
       </div>
       <footer className="flex flex-col gap-5 pt-6 text-xs text-ink/60 md:flex-row md:items-center md:justify-between">
@@ -20,6 +20,7 @@ export default function FinalCallToAction() {
           <Link href="#stays">Places to stay</Link>
           <Link href="#experiences">Experiences</Link>
           <Link href="#concierge">Notre Histoire</Link>
+          <Link href="/blog">Travel journal</Link>
         </nav>
         <p>More than a trip. A journey.</p>
       </footer>

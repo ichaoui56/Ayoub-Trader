@@ -12,7 +12,7 @@ export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const panel = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
-  const homeHref = (href: string) => pathname === "/" ? href : `/${href}`;
+  const homeHref = (href: string) => href.startsWith("/") || pathname === "/" ? href : `/${href}`;
 
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 24);

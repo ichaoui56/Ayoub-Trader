@@ -1,85 +1,25 @@
 "use client";
 
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { MEDIA } from "../content";
+import { createTransferRequest } from "../server/transfer-actions";
+import type {
+  PrivateServiceData,
+  ReservedPrivateSlot,
+  TransferLocationData,
+  TransferRouteData,
+} from "../transfers/types";
 
 type BookingTab = "routes" | "private" | "custom";
 type FieldValues = Record<string, string>;
 
-type Route = {
-  id: string;
-  from: string;
-  to: string;
-  price: number;
+type Catalog = {
+  bookingEnabled: boolean;
+  routes: TransferRouteData[];
+  services: PrivateServiceData[];
+  locations: TransferLocationData[];
+  reservedPrivateSlots: ReservedPrivateSlot[];
 };
-
-type PrivateService = {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  image: string;
-  imageAlt: string;
-  sharedUrl?: string;
-  sharedPrice?: number;
-};
-
-const routes: Route[] = [
-  { id: "agadir-city", from: "Aéroport d'Agadir", to: "Agadir", price: 20 },
-  { id: "taghazout", from: "Aéroport d'Agadir", to: "Taghazout", price: 30 },
-  { id: "imi-ouaddar", from: "Aéroport d'Agadir", to: "Imi Ouaddar", price: 40 },
-  { id: "imsouane", from: "Aéroport d'Agadir", to: "Imsouane", price: 75 },
-  { id: "essaouira", from: "Aéroport d'Agadir", to: "Essaouira", price: 100 },
-  { id: "agadir-taghazout", from: "Agadir", to: "Taghazout", price: 20 },
-  { id: "marrakech", from: "Agadir", to: "Marrakech", price: 135 },
-  { id: "casablanca", from: "Agadir", to: "Casablanca", price: 270 },
-  { id: "taroudant", from: "Agadir", to: "Taroudant", price: 110 },
-];
-
-const privateServices: PrivateService[] = [
-  {
-    id: "paradise-valley",
-    name: "Vallée du Paradis, véhicule privé",
-    description: "Jusqu'à 8 personnes · Demi-journée",
-    price: 75,
-    image: "photo-1501785888041-af3ef285b470",
-    imageAlt: "Turquoise water among the scenic landscapes of Morocco",
-    sharedUrl: "https://www.bookagadirexperience.com/fr/vallee-du-paradis-agadir",
-    sharedPrice: 20,
-  },
-  {
-    id: "agadir-tour",
-    name: "Visite privée d'Agadir",
-    description: "Non partagée avec d'autres clients",
-    price: 30,
-    image: "photo-1507525428034-b723cf961d3e",
-    imageAlt: "Atlantic shoreline near Agadir",
-    sharedUrl: "https://www.bookagadirexperience.com/fr/visite-agadir",
-    sharedPrice: 20,
-  },
-  {
-    id: "chauffeur",
-    name: "Véhicule avec chauffeur à Agadir",
-    description: "Pour vos propres projets à Agadir",
-    price: 135,
-    image: "photo-1504215680853-026ed2a45def",
-    imageAlt: "A coastal road in Morocco",
-  },
-];
-
-const locations = [
-  "Aéroport Agadir Al Massira (AGA)",
-  "Agadir",
-  "Taghazout",
-  "Tamraght",
-  "Imi Ouaddar",
-  "Imsouane",
-  "Essaouira",
-  "Marrakech",
-  "Casablanca",
-  "Taroudant",
-  "Autre (précisez en remarque)",
-];
 
 const tabs: { id: BookingTab; label: string; mobileLabel: string; icon: string }[] = [
   { id: "routes", label: "Transferts aéroport & trajets", mobileLabel: "Trajets", icon: "✈" },
@@ -88,7 +28,9 @@ const tabs: { id: BookingTab; label: string; mobileLabel: string; icon: string }
 ];
 
 const sharedImageUrl = (id: string) =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=520&q=80`;
+  id.startsWith("data:image/") || /^https?:\/\//i.test(id)
+    ? id
+    : `https://images.unsplash.com/${id || "photo-1501785888041-af3ef285b470"}?auto=format&fit=crop&w=520&q=80`;
 
 function Field({
   name,
@@ -148,6 +90,68 @@ function Field({
   );
 }
 
+function formatStartTime(time: string) {
+  const [hours, minutes] = time.split(":");
+  return `${Number(hours)}h${minutes}`;
+}
+
+function PrivateStartTimePicker({
+  service,
+  date,
+  value,
+  setValue,
+  reservedSlots,
+}: {
+  service: PrivateServiceData;
+  date: string;
+  value: string;
+  setValue: (name: string, value: string) => void;
+  reservedSlots: ReservedPrivateSlot[];
+}) {
+  const reservedTimes = reservedSlots
+    .filter((slot) => slot.privateServiceId === service.id && slot.serviceDate === date)
+    .map((slot) => slot.serviceTime);
+  const times = [...new Set([...service.startTimes, ...reservedTimes])].sort();
+  if (!service.startTimes.length) {
+    return (
+      <Field
+        name="time"
+        label="Heure"
+        values={{ time: value }}
+        setValue={setValue}
+        type="time"
+        required
+      />
+    );
+  }
+
+  return (
+    <fieldset className="booking-field booking-start-times">
+      <legend className="booking-field__label">Heure de départ <span className="booking-optional">(obligatoire)</span></legend>
+      {!date && <p className="booking-field__helper">Choisissez une date pour voir les heures déjà réservées.</p>}
+      <div className="booking-start-times__options">
+        {times.map((time) => {
+          const reserved = reservedTimes.includes(time);
+          return (
+            <button
+              type="button"
+              key={time}
+              className={`booking-start-times__option${value === time ? " is-selected" : ""}${reserved ? " is-reserved" : ""}`}
+              disabled={reserved}
+              aria-pressed={!reserved && value === time}
+              aria-label={`${formatStartTime(time)}${reserved ? " — réservé" : ""}`}
+              onClick={() => setValue("time", time)}
+            >
+              <span>{formatStartTime(time)}</span>
+              {reserved && <span className="booking-start-times__reserved">× Réservé</span>}
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+}
+
 function ContactFields({
   values,
   setValue,
@@ -172,7 +176,8 @@ function ContactFields({
           setValue={setValue}
           type="email"
           placeholder="votre@email.com"
-          helper="Au cas où nous ne pourrions pas vous joindre par téléphone. Utilisé uniquement pour cette demande."
+          required
+          helper="Nous utilisons votre adresse uniquement pour cette demande."
         />
       </div>
       <label className="booking-field booking-field--remarks">
@@ -195,15 +200,27 @@ function TravelFields({
   setValue,
   passengerLimit = 8,
   variant = "standard",
+  privateService,
+  reservedPrivateSlots = [],
 }: {
   values: FieldValues;
   setValue: (name: string, value: string) => void;
   passengerLimit?: number;
   variant?: "standard" | "custom";
+  privateService?: PrivateServiceData;
+  reservedPrivateSlots?: ReservedPrivateSlot[];
 }) {
   const hotelField = <Field name="hotel" label="Hôtel / adresse" values={values} setValue={setValue} placeholder="Hôtel, adresse ou point de rencontre" />;
   const dateField = <Field name="date" label="Date" values={values} setValue={setValue} type="date" required />;
-  const timeField = <Field name="time" label="Heure" values={values} setValue={setValue} type="time" />;
+  const timeField = privateService
+    ? <PrivateStartTimePicker
+      service={privateService}
+      date={values.date ?? ""}
+      value={values.time ?? ""}
+      setValue={setValue}
+      reservedSlots={reservedPrivateSlots}
+    />
+    : <Field name="time" label="Heure" values={values} setValue={setValue} type="time" required />;
   const passengerField = (
     <Field
       name="passengers"
@@ -255,15 +272,24 @@ function TravelFields({
 function BookingSubmit({
   message,
   onClear,
+  busy,
+  bookingEnabled,
 }: {
   message: string;
   onClear: () => void;
+  busy: boolean;
+  bookingEnabled: boolean;
 }) {
   return (
     <>
-      <button type="submit" className="booking-send">
-        <span aria-hidden="true">↗</span> Envoyer la demande <span aria-hidden="true">→</span>
+      <button type="submit" className="booking-send" disabled={busy || !bookingEnabled}>
+        <span aria-hidden="true">↗</span> {busy ? "Envoi en cours…" : "Envoyer la demande"} <span aria-hidden="true">→</span>
       </button>
+      {!bookingEnabled && (
+        <p className="booking-message" role="status">
+          Les réservations en ligne ne sont pas encore configurées. Veuillez contacter notre équipe directement.
+        </p>
+      )}
       <p className="booking-confirmation">
         <span aria-hidden="true">ⓘ</span>
         Notre équipe vous confirme la disponibilité, le véhicule et l'heure de prise en charge.
@@ -279,30 +305,54 @@ function BookingSubmit({
   );
 }
 
-export default function AirportTransfer() {
+export default function AirportTransfer({
+  bookingEnabled,
+  routes,
+  services: privateServices,
+  locations,
+  reservedPrivateSlots,
+}: Catalog) {
   const [activeTab, setActiveTab] = useState<BookingTab>("routes");
   const [mobileRouteStep, setMobileRouteStep] = useState<"choose" | "booking">("choose");
   const [mobilePrivateStep, setMobilePrivateStep] = useState<"choose" | "booking">("choose");
-  const [selectedRouteId, setSelectedRouteId] = useState(routes[0].id);
-  const [selectedPrivateId, setSelectedPrivateId] = useState(privateServices[0].id);
+  const [selectedRouteId, setSelectedRouteId] = useState(routes[0]?.id ?? "");
+  const [selectedPrivateId, setSelectedPrivateId] = useState(privateServices[0]?.id ?? "");
   const [values, setValues] = useState<FieldValues>({
     passengers: "1",
     luggage: "0",
   });
   const [message, setMessage] = useState("");
+  const [successToastOpen, setSuccessToastOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
   const routeListRef = useRef<HTMLDivElement>(null);
   const privateListRef = useRef<HTMLDivElement>(null);
 
-  const selectedRoute = routes.find((route) => route.id === selectedRouteId) ?? routes[0];
-  const selectedPrivate = privateServices.find((service) => service.id === selectedPrivateId) ?? privateServices[0];
+  useEffect(() => {
+    if (!successToastOpen) return;
+    const timeout = window.setTimeout(() => setSuccessToastOpen(false), 7000);
+    return () => window.clearTimeout(timeout);
+  }, [successToastOpen]);
+
+  const selectedRoute = routes.find((route) => route.id === selectedRouteId);
+  const selectedPrivate = privateServices.find((service) => service.id === selectedPrivateId);
 
   const setValue = (name: string, value: string) => {
-    setValues((current) => ({ ...current, [name]: value }));
+    setValues((current) => ({
+      ...current,
+      [name]: value,
+      ...(name === "date" ? { time: "" } : {}),
+    }));
     setMessage("");
   };
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (busy) return;
+
+    if (activeTab === "private" && !values.time) {
+      setMessage("Choisissez une heure de départ disponible.");
+      return;
+    }
 
     if (activeTab === "custom") {
       if (values.departure && values.departure === values.arrival) {
@@ -322,13 +372,42 @@ export default function AirportTransfer() {
       }
     }
 
-    setMessage(
-      "Vos informations sont valides, mais l'envoi en ligne n'est pas encore configuré. Votre demande n'a pas été envoyée.",
-    );
+    setBusy(true);
+    setMessage("");
+    setSuccessToastOpen(false);
+    try {
+      await createTransferRequest({
+        serviceType: activeTab === "routes"
+          ? "AIRPORT_ROUTE"
+          : activeTab === "private"
+            ? "PRIVATE_SERVICE"
+            : "CUSTOM_ROUTE",
+        routeId: activeTab === "routes" ? selectedRouteId : undefined,
+        privateServiceId: activeTab === "private" ? selectedPrivateId : undefined,
+        departure: values.departure,
+        arrival: values.arrival,
+        serviceDate: values.date ?? "",
+        serviceTime: values.time,
+        passengerCount: Number(values.passengers),
+        luggageCount: Number(values.luggage || "0"),
+        hotelAddress: values.hotel,
+        flightNumber: values.flight,
+        customerName: values.name ?? "",
+        customerPhone: values.phone ?? "",
+        customerEmail: values.email ?? "",
+        notes: values.remarks,
+      });
+      setSuccessToastOpen(true);
+      setValues({ passengers: "1", luggage: "0" });
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Votre demande n’a pas pu être envoyée. Veuillez réessayer.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   const renderSubmit = () => (
-    <BookingSubmit message={message} onClear={() => setMessage("")} />
+    <BookingSubmit message={message} onClear={() => setMessage("")} busy={busy} bookingEnabled={bookingEnabled} />
   );
 
   const renderContactAndSubmit = () => (
@@ -464,18 +543,20 @@ export default function AirportTransfer() {
                     </article>
                   ))}
                 </div>
+                {routes.length === 0 && <p className="booking-empty">Aucun trajet n’est disponible pour le moment.</p>}
                 <button
                   type="button"
                   className="booking-continue"
+                  disabled={!selectedRoute}
                   onClick={() => setMobileRouteStep("booking")}
                 >
-                  Continuer avec {selectedRoute.to}
-                  <span>À partir de {selectedRoute.price} €</span>
+                  Continuer avec {selectedRoute?.to ?? "un trajet"}
+                  <span>À partir de {selectedRoute?.price ?? "—"} €</span>
                   <span aria-hidden="true">→</span>
                 </button>
               </div>
 
-              <form className="booking-detail" onSubmit={submit}>
+              {selectedRoute ? <form className="booking-detail" onSubmit={submit}>
                 <div className="booking-selected">
                   <button
                     type="button"
@@ -512,7 +593,7 @@ export default function AirportTransfer() {
                 </div>
                 <TravelFields values={values} setValue={setValue} />
                 {renderContactAndSubmit()}
-              </form>
+              </form> : <div className="booking-detail"><p className="booking-empty">Choisissez un trajet disponible pour continuer.</p></div>}
             </div>
           )}
 
@@ -521,7 +602,7 @@ export default function AirportTransfer() {
               <div className="booking-options" ref={privateListRef}>
                 <div className="booking-section-intro">
                   <h3>Sorties privées</h3>
-                  <p>Un véhicule avec chauffeur rien que pour vous, non partagé avec d'autres clients : un prix pour la sortie. À ne pas confondre avec nos excursions partagées, au prix par personne.</p>
+                  <p>Un véhicule avec chauffeur rien que pour vous, avec des horaires de départ définis pour chaque sortie.</p>
                 </div>
                 <div className="booking-option-list booking-option-list--private">
                   {privateServices.map((service) => (
@@ -534,12 +615,15 @@ export default function AirportTransfer() {
                         <span className="booking-badge">♙ Privé</span>
                         <h4>{service.name}</h4>
                         <p>{service.description}</p>
-                        <strong>à partir de {service.price} €</strong>
-                        {service.sharedUrl && (
-                          <a href={service.sharedUrl} target="_blank" rel="noreferrer">
-                            Excursion partagée · {service.sharedPrice} € par personne ↗
-                          </a>
+                        <small className="booking-private-card__capacity">
+                          Jusqu'à {service.passengerLimit} personnes · {service.duration}
+                        </small>
+                        {service.startTimes.length > 0 && (
+                          <small className="booking-private-card__capacity">
+                            Départs : {service.startTimes.map(formatStartTime).join(" · ")}
+                          </small>
                         )}
+                        <strong>à partir de {service.price} €</strong>
                       </div>
                       <button
                         type="button"
@@ -547,6 +631,7 @@ export default function AirportTransfer() {
                         aria-pressed={selectedPrivateId === service.id}
                         onClick={() => {
                           setSelectedPrivateId(service.id);
+                          setValue("time", "");
                           if (window.matchMedia("(max-width: 660px)").matches) {
                             setMobilePrivateStep("booking");
                           }
@@ -557,15 +642,19 @@ export default function AirportTransfer() {
                     </article>
                   ))}
                 </div>
+                {privateServices.length === 0 && <p className="booking-empty">Aucune sortie privée n’est disponible pour le moment.</p>}
               </div>
 
-              <form className="booking-detail" onSubmit={submit}>
+              {selectedPrivate ? <form className="booking-detail" onSubmit={submit}>
                 <div className="booking-selected">
                   <img src={sharedImageUrl(selectedPrivate.image)} alt="" />
                   <div>
                     <span className="booking-badge">♙ Privé</span>
                     <h3>{selectedPrivate.name}</h3>
                     <p>{selectedPrivate.description}</p>
+                    <small className="booking-private-card__capacity">
+                      Jusqu'à {selectedPrivate.passengerLimit} personnes · {selectedPrivate.duration}
+                    </small>
                     <strong className="booking-selected__price">{selectedPrivate.price} €</strong>
                   </div>
                   <button
@@ -587,9 +676,15 @@ export default function AirportTransfer() {
                   <span aria-hidden="true">01</span>
                   <h4>Détails de votre sortie</h4>
                 </div>
-                <TravelFields values={values} setValue={setValue} />
+                <TravelFields
+                  values={values}
+                  setValue={setValue}
+                  passengerLimit={selectedPrivate.passengerLimit}
+                  privateService={selectedPrivate}
+                  reservedPrivateSlots={reservedPrivateSlots}
+                />
                 {renderContactAndSubmit()}
-              </form>
+              </form> : <div className="booking-detail"><p className="booking-empty">Choisissez une sortie privée disponible pour continuer.</p></div>}
             </div>
           )}
 
@@ -627,8 +722,8 @@ export default function AirportTransfer() {
                   </div>
                 </div>
                 <div className="booking-location-grid">
-                  <Field name="departure" label="Départ" values={values} setValue={setValue} options={locations} placeholder="Choisir" required />
-                  <Field name="arrival" label="Arrivée" values={values} setValue={setValue} options={locations} placeholder="Choisir" required />
+                  <Field name="departure" label="Départ" values={values} setValue={setValue} options={locations.filter((location) => location.isDeparture).map((location) => location.name)} placeholder="Choisir" required />
+                  <Field name="arrival" label="Arrivée" values={values} setValue={setValue} options={locations.filter((location) => location.isArrival).map((location) => location.name)} placeholder="Choisir" required />
                 </div>
                 {(values.departure?.startsWith("Autre") || values.arrival?.startsWith("Autre")) && (
                   <p className="booking-field__helper booking-location-helper">
@@ -651,6 +746,16 @@ export default function AirportTransfer() {
           )}
         </div>
       </div>
+      {successToastOpen && (
+        <div className="booking-success-toast" role="status" aria-live="polite" aria-atomic="true">
+          <span className="booking-success-toast__icon" aria-hidden="true">✓</span>
+          <div>
+            <h3>Votre demande a bien été envoyée</h3>
+            <p>Notre équipe vous contactera rapidement pour confirmer les détails de votre réservation.</p>
+          </div>
+          <button type="button" aria-label="Fermer la confirmation" onClick={() => setSuccessToastOpen(false)}>×</button>
+        </div>
+      )}
     </section>
   );
 }

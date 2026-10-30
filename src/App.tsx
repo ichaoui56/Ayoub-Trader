@@ -2,12 +2,12 @@ import Link from "next/link";
 import Nav from "./components/Nav";
 import ScrollFilm from "./components/ScrollFilm";
 import ScrollMotion from "./components/ScrollMotion";
-import AirportTransfer from "./components/AirportTransfer";
+import AirportTransferWrapper from "./components/AirportTransferWrapper";
 import Stays from "./components/Stays";
 import Experiences from "./components/Experiences";
 import Concierge from "./components/Concierge";
 import JourneySteps from "./components/JourneySteps";
-import Destinations from "./components/Destinations";
+import BlogSection from "./components/BlogSection";
 import WhyChooseUs from "./components/WhyChooseUs";
 import FinalCallToAction from "./components/FinalCallToAction";
 import PageLoader from "./components/PageLoader";
@@ -26,12 +26,12 @@ export default function App() {
       <main>
         <ScrollFilm />
         <ScrollMotion>
-          <AirportTransfer />
+          <AirportTransferWrapper />
           <Stays />
           <Experiences />
           <Concierge />
           <JourneySteps />
-          <Destinations />
+          <BlogSection />
           <WhyChooseUs />
           <FinalCallToAction />
         </ScrollMotion>

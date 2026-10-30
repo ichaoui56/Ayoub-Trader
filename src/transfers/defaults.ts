@@ -1,0 +1,61 @@
+export const defaultRoutes = [
+  { from: "Aéroport d'Agadir", to: "Agadir", price: 20 },
+  { from: "Aéroport d'Agadir", to: "Taghazout", price: 30 },
+  { from: "Aéroport d'Agadir", to: "Imi Ouaddar", price: 40 },
+  { from: "Aéroport d'Agadir", to: "Imsouane", price: 75 },
+  { from: "Aéroport d'Agadir", to: "Essaouira", price: 100 },
+  { from: "Agadir", to: "Taghazout", price: 20 },
+  { from: "Agadir", to: "Marrakech", price: 135 },
+  { from: "Agadir", to: "Casablanca", price: 270 },
+  { from: "Agadir", to: "Taroudant", price: 110 },
+];
+
+export const defaultPrivateServices = [
+  {
+    name: "Vallée du Paradis, véhicule privé",
+    kind: "OUTING" as const,
+    description: "Jusqu'à 8 personnes · Demi-journée",
+    price: 75,
+    passengerLimit: 8,
+    duration: "Demi-journée",
+    startTimes: [],
+    image: "photo-1501785888041-af3ef285b470",
+    imageAlt: "Turquoise water among the scenic landscapes of Morocco",
+  },
+  {
+    name: "Visite privée d'Agadir",
+    kind: "PRIVATE_VISIT" as const,
+    description: "Non partagée avec d'autres clients",
+    price: 30,
+    passengerLimit: 8,
+    duration: "Demi-journée",
+    startTimes: [],
+    image: "photo-1507525428034-b723cf961d3e",
+    imageAlt: "Atlantic shoreline near Agadir",
+  },
+  {
+    name: "Véhicule avec chauffeur à Agadir",
+    kind: "CHAUFFEUR" as const,
+    description: "Pour vos propres projets à Agadir",
+    price: 135,
+    passengerLimit: 8,
+    duration: "À définir",
+    startTimes: [],
+    image: "photo-1504215680853-026ed2a45def",
+    imageAlt: "A coastal road in Morocco",
+  },
+];
+
+export const defaultTransferLocations = [
+  "Aéroport Agadir Al Massira (AGA)",
+  "Agadir",
+  "Taghazout",
+  "Tamraght",
+  "Imi Ouaddar",
+  "Imsouane",
+  "Essaouira",
+  "Marrakech",
+  "Casablanca",
+  "Taroudant",
+  "Autre (précisez en remarque)",
+];
