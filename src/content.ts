@@ -1,7 +1,7 @@
 const base = "https://media.scrollhaus.ai/sites/freight-forward/assets/";
 
 export const MEDIA = {
-  film: "/Aerial_drone_video_of_resort_a253ca43_1080p.mp4",
+  film: "/Aerial_drone_video_of_resort_a253ca43_1080p_scrub.mp4",
   filmAlt: `${base}e8eb434f-d097-4b1b-b9e6-c8b46fa43040.mp4`,
   poster: "/aerial_resort_1080p_poster.jpg",
   terminal: `${base}terminal.jpg`,
