@@ -1,6 +1,4 @@
-import type { CHAPTERS } from "../content";
-
-type Props = { chapter: (typeof CHAPTERS)[number] };
+type Props = { chapter: { n: string; kicker: string; title: string; body: string } };
 
 export default function Chapter({ chapter }: Props) {
   return (

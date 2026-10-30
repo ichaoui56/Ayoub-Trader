@@ -5,49 +5,57 @@ import { useRef } from "react";
 import { CHAPTERS, MEDIA } from "../content";
 import { clamp, usePrefersReducedMotion, useScrollFilm, windowOpacity } from "../hooks";
 import Chapter from "./Chapter";
+import { translate, type Locale } from "../i18n";
 
-function HeroCopy({ opacity = 1 }: { opacity?: number }) {
+function HeroCopy({ opacity = 1, locale }: { opacity?: number; locale: Locale }) {
+  const t = (phrase: string) => translate(locale, phrase);
   return (
     <div
       className="hero-copy absolute inset-x-5 top-[54%] text-paper md:left-[7vw] md:right-auto"
       style={{ opacity, transform: `translateY(calc(-50% + ${(1 - opacity) * -20}px))` }}
     >
       <p className="mb-4 flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.22em] text-paper/90 md:mb-6">
-        <span className="h-px w-7 bg-signal" /> Travel / Concierge
+        <span className="h-px w-7 bg-signal" /> {t("Travel / Concierge")}
       </p>
       <h1 className="hero-title font-display font-extrabold uppercase">
-        <span className="block whitespace-nowrap">Your Morocco</span>
-        <span className="block whitespace-nowrap text-signal">Adventure</span>
-        <span className="block whitespace-nowrap">starts the moment</span>
-        <span className="block whitespace-nowrap">you <span className="text-signal">land.</span></span>
+        <span className="block whitespace-nowrap">{t("Hero title line one")}</span>
+        <span className="block whitespace-nowrap text-signal">{t("Hero title line two")}</span>
+        <span className="block whitespace-nowrap">{t("Hero title line three")}</span>
+        <span className="block whitespace-nowrap text-signal">{t("Hero title line four")}</span>
       </h1>
       <p className="mt-5 max-w-md text-sm leading-relaxed text-paper/90 [text-shadow:0_1px_8px_rgb(0_0_0/35%)] md:mt-7 md:text-base">
-        Seamless airport pickup, handpicked stays and unforgettable experiences—all in one premium concierge service.
+        {t("Seamless airport pickup, handpicked stays and unforgettable experiences—all in one premium concierge service.")}
       </p>
       <Link href="#transfer" className="mt-6 inline-flex items-center gap-5 bg-signal px-5 py-3 text-[11px] font-bold uppercase tracking-wide text-paper transition-colors hover:bg-paper hover:text-ink md:mt-8">
-        Plan your arrival <span aria-hidden="true">↓</span>
+        {t("Plan your arrival")} <span aria-hidden="true">↓</span>
       </Link>
     </div>
   );
 }
 
-export default function ScrollFilm() {
+export default function ScrollFilm({ locale }: { locale: Locale }) {
   const reduced = usePrefersReducedMotion();
   const runway = useRef<HTMLElement>(null);
   const video = useRef<HTMLVideoElement>(null);
   const p = useScrollFilm(runway, video, !reduced);
+  const chapters = CHAPTERS.map((chapter) => ({
+    ...chapter,
+    kicker: translate(locale, chapter.kicker),
+    title: translate(locale, chapter.title),
+    body: translate(locale, chapter.body),
+  }));
 
   if (reduced) {
     return (
-      <section id="top" aria-label="Morocco Journeys introduction" className="bg-ink">
+      <section id="top" aria-label={translate(locale, "Morocco Journeys introduction")} className="bg-ink">
         <div className="relative min-h-svh overflow-hidden">
           <img src={MEDIA.poster} alt="An aerial view of a private car approaching a Moroccan resort" className="absolute inset-0 h-full w-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-r from-ink/80 via-ink/25 to-transparent" />
-          <HeroCopy />
+          <HeroCopy locale={locale} />
         </div>
         <div className="grid gap-12 px-5 py-20 md:grid-cols-3 md:px-[6vw]">
-          {CHAPTERS.map((c) => (
-            <div key={c.id} className="text-paper"><Chapter chapter={c} /></div>
+          {chapters.map((chapter) => (
+            <div key={chapter.id} className="text-paper"><Chapter chapter={chapter} /></div>
           ))}
         </div>
       </section>
@@ -55,7 +63,7 @@ export default function ScrollFilm() {
   }
 
   return (
-    <section id="top" ref={runway} aria-label="Morocco travel film, scrubbed by scrolling" className="relative h-[520svh] bg-ink md:h-[600svh]">
+    <section id="top" ref={runway} aria-label={translate(locale, "Morocco travel film, scrubbed by scrolling")} className="relative h-[520svh] bg-ink md:h-[600svh]">
       <div className="sticky top-0 h-svh overflow-hidden">
         <video
           ref={video}
@@ -76,9 +84,9 @@ export default function ScrollFilm() {
           <div className="h-full origin-left bg-signal" style={{ transform: `scaleX(${p})` }} />
         </div>
 
-        <HeroCopy opacity={clamp((0.11 - p) / 0.04)} />
+        <HeroCopy locale={locale} opacity={clamp((0.11 - p) / 0.04)} />
 
-        {CHAPTERS.map((c) => {
+        {chapters.map((c) => {
           const o = windowOpacity(p, c.from, c.to);
           return (
             <div key={c.id} className={`absolute text-paper ${c.pos}`} style={{ opacity: o, transform: `translateY(${(1 - o) * 18}px)` }}>
@@ -88,10 +96,10 @@ export default function ScrollFilm() {
         })}
 
         <div className="hero-scroll-hint absolute bottom-6 left-5 flex items-center gap-3 text-xs text-paper/80 md:left-[6vw]" style={{ opacity: clamp((0.06 - p) / 0.03) }}>
-          <span className="block h-px w-10 bg-signal" /> Scroll to explore Morocco
+          <span className="block h-px w-10 bg-signal" /> {translate(locale, "Scroll to explore Morocco")}
         </div>
         <p className="absolute bottom-6 right-5 hidden text-right text-xs text-paper/70 md:block md:right-[4vw]">
-          Morocco Journeys.<br />Every arrival, considered.
+          Morocco Journeys.<br />{translate(locale, "Every arrival, considered.")}
         </p>
 
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-cloud" style={{ opacity: clamp((p - 0.82) / 0.18) }} />

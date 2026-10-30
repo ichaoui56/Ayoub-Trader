@@ -21,6 +21,11 @@ export type ActivityBookingExtra = {
   billing: "person" | "unit";
 };
 
+export type ActivityAvailability = {
+  date: string;
+  times: string[];
+};
+
 export type Activity = {
   slug: string;
   title: string;
@@ -47,12 +52,20 @@ export type Activity = {
   faqs?: { question: string; answer: string }[];
   reservation?: {
     times?: string[];
+    availability?: ActivityAvailability[];
     rates: ActivityBookingRate[];
     childRate?: { price: number; label: string };
     extras?: ActivityBookingExtra[];
     extraSelectionMode?: "single" | "multiple";
     priceNeedsConfirmation?: boolean;
   };
+};
+
+export type ManagedActivity = {
+  id: string;
+  isActive: boolean;
+  sortOrder: number;
+  activity: Activity;
 };
 
 export const activities: Activity[] = [
@@ -90,7 +103,7 @@ export const activities: Activity[] = [
     ],
     priceOptions: [
       { label: "Solo quad", price: "36 €", unit: "per quad" },
-      { label: "Shared quad", price: "18 €", unit: "per person" },
+      { label: "Shared quad", price: "36 €", unit: "per quad" },
     ],
     pickup: "Included from your accommodation in Agadir or Taghazout",
     bookingUrl: "https://www.bookagadirexperience.com/fr/quad-agadir",
@@ -98,7 +111,7 @@ export const activities: Activity[] = [
       times: ["09h00", "14h00"],
       rates: [
         { id: "solo", label: "Quad solo", price: 36, unit: "per quad", billing: "unit", peoplePerUnit: 1, description: "1 pilot per quad" },
-        { id: "shared", label: "Quad partagé", price: 18, unit: "per person", billing: "person", peoplePerUnit: 2, description: "Up to 2 people per quad" },
+        { id: "shared", label: "Quad partagé", price: 36, unit: "per quad", billing: "unit", peoplePerUnit: 2, description: "Up to 2 people per quad" },
       ],
       extras: [
         { id: "photo", label: "Photo pack", price: 25, unit: "per quad", billing: "unit" },

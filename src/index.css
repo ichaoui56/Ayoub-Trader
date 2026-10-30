@@ -2739,6 +2739,36 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
   color: #20352a;
 }
 
+.site-language-switch {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 0.1rem;
+  border: 1px solid rgb(255 255 255 / 38%);
+  border-radius: 0.22rem;
+  padding: 0.12rem;
+}
+
+.site-language-switch button {
+  min-width: 1.8rem;
+  min-height: 1.75rem;
+  border-radius: 0.13rem;
+  background: transparent;
+  color: rgb(255 255 255 / 72%);
+  cursor: pointer;
+  font-size: 0.58rem;
+  font-weight: 800;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.site-language-switch button[aria-pressed="true"] {
+  background: #fff;
+  color: #1e2826;
+}
+
+.site-language-switch button:hover:not([aria-pressed="true"]) {
+  color: #fff;
+}
+
 @keyframes booking-toast-in {
   from { opacity: 0; transform: translateY(0.65rem); }
   to { opacity: 1; transform: translateY(0); }
@@ -7222,6 +7252,74 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
   color: white;
 }
 
+.activity-reservation-times button.is-taken {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-color: #d7dad8;
+  background: #e9ecea;
+  color: #858c89;
+  cursor: not-allowed;
+}
+
+.activity-reservation-times button.is-taken > span:last-child,
+.activity-reservation-times--booked > span > b {
+  color: #656d69;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.activity-reservation-times--booked {
+  margin-top: 0.65rem;
+}
+
+.activity-reservation-times--booked > span {
+  display: inline-flex;
+  min-height: 2.2rem;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid #d7dad8;
+  border-radius: 999px;
+  background: #e9ecea;
+  padding: 0.4rem 0.7rem;
+  color: #858c89;
+  font-size: 0.68rem;
+  font-weight: 750;
+}
+
+.activity-reservation-date {
+  display: grid;
+  width: min(100%, 20rem);
+  gap: 0.3rem;
+}
+
+.activity-reservation-date > span {
+  color: color-mix(in srgb, var(--color-ink) 66%, transparent);
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
+.activity-reservation-date input,
+.activity-reservation-date select {
+  width: 100%;
+  min-height: 2.65rem;
+  border: 1px solid rgb(30 34 34 / 17%);
+  border-radius: 0.38rem;
+  padding: 0.55rem 0.7rem;
+  background: #fffefa;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 0.72rem;
+}
+
+.activity-reservation-date input:focus,
+.activity-reservation-date select:focus {
+  border-color: var(--color-signal);
+  outline: 2px solid color-mix(in srgb, var(--color-signal) 24%, transparent);
+}
+
 .activity-reservation-guests {
   display: grid;
   gap: 0.3rem;
@@ -7846,17 +7944,24 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
   .activity-reservation-product h3 {
     font-size: 1.25rem;
   }
+
+  .activity-reservation-date input,
+  .activity-reservation-date select {
+    min-height: 3rem;
+    font-size: 16px;
+  }
 }
 
 .transfer-dashboard {
-  --dash-ink: #1e2826;
+  --dash-ink: #1e2222;
   --dash-muted: #78817e;
   --dash-line: #e6e8e4;
-  --dash-paper: #f6f7f4;
-  --dash-accent: #ed6a4f;
+  --dash-paper: #f1f5fa;
+  --dash-accent: #f25b3f;
   display: grid;
   min-height: 100vh;
   grid-template-columns: var(--transfer-sidebar-width, 16.5rem) 0.75rem minmax(0, 1fr);
+  padding: clamp(0.75rem, 1.35vw, 1.25rem);
   background: var(--dash-paper);
   color: var(--dash-ink);
   font-family: var(--font-sans);
@@ -7876,10 +7981,10 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
 .transfer-sidebar-resize {
   position: sticky;
   z-index: 15;
-  top: 0;
+  top: 1.25rem;
   display: grid;
   width: 0.75rem;
-  height: 100vh;
+  height: calc(100vh - 2.5rem);
   place-items: center;
   align-self: start;
   border: 0;
@@ -7924,15 +8029,18 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
 
 .transfer-sidebar {
   position: sticky;
-  top: 0;
+  top: 1.25rem;
   display: flex;
-  height: 100vh;
+  height: calc(100vh - 2.5rem);
   flex-direction: column;
-  background: #192321;
-  padding: 5.2rem 1rem 1rem;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 1.15rem;
+  background: #1e2222;
+  padding: 1.15rem 0.85rem 1rem;
   color: #f5f3ed;
   overflow: hidden;
-  transition: padding 260ms ease;
+  box-shadow: 0 1rem 2.8rem rgb(30 34 34 / 18%);
+  transition: padding 260ms ease, box-shadow 220ms ease;
 }
 
 .transfer-brand {
@@ -7979,7 +8087,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
 }
 
 .transfer-sidebar__section-label {
-  border-top: 1px solid rgb(245 243 237 / 12%);
+  border-top: 1px solid rgb(245 243 237 / 18%);
   padding: 1.3rem 0.65rem 0.65rem;
   color: rgb(245 243 237 / 46%);
   font-size: 0.57rem;
@@ -8025,14 +8133,14 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
 .transfer-sidebar__nav button.is-active,
 .transfer-sidebar__nav a:hover,
 .transfer-sidebar__nav a.is-active {
-  background: rgb(255 255 255 / 9%);
+  background: rgb(255 255 255 / 11%);
   color: white;
 }
 
 .transfer-sidebar__nav button.is-active,
 .transfer-sidebar__nav a.is-active {
   position: relative;
-  background: linear-gradient(100deg, rgb(237 106 79 / 18%), rgb(255 255 255 / 5%));
+  background: rgb(242 91 63 / 16%);
   box-shadow: inset 3px 0 var(--dash-accent);
 }
 
@@ -8050,7 +8158,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
   margin-left: auto;
   border-radius: 999px;
   background: var(--dash-accent);
-  color: var(--dash-ink);
+  color: #1e2222;
   font-size: 0.62rem;
 }
 
@@ -8065,11 +8173,9 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
   display: grid;
   gap: 0.4rem;
   margin-top: auto;
-  border: 1px solid rgb(255 255 255 / 9%);
+  border: 1px solid rgb(255 255 255 / 13%);
   border-radius: 0.85rem;
-  background:
-    radial-gradient(circle at 100% 0%, rgb(237 106 79 / 22%), transparent 58%),
-    linear-gradient(140deg, #25332f, #1d2926);
+  background: linear-gradient(145deg, rgb(255 255 255 / 12%), rgb(255 255 255 / 5%));
   padding: 1rem;
   box-shadow: 0 1rem 2rem rgb(0 0 0 / 12%);
 }
@@ -8080,9 +8186,9 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
   height: 1.8rem;
   place-items: center;
   margin-bottom: 0.2rem;
-  border: 1px solid rgb(237 106 79 / 28%);
+  border: 1px solid rgb(242 91 63 / 28%);
   border-radius: 0.55rem;
-  background: rgb(237 106 79 / 10%);
+  background: rgb(242 91 63 / 10%);
   color: var(--dash-accent);
   font-size: 0.85rem;
 }
@@ -8196,44 +8302,33 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
 .transfer-dashboard__topbar {
   position: sticky;
   z-index: 20;
-  top: 0;
+  top: 1.25rem;
   display: flex;
-  min-height: 4.2rem;
+  min-height: 4.4rem;
   align-items: center;
   gap: 0;
-  width: calc(100% + var(--transfer-sidebar-width, 16.5rem) + 0.75rem);
-  margin-left: calc(-1 * (var(--transfer-sidebar-width, 16.5rem) + 0.75rem));
-  border-bottom: 1px solid rgb(222 227 221 / 88%);
-  background: rgb(255 255 255 / 92%);
-  padding: 0;
-  box-shadow: 0 0.45rem 1.4rem rgb(26 39 34 / 4%);
+  width: 100%;
+  margin-left: 0;
+  border: 1px solid rgb(255 255 255 / 16%);
+  border-radius: 1rem;
+  background: #1e2222;
+  padding: 0 0.75rem;
+  box-shadow: 0 0.75rem 1.8rem rgb(30 34 34 / 14%);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
 }
 
 .transfer-dashboard--sidebar-collapsed .transfer-dashboard__topbar {
-  width: calc(100% + 5.95rem);
-  margin-left: -5.95rem;
+  width: 100%;
+  margin-left: 0;
 }
 
 .transfer-sidebar > .transfer-brand {
-  display: none;
+  display: flex;
 }
 
 .transfer-dashboard__header-brand {
-  display: flex;
-  width: var(--transfer-sidebar-width, 16.5rem);
-  height: 4.2rem;
-  flex: 0 0 var(--transfer-sidebar-width, 16.5rem);
-  align-items: center;
-  gap: 0.7rem;
-  border-right: 1px solid rgb(255 255 255 / 8%);
-  background:
-    radial-gradient(ellipse at 10% 0%, rgb(91 128 111 / 20%), transparent 58%),
-    linear-gradient(180deg, #1d2b27 0%, #17221f 100%);
-  padding-inline: 1.25rem;
-  color: #f5f3ed;
-  text-decoration: none;
+  display: none;
 }
 
 .transfer-dashboard__header-brand > span:last-child {
@@ -8259,7 +8354,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
 
 .transfer-dashboard__topbar-start {
   flex: 1 1 auto;
-  padding-left: clamp(1rem, 2.4vw, 2rem);
+  padding-left: 0.35rem;
 }
 
 .transfer-dashboard__breadcrumb,
@@ -8267,17 +8362,17 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
   display: flex;
   align-items: center;
   gap: 0.55rem;
-  color: var(--dash-muted);
+  color: rgb(245 249 255 / 70%);
   font-size: 0.67rem;
 }
 
 .transfer-dashboard__breadcrumb strong {
-  color: var(--dash-ink);
+  color: #fff;
 }
 
 .transfer-dashboard__website-link {
   gap: 0.45rem;
-  color: var(--dash-ink);
+  color: #1e2222;
   font-weight: 700;
   text-decoration: none;
 }
@@ -8292,14 +8387,14 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
   flex: 0 0 auto;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.45rem clamp(1rem, 2.4vw, 2rem) 0.45rem 0.8rem;
+  padding: 0.45rem 0.1rem 0.45rem 0.8rem;
 }
 
 .transfer-dashboard__website-link {
   min-height: 2.3rem;
-  border: 1px solid #e8ebe7;
+  border: 1px solid rgb(255 255 255 / 28%);
   border-radius: 0.65rem;
-  background: #fff;
+  background: rgb(255 255 255 / 95%);
   padding: 0.45rem 0.7rem;
   font-size: 0.62rem;
   transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
@@ -8307,15 +8402,15 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
 
 .transfer-dashboard__website-link:hover {
   transform: translateY(-1px);
-  border-color: #d3ddd6;
-  background: #f8faf8;
+  border-color: #fff;
+  background: #fff;
 }
 
 .transfer-dashboard__account {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  border-left: 1px solid #e8ebe7;
+  border-left: 1px solid rgb(255 255 255 / 22%);
   padding-left: 0.8rem;
 }
 
@@ -8324,10 +8419,10 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
   width: 2rem;
   height: 2rem;
   place-items: center;
-  border: 1px solid #efd0c8;
+  border: 1px solid rgb(255 255 255 / 60%);
   border-radius: 50%;
-  background: #fff4f0;
-  color: #a74d3d;
+  background: #fff;
+  color: #1e2222;
   font-size: 0.58rem;
   font-weight: 850;
 }
@@ -8338,13 +8433,13 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
 }
 
 .transfer-dashboard__account-name strong {
-  color: var(--dash-ink);
+  color: #fff;
   font-size: 0.62rem;
   font-weight: 750;
 }
 
 .transfer-dashboard__account-name small {
-  color: #89928e;
+  color: rgb(245 249 255 / 64%);
   font-size: 0.52rem;
   text-transform: capitalize;
 }
@@ -8355,11 +8450,11 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  border: 1px solid #f0d7d0;
+  border: 1px solid rgb(255 255 255 / 30%);
   border-radius: 0.65rem;
-  background: #fff8f5;
+  background: rgb(255 255 255 / 10%);
   padding: 0.45rem 0.7rem;
-  color: #9e4a3a;
+  color: #fff;
   cursor: pointer;
   font: inherit;
   font-size: 0.61rem;
@@ -8369,16 +8464,13 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
 
 .transfer-dashboard__logout:hover {
   transform: translateY(-1px);
-  border-color: #e6b6aa;
-  background: #fff0eb;
-  color: #82392c;
+  border-color: rgb(255 255 255 / 62%);
+  background: rgb(255 255 255 / 18%);
+  color: #fff;
 }
 
 .transfer-dashboard--sidebar-collapsed .transfer-dashboard__header-brand {
-  width: 5.2rem;
-  flex-basis: 5.2rem;
-  justify-content: center;
-  padding-inline: 0.5rem;
+  display: none;
 }
 
 .transfer-dashboard--sidebar-collapsed .transfer-dashboard__header-brand > span:last-child {
@@ -9489,6 +9581,768 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
   font-size: 1.2rem;
 }
 
+.activity-management {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.activity-management__heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.25rem;
+  border-bottom: 1px solid #e3e7e2;
+  padding-bottom: 1rem;
+}
+
+.activity-management__heading h2 {
+  margin-top: 0.25rem;
+  color: #24302c;
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+  font-weight: 750;
+}
+
+.activity-management__heading > div > p:last-child {
+  margin-top: 0.25rem;
+  color: #718078;
+  font-size: 0.68rem;
+}
+
+.activity-management__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 1rem;
+}
+
+.activity-management-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #e0e6e0;
+  border-radius: 0.4rem;
+  background: linear-gradient(160deg, #fff, #fafbf8);
+  box-shadow: 0 7px 22px rgb(30 40 38 / 4%);
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.activity-management-card:hover {
+  transform: translateY(-2px);
+  border-color: #d3b9ae;
+  box-shadow: 0 14px 28px rgb(30 40 38 / 8%);
+}
+
+.activity-management-card.is-inactive {
+  opacity: 0.68;
+}
+
+.activity-management-card__image {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #e8ede8;
+}
+
+.activity-management-card__image::after {
+  position: absolute;
+  inset: 45% 0 0;
+  background: linear-gradient(transparent, rgb(18 27 24 / 25%));
+  content: "";
+  pointer-events: none;
+}
+
+.activity-management-card__image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 400ms ease;
+}
+
+.activity-management-card:hover .activity-management-card__image img {
+  transform: scale(1.035);
+}
+
+.activity-management-card__image .transfer-live-badge {
+  position: absolute;
+  z-index: 1;
+  top: 0.7rem;
+  right: 0.7rem;
+}
+
+.activity-management-card__image > b {
+  position: absolute;
+  z-index: 1;
+  bottom: 0.7rem;
+  left: 0.7rem;
+  border: 1px solid rgb(255 255 255 / 45%);
+  border-radius: 0.2rem;
+  background: rgb(30 40 38 / 76%);
+  padding: 0.32rem 0.48rem;
+  color: #fff;
+  font-size: 0.53rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.activity-management-card__body {
+  display: flex;
+  min-height: 15rem;
+  flex-direction: column;
+  padding: 0.9rem;
+}
+
+.activity-management-card__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: #78857d;
+  font-size: 0.55rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.activity-management-card__meta > span:last-child {
+  text-align: right;
+}
+
+.activity-management-card__body h3 {
+  margin-top: 0.35rem;
+  color: #24302c;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 750;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.activity-management-card__body > p {
+  display: -webkit-box;
+  min-height: 2.8rem;
+  overflow: hidden;
+  margin-top: 0.35rem;
+  color: #68766e;
+  font-size: 0.64rem;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.activity-management-card__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+}
+
+.activity-management-card__facts span {
+  border: 1px solid #e5eae4;
+  border-radius: 0.2rem;
+  background: #f5f8f4;
+  padding: 0.3rem 0.4rem;
+  color: #617068;
+  font-size: 0.54rem;
+  font-weight: 700;
+}
+
+.activity-management-card__rates {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.7rem;
+}
+
+.activity-management-card__rates > span {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  border-bottom: 1px solid #edf0ec;
+  padding-bottom: 0.35rem;
+}
+
+.activity-management-card__rates strong {
+  color: #26734d;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.activity-management-card__rates small {
+  color: #849087;
+  font-size: 0.55rem;
+  text-align: right;
+}
+
+.activity-management-card__body footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: auto;
+  border-top: 1px solid #e8ede7;
+  padding-top: 0.75rem;
+}
+
+.activity-management-card__body footer button {
+  min-height: 2.15rem;
+  border: 1px solid #dfe6df;
+  border-radius: 0.22rem;
+  background: #fff;
+  padding: 0.42rem 0.62rem;
+  color: #405048;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.6rem;
+  font-weight: 800;
+}
+
+.activity-management-card__body footer button:hover {
+  border-color: #e6c1b4;
+  background: #fff6f1;
+  color: #a34f3b;
+}
+
+.activity-management-card__body footer button.is-danger {
+  margin-left: auto;
+  border-color: transparent;
+  background: transparent;
+  color: #98746c;
+}
+
+.activity-management-backdrop {
+  position: fixed;
+  z-index: 1100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  padding: 1rem;
+  background: rgb(18 27 25 / 68%);
+  backdrop-filter: blur(5px);
+}
+
+.activity-management-editor {
+  display: flex;
+  width: min(74rem, 100%);
+  max-height: 96svh;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #dfe5df;
+  border-radius: 0.45rem;
+  background: #f8faf7;
+  box-shadow: 0 2rem 5rem rgb(0 0 0 / 24%);
+}
+
+.activity-management-editor__header {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid #e3e8e2;
+  background: #fff;
+  padding: 1rem 1.25rem;
+}
+
+.activity-management-editor__header h2 {
+  margin-top: 0.2rem;
+  color: #23302a;
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+  font-weight: 800;
+}
+
+.activity-management-editor__header > button {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #dfe5df;
+  border-radius: 0.25rem;
+  background: #fff;
+  color: #324139;
+  cursor: pointer;
+  font-size: 1.25rem;
+}
+
+.activity-management-form {
+  display: grid;
+  min-height: 0;
+  gap: 0.85rem;
+  overflow-y: auto;
+  padding: 1rem 1.25rem;
+}
+
+.activity-management-form fieldset {
+  display: grid;
+  min-width: 0;
+  gap: 0.8rem;
+  margin: 0;
+  border: 0;
+  border-bottom: 1px solid #dfe6df;
+  padding: 0 0 1rem;
+}
+
+.activity-management-form legend {
+  width: 100%;
+  margin-bottom: 0.15rem;
+  color: #26332d;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.activity-management-form legend small,
+.activity-management-form label > small {
+  margin-left: 0.35rem;
+  color: #818d85;
+  font-family: var(--font-sans);
+  font-size: 0.58rem;
+  font-weight: 500;
+}
+
+.activity-management-form label {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 0.3rem;
+  color: #536159;
+  font-size: 0.62rem;
+  font-weight: 750;
+}
+
+.activity-management-form input:not([type="checkbox"]),
+.activity-management-form select,
+.activity-management-form textarea {
+  width: 100%;
+  min-height: 2.55rem;
+  border: 1px solid #dce4dc;
+  border-radius: 0.25rem;
+  background: #fff;
+  padding: 0.55rem 0.65rem;
+  color: #27342d;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 500;
+}
+
+.activity-management-form textarea {
+  min-height: 4.5rem;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.activity-management-form input:focus,
+.activity-management-form select:focus,
+.activity-management-form textarea:focus {
+  border-color: var(--dash-accent);
+  outline: 2px solid rgb(237 106 79 / 17%);
+}
+
+.activity-management-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.activity-management-form__grid--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.activity-management-form__checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.2rem;
+}
+
+.activity-management-form__checks label,
+.activity-management-form__inline-check {
+  display: flex !important;
+  align-items: center;
+  gap: 0.45rem !important;
+  color: #46564c !important;
+  font-size: 0.64rem !important;
+}
+
+.activity-management-form__checks input[type="checkbox"],
+.activity-management-form__inline-check input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #26734d;
+}
+
+.activity-management-form__hint,
+.activity-management-form__section-title small {
+  color: #758279;
+  font-size: 0.62rem;
+  line-height: 1.5;
+}
+
+.activity-management-upload {
+  display: inline-flex !important;
+  width: fit-content;
+  min-height: 2.2rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #cbd9cc;
+  border-radius: 0.22rem;
+  background: #f3f8f3;
+  padding: 0.45rem 0.7rem;
+  color: #38664a !important;
+  cursor: pointer;
+  font-size: 0.62rem !important;
+  font-weight: 800 !important;
+}
+
+.activity-management-upload:hover {
+  border-color: #80a58a;
+  background: #eaf3eb;
+}
+
+.activity-management-upload input {
+  position: absolute;
+  width: 1px !important;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.activity-management-upload:focus-within {
+  outline: 2px solid var(--color-signal);
+  outline-offset: 3px;
+}
+
+.activity-management-form__rows {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.activity-management-form__section-title {
+  display: grid;
+  gap: 0.15rem;
+  margin-top: 0.35rem;
+  color: #38463e;
+  font-size: 0.72rem;
+}
+
+.activity-management-image-row {
+  display: grid;
+  grid-template-columns: 4.2rem minmax(0, 1.15fr) minmax(0, 1fr) 2rem;
+  align-items: end;
+  gap: 0.55rem;
+  border: 1px solid #e1e8e1;
+  border-radius: 0.28rem;
+  background: #fff;
+  padding: 0.55rem;
+}
+
+.activity-management-image-row__preview {
+  display: grid;
+  width: 4.2rem;
+  aspect-ratio: 1.2;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 0.2rem;
+  background: #edf2ed;
+  color: #87958a;
+}
+
+.activity-management-image-row__preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.activity-management-image-row > button,
+.activity-management-itinerary-row > button {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border: 1px solid #e6dfdc;
+  border-radius: 0.22rem;
+  background: #fff;
+  color: #9a6358;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.activity-management-rate-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+  gap: 0.6rem;
+  border: 1px solid #e1e8e1;
+  border-radius: 0.28rem;
+  background: #fff;
+  padding: 0.7rem;
+}
+
+.activity-management-rate-row > button {
+  justify-self: start;
+  border: 0;
+  background: transparent;
+  padding: 0.3rem 0;
+  color: #9a6358;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.6rem;
+  font-weight: 750;
+}
+
+.activity-management-itinerary-row {
+  display: grid;
+  grid-template-columns: minmax(12rem, 0.7fr) minmax(0, 1.3fr) 2rem;
+  align-items: end;
+  gap: 0.6rem;
+  border: 1px solid #e1e8e1;
+  border-radius: 0.28rem;
+  background: #fff;
+  padding: 0.65rem;
+}
+
+.activity-management-schedules {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.activity-management-general-times {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.activity-management-general-time {
+  display: grid;
+  grid-template-columns: minmax(12rem, 0.6fr) minmax(0, 1fr);
+  align-items: end;
+  gap: 0.65rem;
+  border: 1px solid #e1e8e1;
+  border-radius: 0.28rem;
+  background: #fff;
+  padding: 0.65rem;
+}
+
+.activity-management-general-time > button {
+  justify-self: start;
+  min-height: 2rem;
+  border: 1px solid #eadbd7;
+  border-radius: 0.22rem;
+  background: #fff9f7;
+  padding: 0.4rem 0.6rem;
+  color: #986156;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.59rem;
+  font-weight: 750;
+}
+
+.activity-management-general-time > button:hover {
+  border-color: #d7aaa0;
+  background: #fff2ee;
+}
+
+.activity-management-schedule-row {
+  display: grid;
+  grid-template-columns: minmax(11rem, 0.7fr) minmax(0, 1.3fr) auto;
+  align-items: start;
+  gap: 0.75rem;
+  border: 1px solid #e1e8e1;
+  border-radius: 0.28rem;
+  background: #fff;
+  padding: 0.7rem;
+}
+
+.activity-management-schedule-times {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.activity-management-schedule-times > span {
+  color: #536159;
+  font-size: 0.62rem;
+  font-weight: 750;
+}
+
+.activity-management-schedule-times > div {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.activity-management-schedule-times > div input {
+  max-width: 13rem;
+}
+
+.activity-management-schedule-times > div button {
+  width: 2rem;
+  border: 1px solid #e6dfdc;
+  border-radius: 0.22rem;
+  background: #fff;
+  color: #9a6358;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.activity-management-schedule-times > div button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.activity-management-schedule-remove {
+  align-self: end;
+  min-height: 2.2rem;
+  border: 1px solid #eadbd7;
+  border-radius: 0.22rem;
+  background: #fff9f7;
+  padding: 0.45rem 0.6rem;
+  color: #986156;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.59rem;
+  font-weight: 750;
+}
+
+.activity-management-add-row {
+  justify-self: start;
+  min-height: 2rem;
+  border: 1px dashed #bfcfc1;
+  border-radius: 0.22rem;
+  background: #f6faf6;
+  padding: 0.4rem 0.65rem;
+  color: #3b6b4d;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.activity-management-add-row:hover {
+  border-color: #70a27d;
+  background: #edf6ef;
+}
+
+.activity-management-form__actions {
+  position: sticky;
+  z-index: 1;
+  bottom: -1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  margin: 0 -1.25rem -1rem;
+  border-top: 1px solid #e0e6df;
+  background: rgb(248 250 247 / 96%);
+  padding: 0.8rem 1.25rem 1rem;
+  backdrop-filter: blur(10px);
+}
+
+.activity-management-form__actions button {
+  min-height: 2.55rem;
+  border: 1px solid #dce4dc;
+  border-radius: 0.24rem;
+  background: #fff;
+  padding: 0.55rem 0.85rem;
+  color: #46564c;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.activity-management-form__actions button:first-child {
+  border-color: #26734d;
+  background: #26734d;
+  color: #fff;
+}
+
+.activity-management-form__actions button:first-child:hover {
+  background: #1d5e3d;
+}
+
+.activity-management-form__actions button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+@media (max-width: 1050px) {
+  .activity-management__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .activity-management__heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .activity-management__grid,
+  .activity-management-form__grid,
+  .activity-management-form__grid--two,
+  .activity-management-rate-row,
+  .activity-management-schedule-row,
+  .activity-management-general-time {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .activity-management-backdrop {
+    display: block;
+    overflow-y: auto;
+    padding: 0;
+  }
+
+  .activity-management-editor {
+    width: 100%;
+    min-height: 100svh;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .activity-management-editor__header {
+    padding: 0.85rem 1rem;
+  }
+
+  .activity-management-form {
+    overflow: visible;
+    padding: 0.9rem 1rem 1.2rem;
+  }
+
+  .activity-management-image-row,
+  .activity-management-itinerary-row {
+    grid-template-columns: minmax(0, 1fr) 2rem;
+  }
+
+  .activity-management-schedule-remove {
+    justify-self: start;
+  }
+
+  .activity-management-image-row__preview {
+    grid-row: span 2;
+  }
+
+  .activity-management-image-row label,
+  .activity-management-itinerary-row label {
+    grid-column: 1 / -1;
+  }
+
+  .activity-management-form__actions {
+    bottom: -1.2rem;
+    margin: 0 -1rem -1.2rem;
+    padding: 0.75rem 1rem max(0.9rem, env(safe-area-inset-bottom));
+  }
+
+  .activity-management-form input:not([type="checkbox"]),
+  .activity-management-form select,
+  .activity-management-form textarea {
+    font-size: 16px;
+  }
+}
+
 .transfer-image-upload {
   display: grid;
   gap: 0.55rem;
@@ -10549,6 +11403,642 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
   outline-offset: 3px;
 }
 
+.activity-reservations__stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin-top: 1.5rem;
+}
+
+.activity-reservations__stats article {
+  display: grid;
+  min-height: 7rem;
+  align-content: space-between;
+  gap: 0.4rem;
+  border: 1px solid var(--dash-line);
+  border-radius: 0.45rem;
+  background: #fff;
+  padding: 0.85rem 1rem;
+}
+
+.activity-reservations__stats article.is-attention {
+  border-color: rgb(242 91 63 / 32%);
+  background: linear-gradient(145deg, #fff, rgb(242 91 63 / 6%));
+}
+
+.activity-reservations__stats article > span,
+.activity-reservations__stats article > small {
+  color: var(--dash-muted);
+  font-size: 0.62rem;
+}
+
+.activity-reservations__stats article > strong {
+  color: var(--dash-ink);
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  line-height: 0.95;
+}
+
+.activity-reservations__stats .is-attention > strong {
+  color: var(--dash-accent);
+}
+
+.activity-reservations__panel {
+  margin-top: 1.25rem;
+  overflow: hidden;
+  border: 1px solid var(--dash-line);
+  border-radius: 0.55rem;
+  background: #fff;
+  box-shadow: 0 0.55rem 1.8rem rgb(30 34 34 / 4%);
+}
+
+.activity-reservations__toolbar {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  border-bottom: 1px solid var(--dash-line);
+  padding: 1rem 1.1rem;
+}
+
+.activity-reservations__toolbar h2 {
+  margin-top: 0.25rem;
+  color: var(--dash-ink);
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 750;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.activity-reservations__filters {
+  display: flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 0.25rem;
+  overflow-x: auto;
+  border: 1px solid #e8ebe7;
+  border-radius: 0.5rem;
+  background: #f5f7f4;
+  padding: 0.2rem;
+  scrollbar-width: thin;
+}
+
+.activity-reservations__filters button {
+  display: inline-flex;
+  min-height: 2rem;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid transparent;
+  border-radius: 0.35rem;
+  background: transparent;
+  padding: 0.35rem 0.55rem;
+  color: #68736d;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.6rem;
+  font-weight: 750;
+}
+
+.activity-reservations__filters button.is-active {
+  border-color: #e4e8e3;
+  background: #fff;
+  color: var(--dash-ink);
+  box-shadow: 0 1px 3px rgb(30 34 34 / 7%);
+}
+
+.activity-reservations__filters button > span {
+  display: grid;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  place-items: center;
+  border-radius: 999px;
+  background: #ecefeb;
+  color: #616d66;
+  font-size: 0.55rem;
+}
+
+.activity-reservations__filters button.is-active > span {
+  background: var(--dash-accent);
+  color: #fff;
+}
+
+.activity-reservations__list {
+  display: grid;
+}
+
+.activity-reservation-row {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 3rem minmax(8rem, 0.8fr) minmax(10rem, 1.3fr) auto auto 1rem;
+  align-items: center;
+  gap: 0.8rem;
+  border: 0;
+  border-bottom: 1px solid #eef0ed;
+  background: #fff;
+  padding: 0.8rem 1rem;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition: background 150ms ease;
+}
+
+.activity-reservation-row:last-child {
+  border-bottom: 0;
+}
+
+.activity-reservation-row:hover,
+.activity-reservation-row.is-new {
+  background: #fffaf8;
+}
+
+.activity-reservation-row__date {
+  display: grid;
+  min-height: 2.4rem;
+  place-items: center;
+  border: 1px solid #e8ebe7;
+  border-radius: 0.4rem;
+  background: #f5f7f4;
+  color: #56625c;
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.activity-reservation-row__guest,
+.activity-reservation-row__activity {
+  display: grid;
+  min-width: 0;
+  gap: 0.2rem;
+}
+
+.activity-reservation-row__guest strong,
+.activity-reservation-row__activity strong {
+  overflow: hidden;
+  color: var(--dash-ink);
+  font-size: 0.67rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activity-reservation-row__guest small,
+.activity-reservation-row__activity small {
+  overflow: hidden;
+  color: #84908a;
+  font-size: 0.57rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activity-reservation-pill {
+  display: inline-flex;
+  min-height: 1.65rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.3rem 0.55rem;
+  font-size: 0.55rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.activity-reservation-pill--new {
+  background: rgb(242 91 63 / 12%);
+  color: #bd4d37;
+}
+
+.activity-reservation-pill--confirmed {
+  background: #e8f4ec;
+  color: #34764f;
+}
+
+.activity-reservation-pill--completed {
+  background: #eaf1f7;
+  color: #486982;
+}
+
+.activity-reservation-pill--cancelled {
+  background: #eef0ee;
+  color: #737d77;
+}
+
+.activity-reservation-row__total {
+  color: var(--dash-ink);
+  font-size: 0.67rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.activity-reservation-row__arrow {
+  color: #a0aaa4;
+  transition: transform 150ms ease, color 150ms ease;
+}
+
+.activity-reservation-row:hover .activity-reservation-row__arrow {
+  transform: translate(2px, -2px);
+  color: var(--dash-accent);
+}
+
+.activity-reservations__empty {
+  display: grid;
+  min-height: 15rem;
+  align-content: center;
+  justify-items: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.activity-reservations__empty > span {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border: 1px solid rgb(242 91 63 / 22%);
+  border-radius: 0.75rem;
+  background: rgb(242 91 63 / 8%);
+  color: var(--dash-accent);
+  font-size: 1.2rem;
+}
+
+.activity-reservations__empty h3 {
+  margin-top: 0.9rem;
+  color: var(--dash-ink);
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  text-transform: uppercase;
+}
+
+.activity-reservations__empty p {
+  margin-top: 0.3rem;
+  color: var(--dash-muted);
+  font-size: 0.65rem;
+}
+
+.activity-reservation-detail-backdrop {
+  position: fixed;
+  z-index: 200;
+  inset: 0;
+  display: flex;
+  justify-content: flex-end;
+  background: rgb(18 24 22 / 48%);
+  backdrop-filter: blur(3px);
+  animation: transfer-drawer-backdrop-in 180ms ease-out both;
+}
+
+.activity-reservation-detail {
+  display: flex;
+  width: min(39rem, 100%);
+  height: 100%;
+  flex-direction: column;
+  gap: 1.2rem;
+  overflow-y: auto;
+  background: #f5f7f4;
+  padding: 1.35rem;
+  box-shadow: -1rem 0 3rem rgb(0 0 0 / 18%);
+  animation: transfer-drawer-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.activity-reservation-detail__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: 0.55rem;
+  background: #1e2222;
+  padding: 1.1rem;
+  color: #fff;
+}
+
+.activity-reservation-detail__header .transfer-eyebrow {
+  color: #ff9a84;
+}
+
+.activity-reservation-detail__header h2 {
+  margin-top: 0.35rem;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 750;
+  line-height: 1;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.activity-reservation-detail__header > button {
+  display: grid;
+  width: 2.2rem;
+  height: 2.2rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 24%);
+  border-radius: 0.4rem;
+  background: rgb(255 255 255 / 8%);
+  color: #fff;
+  cursor: pointer;
+  font-size: 1.25rem;
+}
+
+.activity-reservation-detail__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+}
+
+.activity-reservation-detail__meta > span:last-child {
+  color: rgb(255 255 255 / 68%);
+  font-size: 0.58rem;
+}
+
+.activity-reservation-detail__section {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.activity-reservation-detail__section-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.activity-reservation-detail__section-heading > span {
+  display: grid;
+  width: 1.65rem;
+  height: 1.65rem;
+  place-items: center;
+  border: 1px solid rgb(242 91 63 / 25%);
+  border-radius: 0.4rem;
+  background: rgb(242 91 63 / 9%);
+  color: var(--dash-accent);
+  font-size: 0.75rem;
+}
+
+.activity-reservation-detail__section-heading h3 {
+  color: var(--dash-ink);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.activity-reservation-detail__line {
+  border: 1px solid #e2e7e2;
+  border-radius: 0.45rem;
+  background: #fff;
+  padding: 0.85rem;
+}
+
+.activity-reservation-detail__line-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-bottom: 1px solid #edf0ed;
+  padding-bottom: 0.65rem;
+}
+
+.activity-reservation-detail__line-heading h4 {
+  color: var(--dash-ink);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.activity-reservation-detail__line-heading small {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--dash-muted);
+  font-size: 0.57rem;
+}
+
+.activity-reservation-detail__line-heading > strong {
+  color: var(--dash-ink);
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+
+.activity-reservation-detail__line dl,
+.activity-reservation-detail__contact {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin: 0;
+  padding-top: 0.65rem;
+}
+
+.activity-reservation-detail__line dl > div,
+.activity-reservation-detail__contact > div {
+  display: grid;
+  min-width: 0;
+  gap: 0.18rem;
+}
+
+.activity-reservation-detail__line dt,
+.activity-reservation-detail__contact dt {
+  color: #84908a;
+  font-size: 0.54rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.activity-reservation-detail__line dd,
+.activity-reservation-detail__contact dd {
+  min-width: 0;
+  margin: 0;
+  color: #3d4842;
+  font-size: 0.63rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.activity-reservation-detail__contact {
+  grid-template-columns: minmax(0, 1fr);
+  border: 1px solid #e2e7e2;
+  border-radius: 0.45rem;
+  background: #fff;
+  padding: 0.85rem;
+}
+
+.activity-reservation-detail__contact a {
+  color: #315d4a;
+  text-decoration: none;
+}
+
+.activity-reservation-detail__contact a:hover {
+  color: var(--dash-accent);
+  text-decoration: underline;
+}
+
+.activity-reservation-detail__total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  border-top: 1px solid #dfe5df;
+  padding-top: 0.7rem;
+  color: #69756e;
+  font-size: 0.62rem;
+}
+
+.activity-reservation-detail__total strong {
+  color: var(--dash-ink);
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+}
+
+.activity-reservation-detail__footer {
+  position: sticky;
+  bottom: -1.35rem;
+  display: grid;
+  gap: 0.55rem;
+  margin: auto -1.35rem -1.35rem;
+  border-top: 1px solid #e0e5e0;
+  background: rgb(255 255 255 / 96%);
+  padding: 0.85rem 1.35rem max(1rem, env(safe-area-inset-bottom));
+  backdrop-filter: blur(12px);
+}
+
+.activity-reservation-detail__footer label {
+  color: #68746d;
+  font-size: 0.58rem;
+  font-weight: 750;
+}
+
+.activity-reservation-detail__footer select {
+  min-height: 2.6rem;
+  border: 1px solid #dfe4df;
+  border-radius: 0.4rem;
+  background: #fff;
+  padding: 0.55rem 0.65rem;
+  color: var(--dash-ink);
+  font: inherit;
+  font-size: 0.68rem;
+}
+
+.activity-reservation-detail__footer p {
+  margin: 0;
+  border-radius: 0.35rem;
+  background: #fff1ed;
+  padding: 0.55rem 0.65rem;
+  color: #9c3d2c;
+  font-size: 0.59rem;
+  line-height: 1.45;
+}
+
+.activity-reservation-detail__footer > button {
+  min-height: 2.7rem;
+  border: 1px solid var(--dash-accent);
+  border-radius: 0.4rem;
+  background: var(--dash-accent);
+  padding: 0.55rem 0.8rem;
+  color: #1e2222;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.activity-reservation-detail__footer > button:disabled {
+  border-color: #dfe4df;
+  background: #edf0ed;
+  color: #8a938e;
+  cursor: not-allowed;
+}
+
+@media (max-width: 1050px) {
+  .activity-reservations__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .activity-reservation-row {
+    grid-template-columns: 2.8rem minmax(7rem, 0.85fr) minmax(8rem, 1.2fr) auto auto 0.8rem;
+    gap: 0.55rem;
+    padding-inline: 0.75rem;
+  }
+}
+
+@media (max-width: 780px) {
+  .activity-reservations__toolbar {
+    align-items: flex-start;
+  }
+
+  .activity-reservations__filters {
+    width: 100%;
+  }
+
+  .activity-reservation-row {
+    grid-template-columns: 2.7rem minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    gap: 0.35rem 0.65rem;
+  }
+
+  .activity-reservation-row__date {
+    grid-row: 1 / 3;
+  }
+
+  .activity-reservation-row__guest {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .activity-reservation-row__activity {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .activity-reservation-row .activity-reservation-pill {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .activity-reservation-row__total {
+    grid-column: 3;
+    grid-row: 2;
+    justify-self: end;
+  }
+
+  .activity-reservation-row__arrow {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .activity-reservations__stats {
+    gap: 0.5rem;
+  }
+
+  .activity-reservations__stats article {
+    min-height: 6rem;
+    padding: 0.7rem;
+  }
+
+  .activity-reservations__stats article > strong {
+    font-size: 1.8rem;
+  }
+
+  .activity-reservations__toolbar {
+    padding: 0.8rem;
+  }
+
+  .activity-reservation-detail {
+    padding: 0.8rem;
+  }
+
+  .activity-reservation-detail__footer {
+    bottom: -0.8rem;
+    margin-inline: -0.8rem;
+    margin-bottom: -0.8rem;
+    padding-inline: 0.8rem;
+  }
+
+  .activity-reservation-detail__line dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 1050px) {
   .transfer-dashboard {
     grid-template-columns: minmax(220px, var(--transfer-sidebar-width, 13.5rem)) 0.75rem minmax(0, 1fr);
@@ -10575,6 +12065,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
 @media (max-width: 780px) {
   .transfer-dashboard {
     grid-template-columns: minmax(0, 1fr);
+    padding: 0.65rem;
   }
 
   .transfer-sidebar-resize {
@@ -10585,12 +12076,15 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
     position: static;
     height: auto;
     max-height: 18rem;
-    padding: 0.8rem 1rem;
-    transition: max-height 260ms ease, padding 260ms ease;
+    margin-bottom: 0.55rem;
+    border-radius: 1rem;
+    padding: 0.85rem 0.75rem;
+    transition: max-height 260ms ease, margin 260ms ease, padding 260ms ease;
   }
 
   .transfer-dashboard--sidebar-collapsed .transfer-sidebar {
     max-height: 0;
+    margin-bottom: 0;
     padding-block: 0;
   }
 
@@ -10610,6 +12104,7 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
   .transfer-dashboard__topbar {
     width: 100%;
     margin-left: 0;
+    border-radius: 0.85rem;
     padding-inline: 0.85rem;
   }
 
@@ -10632,25 +12127,34 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
     display: none;
   }
 
-  .transfer-sidebar__nav {
-    display: flex;
-    gap: 0.35rem;
-    overflow-x: auto;
-    padding-bottom: 0.1rem;
-    scrollbar-width: none;
+  .transfer-sidebar__workspace-card {
+    display: none;
   }
 
-  .transfer-sidebar__nav::-webkit-scrollbar {
-    display: none;
+  .transfer-sidebar__nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem;
+    overflow: visible;
+    padding-bottom: 0.1rem;
   }
 
   .transfer-sidebar__nav button,
   .transfer-sidebar__nav a {
-    flex: 0 0 auto;
+    min-width: 0;
+    width: 100%;
     min-height: 2.4rem;
     gap: 0.4rem;
     padding-inline: 0.6rem;
     font-size: 0.61rem;
+  }
+
+  .transfer-sidebar__nav a > span:nth-child(2) {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .transfer-sidebar__nav button.is-active,

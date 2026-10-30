@@ -1,15 +1,18 @@
+import { translate, type Locale } from "../i18n";
+
 const steps = [
   { number: "01", title: "Arrive", detail: "We’ll meet you at the airport and get you on your way.", icon: "✈" },
   { number: "02", title: "Settle in", detail: "Check into your handpicked accommodation.", icon: "⌂" },
   { number: "03", title: "Explore", detail: "Enjoy curated experiences and make unforgettable memories.", icon: "⌁" },
 ];
 
-export default function JourneySteps() {
+export default function JourneySteps({ locale }: { locale: Locale }) {
+  const t = (phrase: string) => translate(locale, phrase);
   return (
     <section id="journey" className="travel-section journey-section pt-4">
       <div data-reveal>
-        <p className="eyebrow">How it works</p>
-        <h2 className="section-title mt-3">From arrival to adventure.</h2>
+        <p className="eyebrow">{t("How it works")}</p>
+        <h2 className="section-title mt-3">{t("From arrival to adventure.")}</h2>
       </div>
       <ol className="journey-steps mt-10" data-stagger>
         {steps.map((step) => (
@@ -25,9 +28,9 @@ export default function JourneySteps() {
               </span>
             )}
             <div className="journey-step__card">
-              <span className="journey-step__number">STEP {step.number}</span>
-              <h3>{step.title}</h3>
-              <p>{step.detail}</p>
+              <span className="journey-step__number">{t("STEP")} {step.number}</span>
+              <h3>{t(step.title)}</h3>
+              <p>{t(step.detail)}</p>
               <span className="journey-step__accent" aria-hidden="true">{step.number}</span>
             </div>
           </li>

@@ -21,12 +21,20 @@ import type {
   TransferRequestData,
   TransferRouteData,
 } from "../transfers/types";
+import type { ManagedActivity } from "../activities";
+import ActivityManagement from "./ActivityManagement";
+import ActivityReservationManagement from "./ActivityReservationManagement";
+import type { ManagedActivityReservation } from "../server/activity-reservations";
 import type { DashboardPage } from "./TransferDashboardWrapper";
 
 type Props = {
   user: TransferDashboardUser;
   data: TransferDashboardData;
   page: DashboardPage;
+  managedActivities: ManagedActivity[];
+  managedActivityCount: number;
+  activityReservations: ManagedActivityReservation[];
+  activityReservationCount: number;
 };
 
 type DashboardTab = "routes" | "private" | "locations";
@@ -259,7 +267,15 @@ function PrivateServiceStartTimes({ initialTimes }: { initialTimes: string[] }) 
   );
 }
 
-export default function TransferDashboard({ user, data, page }: Props) {
+export default function TransferDashboard({
+  user,
+  data,
+  page,
+  managedActivities,
+  managedActivityCount,
+  activityReservations,
+  activityReservationCount,
+}: Props) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<DashboardTab>("routes");
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -356,7 +372,11 @@ export default function TransferDashboard({ user, data, page }: Props) {
     ? "Overview"
     : page === "requests"
       ? "Transfer requests"
-      : "Transfer management";
+      : page === "activities"
+        ? "Manage activities"
+        : page === "activity-reservations"
+          ? "Activity reservations"
+          : "Transfer management";
 
   useEffect(() => {
     try {
@@ -596,6 +616,18 @@ export default function TransferDashboard({ user, data, page }: Props) {
               <b className="transfer-sidebar__count">{data.routes.length + data.services.length + data.locations.length}</b>
             </Link>
           )}
+          {isAdmin && (
+            <Link href="/dashboard/activities" className={page === "activities" ? "is-active" : ""} title="Manage activities">
+              <span aria-hidden="true">✦</span><span>Manage activities</span>
+              <b className="transfer-sidebar__count">{managedActivityCount}</b>
+            </Link>
+          )}
+          {isAdmin && (
+            <Link href="/dashboard/activity-reservations" className={page === "activity-reservations" ? "is-active" : ""} title="Activity reservations">
+              <span aria-hidden="true">▤</span><span>Activity reservations</span>
+              <b className="transfer-sidebar__count">{activityReservationCount}</b>
+            </Link>
+          )}
         </nav>
         <div className="transfer-sidebar__workspace-card">
           <span className="transfer-sidebar__workspace-icon" aria-hidden="true">✦</span>
@@ -661,7 +693,7 @@ export default function TransferDashboard({ user, data, page }: Props) {
             <div>
               <p className="transfer-eyebrow">Travel operations · Morocco</p>
               <h1>{heading}</h1>
-              <p>{page === "overview" ? "A clear view of your bookings, routes and guest experiences." : page === "requests" ? "Review guest details and keep every booking moving." : "Manage all transfer options from one place."}</p>
+              <p>{page === "overview" ? "A clear view of your bookings, routes and guest experiences." : page === "requests" ? "Review guest details and keep every booking moving." : page === "activities" ? "Create and publish experiences with complete content and flexible pricing." : page === "activity-reservations" ? "Review guest requests, confirm availability and manage every experience booking." : "Manage all transfer options from one place."}</p>
             </div>
             {isAdmin && page === "transfers" && (
               <button type="button" className="transfer-add-button" onClick={startAdd}>
@@ -764,6 +796,12 @@ export default function TransferDashboard({ user, data, page }: Props) {
           )}
 
           {notice && <p className={`transfer-notice transfer-notice--${notice.type}`} role="status">{notice.text}</p>}
+
+          {page === "activities" && isAdmin && <ActivityManagement items={managedActivities} />}
+
+          {page === "activity-reservations" && isAdmin && (
+            <ActivityReservationManagement items={activityReservations} />
+          )}
 
           {page === "requests" && (
             <>

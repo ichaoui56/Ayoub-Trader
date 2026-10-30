@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import Nav from "../../../src/components/Nav";
 import BlogShareActions from "../../../src/components/BlogShareActions";
-import { blogPosts, formatBlogDate, getBlogBySlug, getBlogImageUrl } from "../../../src/blogs";
+import { blogPosts, formatBlogDate, getBlogImageUrl } from "../../../src/blogs";
+import { getLocale } from "../../../src/server/locale";
+import { localizeTree, translate } from "../../../src/i18n";
 
 type BlogDetailPageProps = {
   params: Promise<{ slug: string }>;
@@ -15,14 +18,16 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: BlogDetailPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = getBlogBySlug(slug);
+  if (process.env.DATABASE_URL) await connection();
+  const [locale] = await Promise.all([getLocale()]);
+  const post = localizeTree(blogPosts.find((item) => item.slug === slug), locale);
 
   if (!post) {
-    return { title: "Story not found" };
+    return { title: translate(locale, "Story not found") };
   }
 
   return {
-    title: `${post.title} | The Morocco Travel Journal`,
+    title: `${post.title} | ${translate(locale, "The Morocco Travel Journal")}`,
     description: post.excerpt,
     openGraph: {
       title: `${post.title} | The Morocco Travel Journal`,
@@ -34,13 +39,16 @@ export async function generateMetadata({ params }: BlogDetailPageProps): Promise
 
 export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
   const { slug } = await params;
-  const post = getBlogBySlug(slug);
+  if (process.env.DATABASE_URL) await connection();
+  const locale = await getLocale();
+  const t = (phrase: string) => translate(locale, phrase);
+  const post = localizeTree(blogPosts.find((item) => item.slug === slug), locale);
 
   if (!post) {
     notFound();
   }
 
-  const relatedPosts = blogPosts
+  const relatedPosts = localizeTree(blogPosts, locale)
     .filter((item) => item.slug !== post.slug)
     .slice(0, 2);
 
@@ -49,8 +57,8 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
       <Nav />
       <main className="blog-detail-page min-h-screen px-5 pb-20 pt-28 text-ink md:px-[4vw] md:pt-36">
         <div className="mx-auto max-w-[1500px]">
-          <nav aria-label="Breadcrumb" className="blog-breadcrumb">
-            <Link href="/blog">The journal</Link>
+          <nav aria-label={t("Breadcrumb")} className="blog-breadcrumb">
+            <Link href="/blog">{t("The journal")}</Link>
             <span aria-hidden="true">/</span>
             <span aria-current="page">{post.title}</span>
           </nav>
@@ -64,9 +72,9 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
                 <span className="blog-detail__byline-mark" aria-hidden="true">M</span>
                 <span>Morocco Journeys</span>
                 <span aria-hidden="true">·</span>
-                <time dateTime={post.publishedAt}>{formatBlogDate(post.publishedAt)}</time>
+                <time dateTime={post.publishedAt}>{formatBlogDate(post.publishedAt, locale)}</time>
                 <span aria-hidden="true">·</span>
-                <span>{post.readingTime}</span>
+                <span>{t(post.readingTime)}</span>
               </div>
             </div>
             <figure className="blog-detail__image">
@@ -75,7 +83,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
             </figure>
           </header>
 
-          <BlogShareActions title={post.title} />
+          <BlogShareActions title={post.title} locale={locale} />
 
           <div className="blog-detail__layout">
             <article className="blog-article">
@@ -87,8 +95,8 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
                 </section>
               ))}
               <footer className="blog-article__footer">
-                <p>Enjoyed this story?</p>
-                <Link href="/blog">Find another reason to explore <span aria-hidden="true">↗</span></Link>
+                <p>{t("Enjoyed this story?")}</p>
+                <Link href="/blog">{t("Find another reason to explore")} <span aria-hidden="true">↗</span></Link>
               </footer>
             </article>
           </div>
@@ -96,10 +104,10 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
           <section className="blog-related" aria-labelledby="blog-related-title">
             <div className="blog-archive__heading">
               <div>
-                <p className="eyebrow">Keep exploring</p>
-                <h2 id="blog-related-title">A few more stories</h2>
+                <p className="eyebrow">{t("Keep exploring")}</p>
+                <h2 id="blog-related-title">{t("A few more stories")}</h2>
               </div>
-              <Link href="/blog" className="journal-text-link">All stories <span aria-hidden="true">↗</span></Link>
+              <Link href="/blog" className="journal-text-link">{t("All stories")} <span aria-hidden="true">↗</span></Link>
             </div>
             <div className="journal-grid journal-grid--related">
               {relatedPosts.map((relatedPost, index) => (
@@ -111,8 +119,8 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
                   </Link>
                   <div className="journal-card__body">
                     <div className="journal-card__meta">
-                      <span>{formatBlogDate(relatedPost.publishedAt)}</span>
-                      <span>{relatedPost.readingTime}</span>
+                      <span>{formatBlogDate(relatedPost.publishedAt, locale)}</span>
+                      <span>{t(relatedPost.readingTime)}</span>
                     </div>
                     <Link href={`/blog/${relatedPost.slug}`} className="journal-card__title">
                       <h3>{relatedPost.title}</h3>
@@ -120,7 +128,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
                     </Link>
                     <p>{relatedPost.excerpt}</p>
                     <Link href={`/blog/${relatedPost.slug}`} className="journal-card__read">
-                      Read the story <span aria-hidden="true">↗</span>
+                      {t("Read the story")} <span aria-hidden="true">↗</span>
                     </Link>
                   </div>
                 </article>

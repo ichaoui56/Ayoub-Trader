@@ -11,14 +11,18 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
-import { activities, getActivityImageUrl, type Activity, type ActivityBookingRate } from "../activities";
+import { getActivityImageUrl, type Activity, type ActivityBookingRate } from "../activities";
+import { translate } from "../i18n";
+import { submitActivityReservation } from "../server/activity-reservation-actions";
+import { useLocale } from "./LocaleProvider";
 
 type ReservationLine = {
   id: number;
-  slug: string;
+  activity: Activity;
   rateId: string;
   adults: number;
   children: number;
+  date: string;
   time: string;
   extras: string[];
 };
@@ -30,8 +34,24 @@ type ReservationContextValue = {
 
 const ReservationContext = createContext<ReservationContextValue | null>(null);
 
-const formatPrice = (price: number) =>
-  `${new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(price)} €`;
+const formatPrice = (price: number, locale: "en" | "fr") =>
+  `${new Intl.NumberFormat(locale === "fr" ? "fr-FR" : "en", { maximumFractionDigits: 0 }).format(price)} €`;
+
+function getTodayDate() {
+  const today = new Date();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${today.getFullYear()}-${month}-${day}`;
+}
+
+function formatReservationDate(date: string, locale: "en" | "fr") {
+  return new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${date}T00:00:00Z`));
+}
 
 function getRate(activity: Activity, rateId: string): ActivityBookingRate {
   const rate = activity.reservation?.rates.find((item) => item.id === rateId);
@@ -46,14 +66,15 @@ function getUnits(rate: ActivityBookingRate, people: number) {
 }
 
 function getRateUnitName(rate: ActivityBookingRate) {
-  if (rate.billing === "unit") return rate.unit.replace(/^per\s+/, "");
+  if (rate.billing === "unit") return rate.unit.replace(/^(?:per|par)\s+/, "");
   return rate.description?.match(/\bper\s+([a-z ]+)/i)?.[1]?.trim() ?? "unit";
 }
 
-function pluralizeUnit(unit: string, count: number) {
+function pluralizeUnit(unit: string, count: number, locale: "en" | "fr") {
   if (count === 1) return unit;
-  if (unit === "buggy") return "buggies";
-  if (unit === "jet ski") return "jet skis";
+  if (unit === "buggy") return locale === "fr" ? "buggys" : "buggies";
+  if (unit === "jet ski" || unit === "jet-ski") return locale === "fr" ? "jet-skis" : "jet skis";
+  if (unit === "bateau") return "bateaux";
   return `${unit}s`;
 }
 
@@ -78,7 +99,8 @@ function getLineTotal(activity: Activity, line: Omit<ReservationLine, "id">) {
   return total;
 }
 
-function getReservationDescription(activity: Activity, line: ReservationLine) {
+function getReservationDescription(activity: Activity, line: ReservationLine, locale: "en" | "fr") {
+  const t = (phrase: string) => translate(locale, phrase);
   const config = activity.reservation;
   if (!config) return activity.title;
 
@@ -88,14 +110,15 @@ function getReservationDescription(activity: Activity, line: ReservationLine) {
   const parts = [activity.title, rate.label];
 
   if (config.childRate) {
-    parts.push(`${line.adults} adults`, `${line.children} children`);
+    parts.push(`${line.adults} ${t("adults")}`, `${line.children} ${t("children")}`);
   } else if (rate.peoplePerUnit || rate.billing === "unit") {
     const unit = getRateUnitName(rate);
-    parts.push(`${people} people`, `${units} ${pluralizeUnit(unit, units)}`);
+    parts.push(`${people} ${t(people === 1 ? "person" : "people")}`, `${units} ${pluralizeUnit(unit, units, locale)}`);
   } else {
-    parts.push(`${people} people`);
+    parts.push(`${people} ${t(people === 1 ? "person" : "people")}`);
   }
 
+  parts.push(formatReservationDate(line.date, locale));
   if (line.time) parts.push(line.time);
   for (const extraId of line.extras) {
     const extra = config.extras?.find((item) => item.id === extraId);
@@ -114,15 +137,22 @@ export function useActivityReservations() {
 }
 
 export function ActivityReservationProvider({ children }: { children: ReactNode }) {
+  const { locale } = useLocale();
+  const t = (phrase: string) => translate(locale, phrase);
   const [activeActivity, setActiveActivity] = useState<Activity | null>(null);
   const [selectedRateId, setSelectedRateId] = useState("");
   const [adults, setAdults] = useState(2);
   const [childrenCount, setChildrenCount] = useState(0);
+  const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
   const [lines, setLines] = useState<ReservationLine[]>([]);
   const [notice, setNotice] = useState("");
   const [requestStatus, setRequestStatus] = useState("");
+  const [bookedTimes, setBookedTimes] = useState<string[]>([]);
+  const [availabilityError, setAvailabilityError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successToastOpen, setSuccessToastOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const nextLineId = useRef(0);
@@ -140,6 +170,7 @@ export function ActivityReservationProvider({ children }: { children: ReactNode 
     setSelectedRateId(activity.reservation.rates[0]?.id ?? "");
     setAdults(activity.reservation.rates[0]?.peoplePerUnit === 1 ? 1 : 2);
     setChildrenCount(0);
+    setSelectedDate("");
     setSelectedTime("");
     setSelectedExtras([]);
     setNotice("");
@@ -174,31 +205,68 @@ export function ActivityReservationProvider({ children }: { children: ReactNode 
     };
   }, [open, cartOpen]);
 
+  useEffect(() => {
+    if (!successToastOpen) return;
+    const timeout = window.setTimeout(() => setSuccessToastOpen(false), 7000);
+    return () => window.clearTimeout(timeout);
+  }, [successToastOpen]);
+
+  useEffect(() => {
+    if (!activeActivity || !selectedDate) {
+      setBookedTimes([]);
+      setAvailabilityError("");
+      return;
+    }
+
+    const controller = new AbortController();
+    setBookedTimes([]);
+    setAvailabilityError("");
+    void fetch(`/api/activities/availability?slug=${encodeURIComponent(activeActivity.slug)}&date=${encodeURIComponent(selectedDate)}`, {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        const result: unknown = await response.json();
+        if (!response.ok || typeof result !== "object" || result === null || !("bookedTimes" in result) || !Array.isArray(result.bookedTimes)) {
+          throw new Error(t("Could not check time availability. Please try again."));
+        }
+        setBookedTimes(result.bookedTimes.filter((time): time is string => typeof time === "string"));
+      })
+      .catch((error: unknown) => {
+        if (error instanceof Error && error.name === "AbortError") return;
+        setAvailabilityError(error instanceof Error ? error.message : t("Could not check time availability. Please try again."));
+      });
+
+    return () => controller.abort();
+  }, [activeActivity?.slug, selectedDate, locale]);
+
   const activeReservation = activeActivity?.reservation;
   const activeRate = activeReservation
     ? activeReservation.rates.find((rate) => rate.id === selectedRateId) ?? activeReservation.rates[0]
     : undefined;
+  const hasDateSchedule = Boolean(activeReservation?.availability?.length);
+  const availableDateSchedules = (activeReservation?.availability ?? []).filter((schedule) => schedule.date >= getTodayDate());
+  const selectedDateSchedule = availableDateSchedules.find((schedule) => schedule.date === selectedDate);
+  const availableTimes = hasDateSchedule
+    ? selectedDateSchedule?.times ?? []
+    : activeReservation?.times ?? [];
   const activeLine = activeActivity && activeRate
     ? {
-      slug: activeActivity.slug,
+      activity: activeActivity,
       rateId: activeRate.id,
       adults,
       children: childrenCount,
+      date: selectedDate,
       time: selectedTime,
       extras: selectedExtras,
     }
     : undefined;
   const activeTotal = activeActivity && activeLine ? getLineTotal(activeActivity, activeLine) : 0;
   const cartTotal = useMemo(
-    () => lines.reduce((total, line) => {
-      const activity = activities.find((item) => item.slug === line.slug);
-      return activity ? total + getLineTotal(activity, line) : total;
-    }, 0),
+    () => lines.reduce((total, line) => total + getLineTotal(line.activity, line), 0),
     [lines],
   );
-  const needsPriceConfirmation = lines.some((line) =>
-    activities.find((activity) => activity.slug === line.slug)?.reservation?.priceNeedsConfirmation,
-  );
+  const needsPriceConfirmation = lines.some((line) => line.activity.reservation?.priceNeedsConfirmation);
 
   const toggleExtra = (extraId: string) => {
     if (activeActivity?.reservation?.extraSelectionMode === "single") {
@@ -212,22 +280,33 @@ export function ActivityReservationProvider({ children }: { children: ReactNode 
 
   const addSelection = () => {
     if (!activeActivity || !activeActivity.reservation || !activeRate) return;
-    if (activeActivity.reservation.times?.length && !selectedTime) {
-      setNotice("Choose an available time before adding this activity.");
+    if (!selectedDate) {
+      setNotice(hasDateSchedule ? t("Choose one of the available dates before adding this activity.") : t("Choose a date before adding this activity."));
+      return;
+    }
+    if (!selectedTime) {
+      setNotice(availableTimes.length
+        ? t("Choose an available time before adding this activity.")
+        : t("Choose a preferred time before adding this activity."));
+      return;
+    }
+    if (bookedTimes.includes(selectedTime)) {
+      setNotice(t("That time has already been confirmed. Choose another time."));
       return;
     }
 
     nextLineId.current += 1;
     setLines((current) => [...current, {
       id: nextLineId.current,
-      slug: activeActivity.slug,
+      activity: activeActivity,
       rateId: activeRate.id,
       adults,
       children: childrenCount,
+      date: selectedDate,
       time: selectedTime,
       extras: selectedExtras,
     }]);
-    setNotice(`${activeActivity.title} added to your selection.`);
+    setNotice(`${activeActivity.title} ${t("added to your selection.")}`);
     setRequestStatus("");
     setOpen(false);
     setCartOpen(true);
@@ -240,62 +319,68 @@ export function ActivityReservationProvider({ children }: { children: ReactNode 
 
   const closeDialog = () => setOpen(false);
 
-  const copyRequest = async (event: FormEvent<HTMLFormElement>) => {
+  const submitRequest = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!lines.length) {
-      setRequestStatus("Add at least one activity to your selection first.");
+    if (!lines.length || isSubmitting) {
+      setRequestStatus(t("Add at least one activity to your selection first."));
       return;
     }
 
     const formData = new FormData(event.currentTarget);
-    const requestLines = lines.map((line) => {
-      const activity = activities.find((item) => item.slug === line.slug);
-      if (!activity) return "";
-      return `• ${getReservationDescription(activity, line)} — ${formatPrice(getLineTotal(activity, line))}`;
-    });
     const phone = String(formData.get("phone") || "").trim();
     const countryCode = String(formData.get("countryCode") || "");
     const formattedPhone = phone.startsWith("+") || countryCode === "other"
       ? phone
       : `${countryCode} ${phone}`.trim();
-    const summary = [
-      "MOROCCO JOURNEYS — ACTIVITY REQUEST",
-      "",
-      ...requestLines,
-      "",
-      `Estimated total: ${formatPrice(cartTotal)}${needsPriceConfirmation ? " (final price to be confirmed)" : ""}`,
-      `Date: ${String(formData.get("date") || "To be confirmed")}`,
-      `Pickup / hotel: ${String(formData.get("hotel") || "To be confirmed")}`,
-      `Name: ${String(formData.get("name") || "")}`,
-      `Phone / WhatsApp: ${formattedPhone}`,
-      `Email: ${String(formData.get("email") || "Not provided")}`,
-      `Notes: ${String(formData.get("notes") || "None")}`,
-      "",
-      "Please confirm availability and final details. No online payment has been made.",
-    ].join("\n");
-
-    if (!navigator.clipboard?.writeText) {
-      setRequestStatus("Copy is unavailable in this browser. Please select and copy your request details manually.");
-      return;
-    }
-
+    setIsSubmitting(true);
+    setRequestStatus("");
     try {
-      await navigator.clipboard.writeText(summary);
-      setRequestStatus("Request copied. Paste it into a message to our team to confirm availability.");
-    } catch {
-      setRequestStatus("We couldn’t copy the request. Check clipboard permissions and try again.");
+      await submitActivityReservation({
+        customerName: String(formData.get("name") || ""),
+        customerPhone: formattedPhone,
+        customerEmail: String(formData.get("email") || ""),
+        hotelAddress: String(formData.get("hotel") || ""),
+        notes: String(formData.get("notes") || ""),
+        lines: lines.map((line) => ({
+          activitySlug: line.activity.slug,
+          rateId: line.rateId,
+          adults: line.adults,
+          children: line.children,
+          date: line.date,
+          time: line.time,
+          extras: line.extras,
+        })),
+      });
+      setLines([]);
+      setRequestStatus("");
+      setCartOpen(false);
+      setSuccessToastOpen(true);
+    } catch (error) {
+      setRequestStatus(error instanceof Error ? error.message : t("Your reservation could not be submitted. Please try again."));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <ReservationContext.Provider value={{ openReservation, openReservationCart }}>
       {children}
+      {successToastOpen && (
+        <div className="booking-success-toast" role="status" aria-live="polite" aria-atomic="true">
+          <span className="booking-success-toast__icon" aria-hidden="true">✓</span>
+          <div>
+            <h3>{t("Your reservation was successfully submitted.")}</h3>
+            <p>{t("Your reservation request has been submitted. Our team will contact you soon.")}</p>
+          </div>
+          <button type="button" aria-label={t("Close confirmation")} onClick={() => setSuccessToastOpen(false)}>×</button>
+        </div>
+      )}
       {lines.length > 0 && !open && !cartOpen && (
         <button type="button" className="activity-cart-trigger" onClick={openReservationCart}>
           <span aria-hidden="true">▤</span>
           Your selection
           <strong>{lines.length}</strong>
-          <b>{formatPrice(cartTotal)}</b>
+          <b>{formatPrice(cartTotal, locale)}</b>
         </button>
       )}
       {open && activeActivity && activeReservation && activeRate && (
@@ -305,10 +390,10 @@ export function ActivityReservationProvider({ children }: { children: ReactNode 
           <section className="activity-reservation-dialog" role="dialog" aria-modal="true" aria-labelledby="activity-reservation-title">
             <header className="activity-reservation-header">
               <div>
-                <p className="eyebrow">Build your Morocco moment</p>
-                <h2 id="activity-reservation-title">Plan your experience</h2>
+                <p className="eyebrow">{t("Build your Morocco moment")}</p>
+                <h2 id="activity-reservation-title">{t("Plan your experience")}</h2>
               </div>
-              <button ref={closeButtonRef} type="button" className="activity-reservation-close" onClick={closeDialog} aria-label="Close reservation dialog">
+              <button ref={closeButtonRef} type="button" className="activity-reservation-close" onClick={closeDialog} aria-label={t("Close reservation dialog")}>
                 ×
               </button>
             </header>
@@ -326,7 +411,7 @@ export function ActivityReservationProvider({ children }: { children: ReactNode 
 
                 {activeReservation.rates.length > 1 && (
                   <fieldset className="activity-reservation-fieldset">
-                    <legend>Choose your experience</legend>
+                    <legend>{t("Choose your experience")}</legend>
                     <div className="activity-reservation-rates">
                       {activeReservation.rates.map((rate) => (
                         <button
@@ -341,7 +426,7 @@ export function ActivityReservationProvider({ children }: { children: ReactNode 
                           }}
                         >
                           <span>{rate.label}</span>
-                          <strong>{formatPrice(rate.price)}</strong>
+                          <strong>{formatPrice(rate.price, locale)}</strong>
                           <small>{rate.unit}{rate.description ? ` · ${rate.description}` : ""}</small>
                         </button>
                       ))}
@@ -349,63 +434,108 @@ export function ActivityReservationProvider({ children }: { children: ReactNode 
                   </fieldset>
                 )}
 
-                {activeReservation.times && (
+                <fieldset className="activity-reservation-fieldset">
+                  <legend>{t("Choose a date")}</legend>
+                  {hasDateSchedule ? (
+                    availableDateSchedules.length ? (
+                      <label className="activity-reservation-date">
+                        <span>{t("Available dates")}</span>
+                        <select value={selectedDate} onChange={(event) => { setSelectedDate(event.target.value); setSelectedTime(""); setNotice(""); }} required>
+                          <option value="">{t("Choose a date")}</option>
+                          {availableDateSchedules.map((schedule) => <option key={schedule.date} value={schedule.date}>{formatReservationDate(schedule.date, locale)}</option>)}
+                        </select>
+                      </label>
+                    ) : <p className="activity-reservation-hint">{t("No future dates are currently available. Please contact our team.")}</p>
+                  ) : (
+                    <label className="activity-reservation-date">
+                        <span>{t("Date for this experience")}</span>
+                      <input type="date" value={selectedDate} min={getTodayDate()} onChange={(event) => { setSelectedDate(event.target.value); setNotice(""); }} required />
+                    </label>
+                  )}
+                </fieldset>
+
+                {hasDateSchedule && !selectedDate ? (
                   <fieldset className="activity-reservation-fieldset">
-                    <legend>Choose a time</legend>
+                    <legend>{t("Choose a time")}</legend>
+                    <p className="activity-reservation-hint">{t("Choose a date to see its available departure times.")}</p>
+                  </fieldset>
+                ) : availableTimes.length ? (
+                  <fieldset className="activity-reservation-fieldset">
+                    <legend>{t("Choose a time")}</legend>
                     <div className="activity-reservation-times">
-                      {activeReservation.times.map((time) => (
-                        <button
-                          key={time}
-                          type="button"
-                          className={selectedTime === time ? "is-selected" : ""}
-                          aria-pressed={selectedTime === time}
-                          onClick={() => { setSelectedTime(time); setNotice(""); }}
-                        >
-                          {time}
-                        </button>
-                      ))}
+                      {availableTimes.map((time) => {
+                        const isBooked = bookedTimes.includes(time);
+                        return (
+                          <button
+                            key={time}
+                            type="button"
+                            className={`${selectedTime === time ? "is-selected" : ""}${isBooked ? " is-taken" : ""}`}
+                            aria-label={isBooked ? `${time}, ${t("Taken")}` : time}
+                            aria-pressed={selectedTime === time}
+                            disabled={isBooked}
+                            onClick={() => { setSelectedTime(time); setNotice(""); }}
+                          >
+                            <span>{time}</span>{isBooked && <span aria-hidden="true">×</span>}
+                          </button>
+                        );
+                      })}
                     </div>
                   </fieldset>
+                ) : (
+                  <fieldset className="activity-reservation-fieldset">
+                    <legend>{t("Choose a preferred time")}</legend>
+                    <label className="activity-reservation-date">
+                      <span>{t("Preferred time")}</span>
+                      <input type="time" value={selectedTime} onChange={(event) => { setSelectedTime(event.target.value); setNotice(""); }} required />
+                    </label>
+                    {bookedTimes.length > 0 && (
+                      <div className="activity-reservation-times activity-reservation-times--booked" aria-label={t("Taken times")}>
+                        {bookedTimes.map((time) => <span key={time}><span>{time}</span><b aria-hidden="true">×</b></span>)}
+                      </div>
+                    )}
+                    <p className="activity-reservation-hint">{t("The activity team will confirm availability for your preferred time.")}</p>
+                  </fieldset>
                 )}
+                {availabilityError && <p className="activity-reservation-notice" role="alert">{availabilityError}</p>}
 
                 <fieldset className="activity-reservation-fieldset">
-                  <legend>{activeReservation.childRate ? "Travellers" : "People"}</legend>
+                  <legend>{t(activeReservation.childRate ? "Travellers" : "People")}</legend>
                   <div className="activity-reservation-guests">
                     <div className="activity-reservation-guest">
                       <span>
-                        <strong>{activeReservation.childRate ? "Adults" : "People"}</strong>
-                        <small>{activeReservation.childRate ? formatPrice(activeRate.price) + " / person" : "Select your group size"}</small>
+                        <strong>{t(activeReservation.childRate ? "Adults" : "People")}</strong>
+                        <small>{activeReservation.childRate ? formatPrice(activeRate.price, locale) + ` / ${t("person")}` : t("Select your group size")}</small>
                       </span>
                       <div className="activity-stepper">
-                        <button type="button" aria-label="Remove one adult" disabled={adults <= 1} onClick={() => setAdults((value) => Math.max(1, value - 1))}>−</button>
+                        <button type="button" aria-label={t("Remove one adult")} disabled={adults <= 1} onClick={() => setAdults((value) => Math.max(1, value - 1))}>−</button>
                         <output>{adults}</output>
-                        <button type="button" aria-label="Add one adult" disabled={adults + childrenCount >= 30} onClick={() => setAdults((value) => Math.min(30 - childrenCount, value + 1))}>+</button>
+                        <button type="button" aria-label={t("Add one adult")} disabled={adults + childrenCount >= 30} onClick={() => setAdults((value) => Math.min(30 - childrenCount, value + 1))}>+</button>
                       </div>
                     </div>
                     {activeReservation.childRate && (
                       <div className="activity-reservation-guest">
                         <span>
                           <strong>{activeReservation.childRate.label}</strong>
-                          <small>{formatPrice(activeReservation.childRate.price)} / child</small>
+                          <small>{formatPrice(activeReservation.childRate.price, locale)} / {t("child")}</small>
                         </span>
                         <div className="activity-stepper">
-                          <button type="button" aria-label="Remove one child" disabled={childrenCount <= 0} onClick={() => setChildrenCount((value) => Math.max(0, value - 1))}>−</button>
+                          <button type="button" aria-label={t("Remove one child")} disabled={childrenCount <= 0} onClick={() => setChildrenCount((value) => Math.max(0, value - 1))}>−</button>
                           <output>{childrenCount}</output>
-                          <button type="button" aria-label="Add one child" disabled={adults + childrenCount >= 30} onClick={() => setChildrenCount((value) => Math.min(30 - adults, value + 1))}>+</button>
+                          <button type="button" aria-label={t("Add one child")} disabled={adults + childrenCount >= 30} onClick={() => setChildrenCount((value) => Math.min(30 - adults, value + 1))}>+</button>
                         </div>
                       </div>
                     )}
                   </div>
                   {activeRate.peoplePerUnit && (
                     <p className="activity-reservation-hint">
-                      {getUnits(activeRate, adults + childrenCount)} {pluralizeUnit(getRateUnitName(activeRate), getUnits(activeRate, adults + childrenCount))} for {adults + childrenCount} {adults + childrenCount === 1 ? "person" : "people"} · up to {activeRate.peoplePerUnit} per {getRateUnitName(activeRate)}
+                      {getUnits(activeRate, adults + childrenCount)} {pluralizeUnit(getRateUnitName(activeRate), getUnits(activeRate, adults + childrenCount), locale)} {t("for")} {adults + childrenCount} {t(adults + childrenCount === 1 ? "person" : "people")} · {t("up to")} {activeRate.peoplePerUnit} {t("per")} {getRateUnitName(activeRate)}
                     </p>
                   )}
                 </fieldset>
 
                 {activeReservation.extras && activeReservation.extras.length > 0 && (
                   <fieldset className="activity-reservation-fieldset">
-                    <legend>Add an extra</legend>
+                    <legend>{t("Add an extra")}</legend>
                     {activeReservation.extraSelectionMode === "single" && (
                       <button
                         type="button"
@@ -413,7 +543,7 @@ export function ActivityReservationProvider({ children }: { children: ReactNode 
                         aria-pressed={!selectedExtras.length}
                         onClick={() => setSelectedExtras([])}
                       >
-                        No extra
+                        {t("No extra")}
                       </button>
                     )}
                     <div className="activity-reservation-extras">
@@ -426,7 +556,7 @@ export function ActivityReservationProvider({ children }: { children: ReactNode 
                             onChange={() => toggleExtra(extra.id)}
                           />
                           <span>{extra.label}<small>{extra.unit}</small></span>
-                          <strong>+{formatPrice(extra.price)}</strong>
+                          <strong>+{formatPrice(extra.price, locale)}</strong>
                         </label>
                       ))}
                     </div>
@@ -435,14 +565,14 @@ export function ActivityReservationProvider({ children }: { children: ReactNode 
 
                 {notice && <p className="activity-reservation-notice" role="status">{notice}</p>}
                 <div className="activity-reservation-add-row">
-                  <div><small>Current activity estimate</small><strong>{formatPrice(activeTotal)}</strong></div>
-                  <button type="button" className="activity-reservation-add" onClick={addSelection} disabled={!!activeReservation.times?.length && !selectedTime}>
-                    Add to selection <span aria-hidden="true">＋</span>
+                  <div><small>{t("Current activity estimate")}</small><strong>{formatPrice(activeTotal, locale)}</strong></div>
+                  <button type="button" className="activity-reservation-add" onClick={addSelection}>
+                    {t("Add to selection")} <span aria-hidden="true">＋</span>
                   </button>
                 </div>
                 {activeActivity.bookingUrl && (
                   <a className="activity-reservation-partner" href={activeActivity.bookingUrl} target="_blank" rel="noopener noreferrer">
-                    Prefer to book directly with the partner? <span>Open partner page ↗</span>
+                    {t("Prefer to book directly with the partner?")} <span>{t("Open partner page ↗")}</span>
                   </a>
                 )}
               </div>
@@ -454,12 +584,12 @@ export function ActivityReservationProvider({ children }: { children: ReactNode 
         <div className="activity-cart-backdrop" onMouseDown={(event) => {
           if (event.target === event.currentTarget) setCartOpen(false);
         }}>
-          <aside className="activity-reservation-summary activity-cart-panel" aria-label="Your activity selection" role="dialog" aria-modal="true">
+          <aside className="activity-reservation-summary activity-cart-panel" aria-label={t("Your activity selection")} role="dialog" aria-modal="true">
             <div className="activity-cart-panel__top">
               <div className="activity-reservation-summary__heading">
                 <div>
-                  <p className="eyebrow">Your trip, coming together</p>
-                  <h3>Your selection <span>{lines.length}</span></h3>
+                  <p className="eyebrow">{t("Your trip, coming together")}</p>
+                  <h3>{t("Your selection")} <span>{lines.length}</span></h3>
                 </div>
                 <span aria-hidden="true">✳</span>
               </div>
@@ -468,7 +598,7 @@ export function ActivityReservationProvider({ children }: { children: ReactNode 
                 type="button"
                 className="activity-reservation-close"
                 onClick={() => setCartOpen(false)}
-                aria-label="Close your selection"
+                aria-label={t("Close your selection")}
               >
                 ×
               </button>
@@ -477,16 +607,15 @@ export function ActivityReservationProvider({ children }: { children: ReactNode 
             {lines.length ? (
               <ul className="activity-reservation-lines">
                 {lines.map((line) => {
-                  const activity = activities.find((item) => item.slug === line.slug);
-                  if (!activity) return null;
+                  const activity = line.activity;
                   return (
                     <li key={line.id}>
                       <div>
                         <strong>{activity.title}</strong>
-                        <span>{getReservationDescription(activity, line)}</span>
+                        <span>{getReservationDescription(activity, line, locale)}</span>
                       </div>
-                      <strong>{formatPrice(getLineTotal(activity, line))}</strong>
-                      <button type="button" aria-label={`Remove ${activity.title}`} onClick={() => removeLine(line.id)}>×</button>
+                      <strong>{formatPrice(getLineTotal(activity, line), locale)}</strong>
+                      <button type="button" aria-label={`${t("Remove")} ${activity.title}`} onClick={() => removeLine(line.id)}>×</button>
                     </li>
                   );
                 })}
@@ -494,28 +623,24 @@ export function ActivityReservationProvider({ children }: { children: ReactNode 
             ) : (
               <div className="activity-reservation-empty">
                 <span aria-hidden="true">✳</span>
-                <strong>Your selection starts here</strong>
-                <p>Choose a time, group size, or extra and add an experience.</p>
+                <strong>{t("Your selection starts here")}</strong>
+                <p>{t("Choose a time, group size, or extra and add an experience.")}</p>
               </div>
             )}
 
-            <form id="activity-reservation-form" className="activity-reservation-form" onSubmit={copyRequest}>
-              <p className="activity-cart-panel__intro">Your plans are ready. Add your details so our team can confirm availability.</p>
+            <form id="activity-reservation-form" className="activity-reservation-form" onSubmit={submitRequest}>
+              <p className="activity-cart-panel__intro">{t("Your plans are ready. Add your details so our team can confirm availability.")}</p>
               <label>
-                <span>Date</span>
-                <input name="date" type="date" required />
-              </label>
-              <label>
-                <span>Hotel / pickup location</span>
-                <input name="hotel" type="text" placeholder="Hotel name or address" />
+                <span>{t("Hotel / pickup location")}</span>
+                <input name="hotel" type="text" placeholder={t("Hotel name or address")} />
               </label>
               <div className="activity-reservation-form__contact">
                 <label>
-                  <span>Your name</span>
-                  <input name="name" type="text" autoComplete="name" placeholder="Full name" required />
+                  <span>{t("Your name")}</span>
+                  <input name="name" type="text" autoComplete="name" placeholder={t("Full name")} required />
                 </label>
                 <label>
-                  <span>Phone / WhatsApp</span>
+                  <span>{t("Phone / WhatsApp")}</span>
                   <div className="activity-reservation-phone">
                     <select name="countryCode" aria-label="Phone country code" autoComplete="tel-country-code">
                       <option value="+212">Morocco (+212)</option>
@@ -530,33 +655,33 @@ export function ActivityReservationProvider({ children }: { children: ReactNode 
                       <option value="+351">Portugal (+351)</option>
                       <option value="+353">Ireland (+353)</option>
                       <option value="+1">United States / Canada (+1)</option>
-                      <option value="other">Other (enter full number)</option>
+                      <option value="other">{t("Other (enter full number)")}</option>
                     </select>
                     <input name="phone" type="tel" autoComplete="tel-national" inputMode="tel" placeholder="6 12 34 56 78" required />
                   </div>
                 </label>
               </div>
               <label>
-                <span>Email <small>(optional)</small></span>
+                <span>{t("Email")} <small>({t("optional")})</small></span>
                 <input name="email" type="email" autoComplete="email" placeholder="you@example.com" />
               </label>
               <label>
-                <span>Notes <small>(optional)</small></span>
-                <textarea name="notes" rows={2} placeholder="Anything else we should know?" />
+                <span>{t("Notes")} <small>({t("optional")})</small></span>
+                <textarea name="notes" rows={2} placeholder={t("Anything else we should know?")} />
               </label>
 
               <div className="activity-reservation-total">
-                <span>{needsPriceConfirmation ? "Estimated total*" : "Estimated total"}</span>
-                <strong>{formatPrice(cartTotal)}</strong>
+                <span>{t(needsPriceConfirmation ? "Estimated total*" : "Estimated total")}</span>
+                <strong>{formatPrice(cartTotal, locale)}</strong>
               </div>
-              {needsPriceConfirmation && <p className="activity-reservation-confirm-note">Some prices require confirmation by our team.</p>}
-              <p className="activity-reservation-payment-note">No online payment. Availability and final details are confirmed by the activity team.</p>
-              <button type="submit" className="activity-reservation-submit" disabled={!lines.length}>
-                Copy request details <span aria-hidden="true">↗</span>
+              {needsPriceConfirmation && <p className="activity-reservation-confirm-note">{t("Some prices require confirmation by our team.")}</p>}
+              <p className="activity-reservation-payment-note">{t("No online payment. Availability and final details are confirmed by the activity team.")}</p>
+              <button type="submit" className="activity-reservation-submit" disabled={!lines.length || isSubmitting}>
+                {isSubmitting ? t("Submitting...") : t("Submit reservation request")} <span aria-hidden="true">↗</span>
               </button>
               {requestStatus && <p className="activity-reservation-status" role="status">{requestStatus}</p>}
               <button type="button" className="activity-cart-continue" onClick={() => setCartOpen(false)}>
-                Continue planning
+                {t("Continue planning")}
               </button>
             </form>
           </aside>

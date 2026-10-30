@@ -11,8 +11,10 @@ import BlogSection from "./components/BlogSection";
 import WhyChooseUs from "./components/WhyChooseUs";
 import FinalCallToAction from "./components/FinalCallToAction";
 import PageLoader from "./components/PageLoader";
+import type { Activity } from "./activities";
+import type { Locale } from "./i18n";
 
-export default function App() {
+export default function App({ activities, locale }: { activities: Activity[]; locale: Locale }) {
   return (
     <>
       <PageLoader />
@@ -24,16 +26,16 @@ export default function App() {
       </Link>
       <Nav />
       <main>
-        <ScrollFilm />
+        <ScrollFilm locale={locale} />
         <ScrollMotion>
-          <AirportTransferWrapper />
-          <Stays />
-          <Experiences />
-          <Concierge />
-          <JourneySteps />
-          <BlogSection />
-          <WhyChooseUs />
-          <FinalCallToAction />
+          <AirportTransferWrapper locale={locale} />
+          <Stays locale={locale} />
+          <Experiences activities={activities} locale={locale} />
+          <Concierge locale={locale} />
+          <JourneySteps locale={locale} />
+          <BlogSection locale={locale} />
+          <WhyChooseUs locale={locale} />
+          <FinalCallToAction locale={locale} />
         </ScrollMotion>
       </main>
     </>

@@ -1,26 +1,28 @@
 import Link from "next/link";
-import { getFeaturedActivities, getActivityImageUrl } from "../activities";
+import { getActivityImageUrl, type Activity } from "../activities";
 import ActivityReserveButton from "./ActivityReserveButton";
+import { translate, type Locale } from "../i18n";
 
-export default function Experiences() {
-  const popularActivities = getFeaturedActivities();
+export default function Experiences({ activities, locale }: { activities: Activity[]; locale: Locale }) {
+  const t = (phrase: string) => translate(locale, phrase);
+  const popularActivities = activities.filter((activity) => activity.popular).slice(0, 6);
 
   return (
     <section id="experiences" className="experiences-section px-5 py-20 text-ink md:px-[4vw] md:py-28">
       <div className="mx-auto max-w-[1500px]">
         <div className="section-heading-grid">
           <div data-reveal>
-            <p className="eyebrow">Experiences</p>
+            <p className="eyebrow">{t("Experiences")}</p>
             <h2 className="section-title mt-3 max-w-3xl">
-              Don’t just visit.<br />Experience <span className="text-signal">Morocco.</span>
+              {t("Don’t just visit.")}<br />{t("Experience")} <span className="text-signal">{t("Morocco.")}</span>
             </h2>
           </div>
           <div className="max-w-sm self-end pb-1" data-reveal>
             <p className="text-sm leading-relaxed text-ink/65">
-              From adrenaline-filled adventures to cultural journeys, discover the many sides of Morocco with experiences curated just for you.
+              {t("From adrenaline-filled adventures to cultural journeys, discover the many sides of Morocco with experiences curated just for you.")}
             </p>
             <Link href="/activities" className="experiences-section__browse mt-5 inline-flex min-h-11 items-center gap-3 px-4 text-xs font-bold uppercase tracking-wide transition">
-              Browse all activities <span aria-hidden="true">↗</span>
+              {t("Browse all activities")} <span aria-hidden="true">↗</span>
             </Link>
             <span className="mt-5 block h-0.5 w-9 bg-signal" />
           </div>
@@ -37,7 +39,7 @@ export default function Experiences() {
                     loading="lazy"
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
                   />
-                  <span className="experience-product-card__badge">Local pick</span>
+                  <span className="experience-product-card__badge">{t("Local pick")}</span>
                 </figure>
               </Link>
               <div className="experience-product-card__body">
@@ -70,7 +72,7 @@ export default function Experiences() {
                   )}
                   {activity.reservation ? (
                     <ActivityReserveButton activity={activity} className="experience-product-card__reserve">
-                      Reserve <span aria-hidden="true">↗</span>
+                      {t("Reserve")} <span aria-hidden="true">↗</span>
                     </ActivityReserveButton>
                   ) : activity.bookingUrl ? (
                     <a
@@ -79,7 +81,7 @@ export default function Experiences() {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      Reserve <span aria-hidden="true">↗</span>
+                      {t("Reserve")} <span aria-hidden="true">↗</span>
                     </a>
                   ) : null}
                 </div>
@@ -89,7 +91,7 @@ export default function Experiences() {
         </div>
         <div className="mt-10 flex justify-center">
           <Link href="/activities" className="button-signal">
-            Show all activities <span aria-hidden="true">→</span>
+            {t("Show all activities")} <span aria-hidden="true">→</span>
           </Link>
         </div>
       </div>

@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { blogPosts, formatBlogDate, getBlogImageUrl } from "../blogs";
+import { localizeTree, translate, type Locale } from "../i18n";
 
-export default function BlogSection() {
-  const latestPosts = [...blogPosts]
+export default function BlogSection({ locale }: { locale: Locale }) {
+  const t = (phrase: string) => translate(locale, phrase);
+  const latestPosts = [...localizeTree(blogPosts, locale)]
     .sort((first, second) => second.publishedAt.localeCompare(first.publishedAt))
     .slice(0, 3);
 
@@ -11,13 +13,13 @@ export default function BlogSection() {
       <div className="mx-auto max-w-[1500px]">
         <div className="section-heading-grid items-end">
           <div data-reveal>
-            <p className="eyebrow">The travel journal</p>
-            <h2 className="section-title mt-3 max-w-3xl">Stories for the road.</h2>
+            <p className="eyebrow">{t("The travel journal")}</p>
+            <h2 className="section-title mt-3 max-w-3xl">{t("Stories for the road.")}</h2>
           </div>
           <div className="journal-section__intro" data-reveal>
-            <p>Thoughtful notes, local perspectives, and little reasons to take the scenic route.</p>
+            <p>{t("Thoughtful notes, local perspectives, and little reasons to take the scenic route.")}</p>
             <Link href="/blog" className="journal-text-link">
-              Explore all stories <span aria-hidden="true">↗</span>
+              {t("Explore all stories")} <span aria-hidden="true">↗</span>
             </Link>
           </div>
         </div>
@@ -31,21 +33,21 @@ export default function BlogSection() {
                   alt={post.imageAlt}
                   loading="lazy"
                 />
-                <span className="journal-card__category">{post.category}</span>
+                  <span className="journal-card__category">{t(post.category)}</span>
                 <span className="journal-card__number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
               </Link>
               <div className="journal-card__body">
                 <div className="journal-card__meta">
-                  <span>{formatBlogDate(post.publishedAt)}</span>
-                  <span>{post.readingTime}</span>
+                  <span>{formatBlogDate(post.publishedAt, locale)}</span>
+                  <span>{t(post.readingTime)}</span>
                 </div>
                 <Link href={`/blog/${post.slug}`} className="journal-card__title">
                   <h3>{post.title}</h3>
                   <span aria-hidden="true">↗</span>
                 </Link>
-                <p>{post.excerpt}</p>
+                <p>{t(post.excerpt)}</p>
                 <Link href={`/blog/${post.slug}`} className="journal-card__read">
-                  Read the story <span aria-hidden="true">↗</span>
+                  {t("Read the story")} <span aria-hidden="true">↗</span>
                 </Link>
               </div>
             </article>
@@ -53,7 +55,7 @@ export default function BlogSection() {
         </div>
         <div className="journal-section__mobile-link">
           <Link href="/blog" className="button-outline">
-            Browse the journal <span aria-hidden="true">→</span>
+            {t("Browse the journal")} <span aria-hidden="true">→</span>
           </Link>
         </div>
       </div>

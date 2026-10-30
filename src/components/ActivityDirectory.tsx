@@ -5,12 +5,15 @@ import { useMemo, useState } from "react";
 import type { Activity } from "../activities";
 import { getActivityImageUrl } from "../activities";
 import ActivityReserveButton from "./ActivityReserveButton";
+import { translate, type Locale } from "../i18n";
 
 type ActivityDirectoryProps = {
   activities: Activity[];
+  locale: Locale;
 };
 
-export default function ActivityDirectory({ activities }: ActivityDirectoryProps) {
+export default function ActivityDirectory({ activities, locale }: ActivityDirectoryProps) {
+  const t = (phrase: string) => translate(locale, phrase);
   const categories = ["All", ...new Set(activities.map((activity) => activity.category))];
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
@@ -34,14 +37,14 @@ export default function ActivityDirectory({ activities }: ActivityDirectoryProps
     <section id="activity-list" className="activity-directory" aria-labelledby="activity-directory-title">
       <div className="activity-directory__heading">
         <div>
-          <p className="eyebrow">A little inspiration</p>
-          <h2 id="activity-directory-title">Pick your <span>pace.</span></h2>
+          <p className="eyebrow">{t("A little inspiration")}</p>
+          <h2 id="activity-directory-title">{t("Pick your")} <span>{t("pace.")}</span></h2>
         </div>
-        <p>Big day out or a few hours well spent. Start with what sounds good.</p>
+        <p>{t("Big day out or a few hours well spent. Start with what sounds good.")}</p>
       </div>
 
       <div className="activity-directory__controls">
-        <div className="activity-directory__filters" role="group" aria-label="Filter activities by category">
+        <div className="activity-directory__filters" role="group" aria-label={t("Filter activities by category")}>
           {categories.map((category) => (
             <button
               key={category}
@@ -50,7 +53,7 @@ export default function ActivityDirectory({ activities }: ActivityDirectoryProps
               aria-pressed={activeCategory === category}
               onClick={() => setActiveCategory(category)}
             >
-              {category === "All" ? "Everything" : category}
+              {category === "All" ? t("Everything") : category}
             </button>
           ))}
         </div>
@@ -59,12 +62,13 @@ export default function ActivityDirectory({ activities }: ActivityDirectoryProps
           <span className="sr-only">Search activities</span>
           <input
             type="search"
-            placeholder="Search experiences"
+            placeholder={t("Search experiences")}
+            aria-label={t("Search activities")}
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
           />
           {searchTerm && (
-            <button type="button" aria-label="Clear search" onClick={() => setSearchTerm("")}>
+            <button type="button" aria-label={t("Clear search")} onClick={() => setSearchTerm("")}>
               ×
             </button>
           )}
@@ -73,7 +77,7 @@ export default function ActivityDirectory({ activities }: ActivityDirectoryProps
 
       <div className="activity-directory__results" aria-live="polite">
         <span>{String(filteredActivities.length).padStart(2, "0")}</span>
-        {filteredActivities.length === 1 ? " experience to explore" : " experiences to explore"}
+        {filteredActivities.length === 1 ? ` ${t("experience to explore")}` : ` ${t("experiences to explore")}`}
       </div>
 
       {filteredActivities.length ? (
@@ -89,7 +93,7 @@ export default function ActivityDirectory({ activities }: ActivityDirectoryProps
                     decoding="async"
                   />
                   <span className="directory-card__category">{activity.category}</span>
-                  {activity.popular && <span className="directory-card__popular">Local favourite</span>}
+                  {activity.popular && <span className="directory-card__popular">{t("Local favourite")}</span>}
                   <span className="directory-card__image-arrow" aria-hidden="true">↗</span>
                 </figure>
 
@@ -105,7 +109,7 @@ export default function ActivityDirectory({ activities }: ActivityDirectoryProps
                     {activity.location}
                     {activity.pickup && (
                       <span className="directory-card__pickup">
-                        · Pickup {activity.pickup.toLowerCase().includes("included") ? "included" : "by request"}
+                        · {t(activity.pickup.toLowerCase().includes("included") ? "Pickup included" : "Pickup on request")}
                       </span>
                     )}
                   </div>
@@ -125,21 +129,21 @@ export default function ActivityDirectory({ activities }: ActivityDirectoryProps
                   </div>
                 ) : (
                   <div className="directory-card__price directory-card__price--inquire">
-                    <span>Discover</span>
-                    <strong>Details</strong>
+                    <span>{t("Discover")}</span>
+                    <strong>{t("Details")}</strong>
                   </div>
                 )}
                 <div className="directory-card__actions">
                   <Link href={`/activities/${activity.slug}`} className="directory-card__details">
-                    View details <span aria-hidden="true">↗</span>
+                    {t("View details")} <span aria-hidden="true">↗</span>
                   </Link>
                   {activity.reservation ? (
                     <ActivityReserveButton activity={activity} className="directory-card__book">
-                      Reserve <span aria-hidden="true">↗</span>
+                      {t("Reserve")} <span aria-hidden="true">↗</span>
                     </ActivityReserveButton>
                   ) : activity.bookingUrl ? (
                     <a href={activity.bookingUrl} target="_blank" rel="noopener noreferrer" className="directory-card__book">
-                      Book <span aria-hidden="true">↗</span>
+                      {t("Book")} <span aria-hidden="true">↗</span>
                     </a>
                   ) : null}
                 </div>
@@ -150,10 +154,10 @@ export default function ActivityDirectory({ activities }: ActivityDirectoryProps
       ) : (
         <div className="activity-directory__empty">
           <span aria-hidden="true">✳</span>
-          <h3>No experiences found just yet.</h3>
-          <p>Try a different search or browse all activities.</p>
+          <h3>{t("No experiences found just yet.")}</h3>
+          <p>{t("Try a different search or browse all activities.")}</p>
           <button type="button" onClick={() => { setActiveCategory("All"); setSearchTerm(""); }}>
-            Show everything
+            {t("Show everything")}
           </button>
         </div>
       )}

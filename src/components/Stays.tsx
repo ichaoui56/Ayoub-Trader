@@ -1,3 +1,5 @@
+import { translate, type Locale } from "../i18n";
+
 const stays = [
   {
     name: "Traditional riad",
@@ -19,18 +21,19 @@ const stays = [
   },
 ];
 
-export default function Stays() {
+export default function Stays({ locale }: { locale: Locale }) {
+  const t = (phrase: string) => translate(locale, phrase);
   return (
     <section id="stays" className="stays-section text-paper">
       <div className="stays-section__inner">
         <div className="section-heading-grid">
           <div data-reveal>
-            <p className="eyebrow">Places to stay</p>
-            <h2 className="section-title mt-3 max-w-3xl">The right place.<br />The right feeling.</h2>
+            <p className="eyebrow">{t("Places to stay")}</p>
+            <h2 className="section-title mt-3 max-w-3xl">{t("The right place.")}<br />{t("The right feeling.")}</h2>
           </div>
           <div className="max-w-sm self-end pb-1" data-reveal>
             <p className="text-sm leading-relaxed text-paper/65">
-              From traditional riads to boutique hotels and beachside retreats, we’ll help find the kind of stay that feels like home—with a touch of Morocco.
+              {t("From traditional riads to boutique hotels and beachside retreats, we’ll help find the kind of stay that feels like home—with a touch of Morocco.")}
             </p>
             <span className="mt-5 block h-0.5 w-9 bg-signal" />
           </div>
@@ -42,15 +45,15 @@ export default function Stays() {
                 <img
                   data-frame-image
                   src={`https://images.unsplash.com/${stay.image}?auto=format&fit=crop&w=1000&q=85`}
-                  alt={`${stay.name} in ${stay.location}`}
+                  alt={`${t(stay.name)} à ${stay.location}`}
                   loading="lazy"
                   className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
                 />
                 <span className="stay-card__number">0{index + 1}</span>
                 <figcaption className="stay-card__caption">
                   <span>{stay.location}</span>
-                  <h3>{stay.name}</h3>
-                  <p>{stay.detail}</p>
+                  <h3>{t(stay.name)}</h3>
+                  <p>{t(stay.detail)}</p>
                 </figcaption>
                 <span className="stay-card__arrow" aria-hidden="true">↗</span>
               </figure>
@@ -58,7 +61,7 @@ export default function Stays() {
           ))}
         </div>
         <p className="stays-section__footnote">
-          A handpicked place to land makes every part of the journey feel better.
+          {t("A handpicked place to land makes every part of the journey feel better.")}
         </p>
       </div>
     </section>

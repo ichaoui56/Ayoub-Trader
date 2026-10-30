@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import Nav from "../../../src/components/Nav";
-import { activities, getActivityBySlug, getActivityImageUrl } from "../../../src/activities";
+import { getActivityImageUrl } from "../../../src/activities";
+import { getPublicActivityCatalog } from "../../../src/server/activity-catalog";
+import { getLocale } from "../../../src/server/locale";
+import { localizeTree, translate } from "../../../src/i18n";
 import ActivityGallery from "../../../src/components/ActivityGallery";
 import ActivityReserveButton from "../../../src/components/ActivityReserveButton";
 
@@ -10,16 +14,15 @@ type ActivityPageProps = {
   params: Promise<{ slug: string }>;
 };
 
-export function generateStaticParams() {
-  return activities.map(({ slug }) => ({ slug }));
-}
-
 export async function generateMetadata({ params }: ActivityPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const activity = getActivityBySlug(slug);
+  if (process.env.DATABASE_URL) await connection();
+  const [catalog, locale] = await Promise.all([getPublicActivityCatalog(), getLocale()]);
+  const activities = localizeTree(catalog, locale);
+  const activity = activities.find((item) => item.slug === slug);
 
   if (!activity) {
-    return { title: "Activity not found" };
+    return { title: translate(locale, "Activity not found") };
   }
 
   return {
@@ -35,7 +38,11 @@ export async function generateMetadata({ params }: ActivityPageProps): Promise<M
 
 export default async function ActivityDetailPage({ params }: ActivityPageProps) {
   const { slug } = await params;
-  const activity = getActivityBySlug(slug);
+  if (process.env.DATABASE_URL) await connection();
+  const [catalog, locale] = await Promise.all([getPublicActivityCatalog(), getLocale()]);
+  const activities = localizeTree(catalog, locale);
+  const t = (phrase: string) => translate(locale, phrase);
+  const activity = activities.find((item) => item.slug === slug);
 
   if (!activity) {
     notFound();
@@ -54,15 +61,15 @@ export default async function ActivityDetailPage({ params }: ActivityPageProps) 
       <Nav />
       <main className="activity-detail-page min-h-screen px-5 pb-20 pt-28 text-ink md:px-[4vw] md:pt-36">
         <div className="mx-auto max-w-[1500px]">
-          <nav aria-label="Breadcrumb" className="activity-breadcrumb">
-            <Link href="/activities">All activities</Link>
+          <nav aria-label={t("Breadcrumb")} className="activity-breadcrumb">
+            <Link href="/activities">{t("All activities")}</Link>
             <span aria-hidden="true">/</span>
             <span aria-current="page">{activity.title}</span>
           </nav>
 
           <header className="activity-detail__hero">
             <div className="activity-detail__copy">
-              <p className="eyebrow">{activity.category} · Southern Morocco</p>
+              <p className="eyebrow">{activity.category} · {t("Southern Morocco")}</p>
               <h1 className="section-title mt-4">{activity.title}</h1>
               <p className="activity-detail__lead">{activity.summary}</p>
               {activity.rating && (
@@ -71,15 +78,15 @@ export default async function ActivityDetailPage({ params }: ActivityPageProps) 
                 </a>
               )}
               <div className="activity-detail__facts">
-                <div><span aria-hidden="true">⌖</span><p><small>Where</small>{activity.location}</p></div>
-                {activity.duration && <div><span aria-hidden="true">◷</span><p><small>Time to allow</small>{activity.duration}</p></div>}
-                <div><span aria-hidden="true">↗</span><p><small>Pace</small>{activity.pace}</p></div>
+                <div><span aria-hidden="true">⌖</span><p><small>{t("Where")}</small>{activity.location}</p></div>
+                {activity.duration && <div><span aria-hidden="true">◷</span><p><small>{t("Time to allow")}</small>{activity.duration}</p></div>}
+                <div><span aria-hidden="true">↗</span><p><small>{t("Pace")}</small>{activity.pace}</p></div>
               </div>
-              {activity.bookingUrl ? (
-                <aside className="activity-booking-card" aria-label={`Booking information for ${activity.title}`}>
+              {activity.bookingUrl || activity.reservation ? (
+                <aside className="activity-booking-card" aria-label={`${t("Booking information for")} ${activity.title}`}>
                   <div className="activity-booking-card__heading">
                     <div>
-                      <p className="eyebrow">Reserve this experience</p>
+                      <p className="eyebrow">{t("Reserve this experience")}</p>
                       <h2>{activity.title}</h2>
                     </div>
                     {activity.priceOptions?.length === 1 && (
@@ -97,20 +104,20 @@ export default async function ActivityDetailPage({ params }: ActivityPageProps) 
                       ))}
                     </ul>
                   )}
-                  {activity.pickup && <p className="activity-booking-card__pickup"><span aria-hidden="true">⌖</span> {activity.pickup}</p>}
+                  {activity.pickup && <p className="activity-booking-card__pickup"><span aria-hidden="true">⌖</span> {t(activity.pickup)}</p>}
                   {activity.reservation && (
                     <ActivityReserveButton activity={activity} className="button-signal activity-detail__cta">
-                      Build a reservation request <span aria-hidden="true">↗</span>
+                      {t("Build a reservation request")} <span aria-hidden="true">↗</span>
                     </ActivityReserveButton>
                   )}
-                  <a className="activity-detail__partner-link" href={activity.bookingUrl} target="_blank" rel="noopener noreferrer">
-                    Book directly with our partner <span aria-hidden="true">↗</span>
-                  </a>
+                  {activity.bookingUrl && <a className="activity-detail__partner-link" href={activity.bookingUrl} target="_blank" rel="noopener noreferrer">
+                    {t("Book directly with our partner")} <span aria-hidden="true">↗</span>
+                  </a>}
                   {activity.paymentNote && <p className="activity-booking-card__note">{activity.paymentNote}</p>}
                 </aside>
               ) : (
                 <Link href="/#transfer" className="button-signal activity-detail__cta">
-                  Plan this experience <span aria-hidden="true">→</span>
+                  {t("Plan this experience")} <span aria-hidden="true">→</span>
                 </Link>
               )}
             </div>
@@ -119,13 +126,13 @@ export default async function ActivityDetailPage({ params }: ActivityPageProps) 
 
           <div className="activity-detail__content">
             <article className="activity-detail__overview">
-              <p className="eyebrow">The experience</p>
-              <h2>Get to know {activity.title.toLowerCase()}.</h2>
+              <p className="eyebrow">{t("The experience")}</p>
+              <h2>{t("Discover the experience")}</h2>
               <p>{activity.overview}</p>
             </article>
 
             <aside className="activity-detail__highlights">
-              <p className="eyebrow">A few highlights</p>
+              <p className="eyebrow">{t("A few highlights")}</p>
               <ul>
                 {activity.highlights.map((highlight) => (
                   <li key={highlight}><span aria-hidden="true">↗</span>{highlight}</li>
@@ -137,8 +144,8 @@ export default async function ActivityDetailPage({ params }: ActivityPageProps) 
           {activity.included && (
             <section className="activity-included" aria-labelledby="activity-included-title">
               <div>
-                <p className="eyebrow">Part of the experience</p>
-                <h2 id="activity-included-title">What’s included</h2>
+                <p className="eyebrow">{t("Part of the experience")}</p>
+                <h2 id="activity-included-title">{t("What’s included")}</h2>
               </div>
               <ul>
                 {activity.included.map((item) => <li key={item}>{item}</li>)}
@@ -148,8 +155,8 @@ export default async function ActivityDetailPage({ params }: ActivityPageProps) 
 
           <section className="activity-itinerary" aria-labelledby="activity-itinerary-title">
             <div className="activity-subheading">
-              <p className="eyebrow">A sense of the day</p>
-              <h2 id="activity-itinerary-title">What to expect</h2>
+              <p className="eyebrow">{t("A sense of the day")}</p>
+              <h2 id="activity-itinerary-title">{t("What to expect")}</h2>
             </div>
             <ol>
               {activity.itinerary.map((step, index) => (
@@ -163,8 +170,8 @@ export default async function ActivityDetailPage({ params }: ActivityPageProps) 
 
           <aside className="activity-good-to-know">
             <div>
-              <p className="eyebrow">Before you go</p>
-              <h2>Good to know</h2>
+                <p className="eyebrow">{t("Before you go")}</p>
+                <h2>{t("Good to know")}</h2>
             </div>
             <ul>
               {activity.goodToKnow.map((note) => <li key={note}>{note}</li>)}
@@ -174,14 +181,14 @@ export default async function ActivityDetailPage({ params }: ActivityPageProps) 
           {activity.privateOption && (
             <aside className="activity-private-option">
               <div>
-                <p className="eyebrow">Prefer a private outing?</p>
+                <p className="eyebrow">{t("Prefer a private outing?")}</p>
                 <h2>{activity.privateOption.title}</h2>
                 <p>{activity.privateOption.description}</p>
               </div>
               <div className="activity-private-option__action">
                 <strong>{activity.privateOption.price}</strong>
                 <a href={activity.privateOption.url} target="_blank" rel="noopener noreferrer">
-                  Explore private option <span aria-hidden="true">↗</span>
+                  {t("Explore private option")} <span aria-hidden="true">↗</span>
                 </a>
               </div>
             </aside>
@@ -190,8 +197,8 @@ export default async function ActivityDetailPage({ params }: ActivityPageProps) 
           {activity.faqs && (
             <section className="activity-faq" aria-labelledby="activity-faq-title">
               <div className="activity-subheading">
-                <p className="eyebrow">Your questions, answered</p>
-                <h2 id="activity-faq-title">Questions</h2>
+                <p className="eyebrow">{t("Your questions, answered")}</p>
+                <h2 id="activity-faq-title">{t("Questions")}</h2>
               </div>
               <div className="activity-faq__list">
                 {activity.faqs.map((faq) => (
@@ -206,8 +213,8 @@ export default async function ActivityDetailPage({ params }: ActivityPageProps) 
 
           <section className="activity-related" aria-labelledby="activity-related-title">
             <div className="activity-subheading">
-              <p className="eyebrow">Keep exploring</p>
-              <h2 id="activity-related-title">You might also like</h2>
+              <p className="eyebrow">{t("Keep exploring")}</p>
+              <h2 id="activity-related-title">{t("You might also like")}</h2>
             </div>
             <div className="activities-grid activities-grid--related">
               {moreActivities.map((related) => (
@@ -220,7 +227,7 @@ export default async function ActivityDetailPage({ params }: ActivityPageProps) 
                     <div className="activity-card__body">
                       <h3>{related.title}</h3>
                       <p>{related.summary}</p>
-                      <span className="activity-card__more">Explore activity <span aria-hidden="true">↗</span></span>
+                      <span className="activity-card__more">{t("Explore activity")} <span aria-hidden="true">↗</span></span>
                     </div>
                   </Link>
                 </article>
@@ -229,7 +236,7 @@ export default async function ActivityDetailPage({ params }: ActivityPageProps) 
           </section>
 
           <div className="activity-detail__back">
-            <Link href="/activities"><span aria-hidden="true">←</span> Browse all activities</Link>
+            <Link href="/activities"><span aria-hidden="true">←</span> {t("Browse all activities")}</Link>
           </div>
         </div>
       </main>

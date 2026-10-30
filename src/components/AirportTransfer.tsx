@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { MEDIA } from "../content";
 import { createTransferRequest } from "../server/transfer-actions";
+import { translate, type Locale } from "../i18n";
 import type {
   PrivateServiceData,
   ReservedPrivateSlot,
@@ -14,6 +15,7 @@ type BookingTab = "routes" | "private" | "custom";
 type FieldValues = Record<string, string>;
 
 type Catalog = {
+  locale: Locale;
   bookingEnabled: boolean;
   routes: TransferRouteData[];
   services: PrivateServiceData[];
@@ -96,18 +98,21 @@ function formatStartTime(time: string) {
 }
 
 function PrivateStartTimePicker({
+  locale,
   service,
   date,
   value,
   setValue,
   reservedSlots,
 }: {
+  locale: Locale;
   service: PrivateServiceData;
   date: string;
   value: string;
   setValue: (name: string, value: string) => void;
   reservedSlots: ReservedPrivateSlot[];
 }) {
+  const t = (phrase: string) => translate(locale, phrase);
   const reservedTimes = reservedSlots
     .filter((slot) => slot.privateServiceId === service.id && slot.serviceDate === date)
     .map((slot) => slot.serviceTime);
@@ -116,7 +121,7 @@ function PrivateStartTimePicker({
     return (
       <Field
         name="time"
-        label="Heure"
+        label={t("Heure")}
         values={{ time: value }}
         setValue={setValue}
         type="time"
@@ -127,8 +132,8 @@ function PrivateStartTimePicker({
 
   return (
     <fieldset className="booking-field booking-start-times">
-      <legend className="booking-field__label">Heure de départ <span className="booking-optional">(obligatoire)</span></legend>
-      {!date && <p className="booking-field__helper">Choisissez une date pour voir les heures déjà réservées.</p>}
+      <legend className="booking-field__label">{t("Heure de départ")} <span className="booking-optional">({t("obligatoire")})</span></legend>
+      {!date && <p className="booking-field__helper">{t("Choisissez une date pour voir les heures déjà réservées.")}</p>}
       <div className="booking-start-times__options">
         {times.map((time) => {
           const reserved = reservedTimes.includes(time);
@@ -139,11 +144,11 @@ function PrivateStartTimePicker({
               className={`booking-start-times__option${value === time ? " is-selected" : ""}${reserved ? " is-reserved" : ""}`}
               disabled={reserved}
               aria-pressed={!reserved && value === time}
-              aria-label={`${formatStartTime(time)}${reserved ? " — réservé" : ""}`}
+              aria-label={`${formatStartTime(time)}${reserved ? ` — ${t("réservé")}` : ""}`}
               onClick={() => setValue("time", time)}
             >
               <span>{formatStartTime(time)}</span>
-              {reserved && <span className="booking-start-times__reserved">× Réservé</span>}
+              {reserved && <span className="booking-start-times__reserved">× {t("Réservé")}</span>}
             </button>
           );
         })}
@@ -153,41 +158,44 @@ function PrivateStartTimePicker({
 }
 
 function ContactFields({
+  locale,
   values,
   setValue,
   sectionLabel = "Vos coordonnées",
   variant = "standard",
 }: {
+  locale: Locale;
   values: FieldValues;
   setValue: (name: string, value: string) => void;
   sectionLabel?: string;
   variant?: "standard" | "custom";
 }) {
+  const t = (phrase: string) => translate(locale, phrase);
   return (
     <fieldset className={`booking-contact booking-contact--${variant}`}>
-      <legend>{sectionLabel}</legend>
+      <legend>{t(sectionLabel)}</legend>
       <div className="booking-contact__grid">
-        <Field name="name" label="Nom" values={values} setValue={setValue} placeholder="Votre nom" required />
-        <Field name="phone" label="Téléphone / WhatsApp" values={values} setValue={setValue} type="tel" placeholder="+212 6 12 34 56 78" required />
+        <Field name="name" label={t("Nom")} values={values} setValue={setValue} placeholder={t("Votre nom")} required />
+        <Field name="phone" label={t("Téléphone / WhatsApp")} values={values} setValue={setValue} type="tel" placeholder="+212 6 12 34 56 78" required />
         <Field
           name="email"
-          label="E-mail"
+          label={t("E-mail")}
           values={values}
           setValue={setValue}
           type="email"
-          placeholder="votre@email.com"
+          placeholder={t("votre@email.com")}
           required
-          helper="Nous utilisons votre adresse uniquement pour cette demande."
+          helper={t("Nous utilisons votre adresse uniquement pour cette demande.")}
         />
       </div>
       <label className="booking-field booking-field--remarks">
-        <span className="booking-field__label">Remarques <span className="booking-optional">(facultatif)</span></span>
+        <span className="booking-field__label">{t("Remarques")} <span className="booking-optional">({t("facultatif")})</span></span>
         <textarea
           className="booking-control booking-control--textarea"
           name="remarks"
           value={values.remarks ?? ""}
           onChange={(event) => setValue("remarks", event.target.value)}
-          placeholder="Toute information supplémentaire..."
+          placeholder={t("Toute information supplémentaire...")}
           rows={2}
         />
       </label>
@@ -196,6 +204,7 @@ function ContactFields({
 }
 
 function TravelFields({
+  locale,
   values,
   setValue,
   passengerLimit = 8,
@@ -203,6 +212,7 @@ function TravelFields({
   privateService,
   reservedPrivateSlots = [],
 }: {
+  locale: Locale;
   values: FieldValues;
   setValue: (name: string, value: string) => void;
   passengerLimit?: number;
@@ -210,37 +220,39 @@ function TravelFields({
   privateService?: PrivateServiceData;
   reservedPrivateSlots?: ReservedPrivateSlot[];
 }) {
-  const hotelField = <Field name="hotel" label="Hôtel / adresse" values={values} setValue={setValue} placeholder="Hôtel, adresse ou point de rencontre" />;
-  const dateField = <Field name="date" label="Date" values={values} setValue={setValue} type="date" required />;
+  const t = (phrase: string) => translate(locale, phrase);
+  const hotelField = <Field name="hotel" label={t("Hôtel / adresse")} values={values} setValue={setValue} placeholder={t("Hôtel, adresse ou point de rencontre")} />;
+  const dateField = <Field name="date" label={t("Date")} values={values} setValue={setValue} type="date" required />;
   const timeField = privateService
     ? <PrivateStartTimePicker
       service={privateService}
+      locale={locale}
       date={values.date ?? ""}
       value={values.time ?? ""}
       setValue={setValue}
       reservedSlots={reservedPrivateSlots}
     />
-    : <Field name="time" label="Heure" values={values} setValue={setValue} type="time" required />;
+    : <Field name="time" label={t("Heure")} values={values} setValue={setValue} type="time" required />;
   const passengerField = (
     <Field
       name="passengers"
-      label="Passagers"
+      label={t("Passagers")}
       values={values}
       setValue={setValue}
       options={Array.from({ length: passengerLimit }, (_, index) => `${index + 1}`)}
-      placeholder="Choisir"
+      placeholder={t("Choisir")}
       required
     />
   );
-  const flightField = <Field name="flight" label="N° de vol" values={values} setValue={setValue} placeholder="Ex. AT123" />;
+  const flightField = <Field name="flight" label={t("N° de vol")} values={values} setValue={setValue} placeholder={t("Ex. AT123")} />;
   const luggageField = (
     <Field
       name="luggage"
-      label="Bagages"
+      label={t("Bagages")}
       values={values}
       setValue={setValue}
       options={["0", "1", "2", "3", "4", "5", "6", "7", "8"]}
-      placeholder="Sélectionner"
+      placeholder={t("Sélectionner")}
     />
   );
 
@@ -270,35 +282,38 @@ function TravelFields({
 }
 
 function BookingSubmit({
+  locale,
   message,
   onClear,
   busy,
   bookingEnabled,
 }: {
+  locale: Locale;
   message: string;
   onClear: () => void;
   busy: boolean;
   bookingEnabled: boolean;
 }) {
+  const t = (phrase: string) => translate(locale, phrase);
   return (
     <>
       <button type="submit" className="booking-send" disabled={busy || !bookingEnabled}>
-        <span aria-hidden="true">↗</span> {busy ? "Envoi en cours…" : "Envoyer la demande"} <span aria-hidden="true">→</span>
+        <span aria-hidden="true">↗</span> {busy ? t("Envoi en cours…") : t("Envoyer la demande")} <span aria-hidden="true">→</span>
       </button>
       {!bookingEnabled && (
         <p className="booking-message" role="status">
-          Les réservations en ligne ne sont pas encore configurées. Veuillez contacter notre équipe directement.
+          {t("Les réservations en ligne ne sont pas encore configurées. Veuillez contacter notre équipe directement.")}
         </p>
       )}
       <p className="booking-confirmation">
         <span aria-hidden="true">ⓘ</span>
-        Notre équipe vous confirme la disponibilité, le véhicule et l'heure de prise en charge.
-        Paiement directement au chauffeur au moment du service.
+        {t("Notre équipe vous confirme la disponibilité, le véhicule et l'heure de prise en charge.")}
+        {t("Paiement directement au chauffeur au moment du service.")}
       </p>
       {message && (
         <p className="booking-message" role="status">
           {message}
-          <button type="button" onClick={onClear} aria-label="Fermer le message">×</button>
+          <button type="button" onClick={onClear} aria-label={t("Fermer le message")}>×</button>
         </p>
       )}
     </>
@@ -306,12 +321,14 @@ function BookingSubmit({
 }
 
 export default function AirportTransfer({
+  locale,
   bookingEnabled,
   routes,
   services: privateServices,
   locations,
   reservedPrivateSlots,
 }: Catalog) {
+  const t = (phrase: string) => translate(locale, phrase);
   const [activeTab, setActiveTab] = useState<BookingTab>("routes");
   const [mobileRouteStep, setMobileRouteStep] = useState<"choose" | "booking">("choose");
   const [mobilePrivateStep, setMobilePrivateStep] = useState<"choose" | "booking">("choose");
@@ -350,13 +367,13 @@ export default function AirportTransfer({
     if (busy) return;
 
     if (activeTab === "private" && !values.time) {
-      setMessage("Choisissez une heure de départ disponible.");
+      setMessage(t("Choisissez une heure de départ disponible."));
       return;
     }
 
     if (activeTab === "custom") {
       if (values.departure && values.departure === values.arrival) {
-        setMessage("Le départ et l'arrivée doivent être différents.");
+        setMessage(t("Le départ et l'arrivée doivent être différents."));
         const departure = event.currentTarget.elements.namedItem("departure");
         if (departure instanceof HTMLSelectElement) departure.focus();
         return;
@@ -365,7 +382,7 @@ export default function AirportTransfer({
         (values.departure?.startsWith("Autre") || values.arrival?.startsWith("Autre")) &&
         !values.remarks?.trim()
       ) {
-        setMessage("Précisez votre lieu de départ ou d'arrivée dans les remarques.");
+        setMessage(t("Précisez votre lieu de départ ou d'arrivée dans les remarques."));
         const remarks = event.currentTarget.elements.namedItem("remarks");
         if (remarks instanceof HTMLTextAreaElement) remarks.focus();
         return;
@@ -400,19 +417,19 @@ export default function AirportTransfer({
       setSuccessToastOpen(true);
       setValues({ passengers: "1", luggage: "0" });
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Votre demande n’a pas pu être envoyée. Veuillez réessayer.");
+      setMessage(error instanceof Error ? t(error.message) : t("Votre demande n’a pas pu être envoyée. Veuillez réessayer."));
     } finally {
       setBusy(false);
     }
   };
 
   const renderSubmit = () => (
-    <BookingSubmit message={message} onClear={() => setMessage("")} busy={busy} bookingEnabled={bookingEnabled} />
+    <BookingSubmit locale={locale} message={message} onClear={() => setMessage("")} busy={busy} bookingEnabled={bookingEnabled} />
   );
 
   const renderContactAndSubmit = () => (
     <>
-      <ContactFields values={values} setValue={setValue} variant="standard" />
+      <ContactFields locale={locale} values={values} setValue={setValue} variant="standard" />
       {renderSubmit()}
     </>
   );
@@ -421,22 +438,22 @@ export default function AirportTransfer({
     <section id="transfer" className="arrival-section scroll-mt-20">
       <div className="arrival-hero">
         <div className="arrival-copy" data-reveal>
-          <p className="eyebrow">Travel / Concierge</p>
+          <p className="eyebrow">{t("Travel / Concierge")}</p>
           <h2 className="arrival-title">
-            <span>Your Morocco</span>
-            <span><em>Adventure</em> starts</span>
-            <span>the moment you</span>
-            <em>land.</em>
+            <span>{t("Hero title line one")}</span>
+            <span><em>{t("Hero title line two")}</em></span>
+            <span>{t("Hero title line three")}</span>
+            <em>{t("Hero title line four")}</em>
           </h2>
           <p className="arrival-intro">
-            Seamless airport pickup, handpicked stays and unforgettable experiences—all in one premium concierge service.
+            {t("Seamless airport pickup, handpicked stays and unforgettable experiences—all in one premium concierge service.")}
           </p>
           <a href="#arrival-booking" className="arrival-text-link">
-            Plan your arrival <span aria-hidden="true">↓</span>
+            {t("Plan your arrival")} <span aria-hidden="true">↓</span>
           </a>
         </div>
 
-        <div className="arrival-visuals" aria-label="A glimpse of your Morocco arrival">
+        <div className="arrival-visuals" aria-label={t("A glimpse of your Morocco arrival")}>
           <figure className="arrival-visual arrival-visual--pickup">
             <img
               src={MEDIA.poster}
@@ -445,7 +462,7 @@ export default function AirportTransfer({
               decoding="async"
               className="arrival-image"
             />
-            <figcaption className="arrival-photo-caption"><span>Your arrival, made easy</span></figcaption>
+            <figcaption className="arrival-photo-caption"><span>{t("Your arrival, made easy")}</span></figcaption>
           </figure>
           <figure className="arrival-visual arrival-visual--riad">
             <img
@@ -455,21 +472,21 @@ export default function AirportTransfer({
               decoding="async"
               className="arrival-image"
             />
-            <figcaption className="arrival-photo-caption"><span>Feel at home</span></figcaption>
+            <figcaption className="arrival-photo-caption"><span>{t("Feel at home")}</span></figcaption>
           </figure>
-          <p className="arrival-visual-note">Your Morocco, thoughtfully connected.</p>
+          <p className="arrival-visual-note">{t("Your Morocco, thoughtfully connected.")}</p>
         </div>
       </div>
 
       <div id="arrival-booking" className="arrival-booking">
-        <div className="booking-tabs" role="tablist" aria-label="Choisir un service de transport">
+        <div className="booking-tabs" role="tablist" aria-label={t("Choisir un service de transport")}>
           {tabs.map((tab) => (
             <button
               key={tab.id}
               type="button"
               role="tab"
               id={`booking-tab-${tab.id}`}
-              aria-label={tab.label}
+              aria-label={t(tab.label)}
               aria-selected={activeTab === tab.id}
               aria-controls={`booking-panel-${tab.id}`}
               className={`booking-tab${activeTab === tab.id ? " is-active" : ""}`}
@@ -489,8 +506,8 @@ export default function AirportTransfer({
               }}
             >
               <span aria-hidden="true">{tab.icon}</span>
-              <span className="booking-tab__label">{tab.label}</span>
-              <span className="booking-tab__mobile-label" aria-hidden="true">{tab.mobileLabel}</span>
+              <span className="booking-tab__label">{t(tab.label)}</span>
+              <span className="booking-tab__mobile-label" aria-hidden="true">{t(tab.mobileLabel)}</span>
             </button>
           ))}
         </div>
@@ -506,10 +523,10 @@ export default function AirportTransfer({
               <div className="booking-options" ref={routeListRef}>
                 <div className="booking-routes-heading">
                   <div>
-                    <p className="booking-intro">Prix en euros. Choisissez votre trajet.</p>
-                    <p className="booking-routes-subtitle">Tarifs indicatifs, confirmés selon votre demande.</p>
+                    <p className="booking-intro">{t("Prix en euros. Choisissez votre trajet.")}</p>
+                    <p className="booking-routes-subtitle">{t("Tarifs indicatifs, confirmés selon votre demande.")}</p>
                   </div>
-                  <span className="booking-route-count">{routes.length} trajets</span>
+                  <span className="booking-route-count">{routes.length} {t("trajets")}</span>
                 </div>
                 <div className="booking-option-list">
                   {routes.map((route) => (
@@ -522,7 +539,7 @@ export default function AirportTransfer({
                         <span className="booking-option__from">{route.from}</span>
                         <span className="booking-option__destination"><span aria-hidden="true">→</span> {route.to}</span>
                       </span>
-                      <span className="booking-option__price"><span>À partir de</span><strong>{route.price} €</strong></span>
+                      <span className="booking-option__price"><span>{t("À partir de")}</span><strong>{route.price} €</strong></span>
                       <button
                         type="button"
                         className="booking-option__button"
@@ -536,22 +553,22 @@ export default function AirportTransfer({
                           }
                         }}
                       >
-                        <span className="booking-option__desktop-label">Choisir</span>
-                        <span className="booking-option__mobile-label">Continuer</span>
+                        <span className="booking-option__desktop-label">{t("Choisir")}</span>
+                        <span className="booking-option__mobile-label">{t("Continuer")}</span>
                         <span aria-hidden="true">→</span>
                       </button>
                     </article>
                   ))}
                 </div>
-                {routes.length === 0 && <p className="booking-empty">Aucun trajet n’est disponible pour le moment.</p>}
+                {routes.length === 0 && <p className="booking-empty">{t("Aucun trajet n’est disponible pour le moment.")}</p>}
                 <button
                   type="button"
                   className="booking-continue"
                   disabled={!selectedRoute}
                   onClick={() => setMobileRouteStep("booking")}
                 >
-                  Continuer avec {selectedRoute?.to ?? "un trajet"}
-                  <span>À partir de {selectedRoute?.price ?? "—"} €</span>
+                  {t("Continuer avec")} {selectedRoute?.to ?? t("un trajet")}
+                  <span>{t("À partir de")} {selectedRoute?.price ?? "—"} €</span>
                   <span aria-hidden="true">→</span>
                 </button>
               </div>
@@ -567,9 +584,9 @@ export default function AirportTransfer({
                   </button>
                   <span className="booking-selected__icon" aria-hidden="true">✈</span>
                   <div>
-                    <span className="booking-selected__eyebrow">Votre trajet</span>
+                    <span className="booking-selected__eyebrow">{t("Votre trajet")}</span>
                     <h3>{selectedRoute.from} <span aria-hidden="true">→</span> {selectedRoute.to}</h3>
-                    <p>À partir de <strong>{selectedRoute.price} €</strong></p>
+                    <p>{t("À partir de")} <strong>{selectedRoute.price} €</strong></p>
                   </div>
                   <button
                     type="button"
@@ -583,17 +600,17 @@ export default function AirportTransfer({
                       }
                     }}
                   >
-                    <span aria-hidden="true">↗</span> Modifier
+                    <span aria-hidden="true">↗</span> {t("Modifier")}
                   </button>
                 </div>
-                <p className="booking-selected-note">Prix indicatif · Le tarif final est confirmé selon votre demande.</p>
+                <p className="booking-selected-note">{t("Prix indicatif · Le tarif final est confirmé selon votre demande.")}</p>
                 <div className="booking-standard-form-heading">
                   <span aria-hidden="true">01</span>
-                  <h4>Détails du trajet</h4>
+                  <h4>{t("Détails du trajet")}</h4>
                 </div>
-                <TravelFields values={values} setValue={setValue} />
+                <TravelFields locale={locale} values={values} setValue={setValue} />
                 {renderContactAndSubmit()}
-              </form> : <div className="booking-detail"><p className="booking-empty">Choisissez un trajet disponible pour continuer.</p></div>}
+              </form> : <div className="booking-detail"><p className="booking-empty">{t("Choisissez un trajet disponible pour continuer.")}</p></div>}
             </div>
           )}
 
@@ -601,8 +618,8 @@ export default function AirportTransfer({
             <div className={`booking-layout booking-layout--private${mobilePrivateStep === "booking" ? " booking-layout--mobile-booking" : ""}`}>
               <div className="booking-options" ref={privateListRef}>
                 <div className="booking-section-intro">
-                  <h3>Sorties privées</h3>
-                  <p>Un véhicule avec chauffeur rien que pour vous, avec des horaires de départ définis pour chaque sortie.</p>
+                  <h3>{t("Sorties privées")}</h3>
+                  <p>{t("Un véhicule avec chauffeur rien que pour vous, avec des horaires de départ définis pour chaque sortie.")}</p>
                 </div>
                 <div className="booking-option-list booking-option-list--private">
                   {privateServices.map((service) => (
@@ -612,18 +629,18 @@ export default function AirportTransfer({
                     >
                       <img src={sharedImageUrl(service.image)} alt={service.imageAlt} loading="lazy" decoding="async" />
                       <div className="booking-private-card__body">
-                        <span className="booking-badge">♙ Privé</span>
+                        <span className="booking-badge">♙ {t("Privé")}</span>
                         <h4>{service.name}</h4>
                         <p>{service.description}</p>
                         <small className="booking-private-card__capacity">
-                          Jusqu'à {service.passengerLimit} personnes · {service.duration}
+                          {t("Jusqu'à")} {service.passengerLimit} {t("personnes")} · {service.duration}
                         </small>
                         {service.startTimes.length > 0 && (
                           <small className="booking-private-card__capacity">
-                            Départs : {service.startTimes.map(formatStartTime).join(" · ")}
+                            {t("Départs :")} {service.startTimes.map(formatStartTime).join(" · ")}
                           </small>
                         )}
-                        <strong>à partir de {service.price} €</strong>
+                        <strong>{t("à partir de")} {service.price} €</strong>
                       </div>
                       <button
                         type="button"
@@ -637,23 +654,23 @@ export default function AirportTransfer({
                           }
                         }}
                       >
-                        Choisir <span aria-hidden="true">→</span>
+                        {t("Choisir")} <span aria-hidden="true">→</span>
                       </button>
                     </article>
                   ))}
                 </div>
-                {privateServices.length === 0 && <p className="booking-empty">Aucune sortie privée n’est disponible pour le moment.</p>}
+                {privateServices.length === 0 && <p className="booking-empty">{t("Aucune sortie privée n’est disponible pour le moment.")}</p>}
               </div>
 
               {selectedPrivate ? <form className="booking-detail" onSubmit={submit}>
                 <div className="booking-selected">
                   <img src={sharedImageUrl(selectedPrivate.image)} alt="" />
                   <div>
-                    <span className="booking-badge">♙ Privé</span>
+                    <span className="booking-badge">♙ {t("Privé")}</span>
                     <h3>{selectedPrivate.name}</h3>
                     <p>{selectedPrivate.description}</p>
                     <small className="booking-private-card__capacity">
-                      Jusqu'à {selectedPrivate.passengerLimit} personnes · {selectedPrivate.duration}
+                      {t("Jusqu'à")} {selectedPrivate.passengerLimit} {t("personnes")} · {selectedPrivate.duration}
                     </small>
                     <strong className="booking-selected__price">{selectedPrivate.price} €</strong>
                   </div>
@@ -669,14 +686,15 @@ export default function AirportTransfer({
                       }
                     }}
                   >
-                    <span aria-hidden="true">↗</span> Modifier
+                    <span aria-hidden="true">↗</span> {t("Modifier")}
                   </button>
                 </div>
                 <div className="booking-standard-form-heading">
                   <span aria-hidden="true">01</span>
-                  <h4>Détails de votre sortie</h4>
+                  <h4>{t("Détails de votre sortie")}</h4>
                 </div>
                 <TravelFields
+                  locale={locale}
                   values={values}
                   setValue={setValue}
                   passengerLimit={selectedPrivate.passengerLimit}
@@ -684,7 +702,7 @@ export default function AirportTransfer({
                   reservedPrivateSlots={reservedPrivateSlots}
                 />
                 {renderContactAndSubmit()}
-              </form> : <div className="booking-detail"><p className="booking-empty">Choisissez une sortie privée disponible pour continuer.</p></div>}
+              </form> : <div className="booking-detail"><p className="booking-empty">{t("Choisissez une sortie privée disponible pour continuer.")}</p></div>}
             </div>
           )}
 
@@ -692,9 +710,9 @@ export default function AirportTransfer({
             <div className="booking-layout booking-layout--custom">
               <div className="booking-custom-aside">
                 <div className="booking-section-intro">
-                  <span className="booking-custom-kicker">Votre itinéraire, à votre façon</span>
-                  <h3>Besoin d'un autre trajet ?</h3>
-                  <p>Un autre trajet, ou le retour : dites-nous où et quand.</p>
+                  <span className="booking-custom-kicker">{t("Votre itinéraire, à votre façon")}</span>
+                  <h3>{t("Besoin d'un autre trajet ?")}</h3>
+                  <p>{t("Un autre trajet, ou le retour : dites-nous où et quand.")}</p>
                 </div>
                 <figure className="booking-custom-visual">
                   <img
@@ -704,12 +722,12 @@ export default function AirportTransfer({
                     loading="lazy"
                     decoding="async"
                   />
-                  <figcaption>Votre route. Votre rythme.</figcaption>
+                  <figcaption>{t("Votre route. Votre rythme.")}</figcaption>
                 </figure>
                 <ul className="booking-benefits">
-                  <li><span aria-hidden="true">⌖</span> Trajets sur mesure<br />selon vos besoins</li>
-                  <li><span aria-hidden="true">◇</span> Véhicules confortables<br />et sécurisés</li>
-                  <li><span aria-hidden="true">♙</span> Chauffeurs professionnels<br />et ponctuels</li>
+                  <li><span aria-hidden="true">⌖</span> {t("Trajets sur mesure selon vos besoins")}</li>
+                  <li><span aria-hidden="true">◇</span> {t("Véhicules confortables et sécurisés")}</li>
+                  <li><span aria-hidden="true">♙</span> {t("Chauffeurs professionnels et ponctuels")}</li>
                 </ul>
               </div>
 
@@ -717,29 +735,29 @@ export default function AirportTransfer({
                 <div className="booking-custom-form-heading">
                   <span className="booking-custom-step">01</span>
                   <div>
-                    <h3>Votre trajet</h3>
-                    <p>Indiquez votre départ et votre destination.</p>
+                    <h3>{t("Votre trajet")}</h3>
+                    <p>{t("Indiquez votre départ et votre destination.")}</p>
                   </div>
                 </div>
                 <div className="booking-location-grid">
-                  <Field name="departure" label="Départ" values={values} setValue={setValue} options={locations.filter((location) => location.isDeparture).map((location) => location.name)} placeholder="Choisir" required />
-                  <Field name="arrival" label="Arrivée" values={values} setValue={setValue} options={locations.filter((location) => location.isArrival).map((location) => location.name)} placeholder="Choisir" required />
+                  <Field name="departure" label={t("Départ")} values={values} setValue={setValue} options={locations.filter((location) => location.isDeparture).map((location) => location.name)} placeholder={t("Choisir")} required />
+                  <Field name="arrival" label={t("Arrivée")} values={values} setValue={setValue} options={locations.filter((location) => location.isArrival).map((location) => location.name)} placeholder={t("Choisir")} required />
                 </div>
                 {(values.departure?.startsWith("Autre") || values.arrival?.startsWith("Autre")) && (
                   <p className="booking-field__helper booking-location-helper">
-                    Indiquez votre lieu exact dans les remarques ci-dessous.
+                    {t("Indiquez votre lieu exact dans les remarques ci-dessous.")}
                   </p>
                 )}
-                <p className="booking-price-notice"><span aria-hidden="true">ⓘ</span><span><strong>Tarif personnalisé</strong><br />Notre équipe confirme le prix selon votre trajet.</span></p>
+                <p className="booking-price-notice"><span aria-hidden="true">ⓘ</span><span><strong>{t("Tarif personnalisé")}</strong><br />{t("Notre équipe confirme le prix selon votre trajet.")}</span></p>
                 <div className="booking-custom-form-heading booking-custom-form-heading--details">
                   <span className="booking-custom-step">02</span>
                   <div>
-                    <h3>Les détails du voyage</h3>
-                    <p>Date, horaires et passagers.</p>
+                    <h3>{t("Les détails du voyage")}</h3>
+                    <p>{t("Date, horaires et passagers.")}</p>
                   </div>
                 </div>
-                <TravelFields values={values} setValue={setValue} variant="custom" />
-                <ContactFields values={values} setValue={setValue} sectionLabel="03 · Vos coordonnées" variant="custom" />
+                <TravelFields locale={locale} values={values} setValue={setValue} variant="custom" />
+                <ContactFields locale={locale} values={values} setValue={setValue} sectionLabel="03 · Vos coordonnées" variant="custom" />
                 {renderSubmit()}
               </form>
             </div>
@@ -750,8 +768,8 @@ export default function AirportTransfer({
         <div className="booking-success-toast" role="status" aria-live="polite" aria-atomic="true">
           <span className="booking-success-toast__icon" aria-hidden="true">✓</span>
           <div>
-            <h3>Votre demande a bien été envoyée</h3>
-            <p>Notre équipe vous contactera rapidement pour confirmer les détails de votre réservation.</p>
+            <h3>{t("Votre demande a bien été envoyée")}</h3>
+            <p>{t("Notre équipe vous contactera rapidement pour confirmer les détails de votre réservation.")}</p>
           </div>
           <button type="button" aria-label="Fermer la confirmation" onClick={() => setSuccessToastOpen(false)}>×</button>
         </div>

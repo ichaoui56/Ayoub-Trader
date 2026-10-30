@@ -298,8 +298,8 @@ export function getBlogImageUrl(image: string, width = 1000) {
   return `https://images.unsplash.com/${image}?auto=format&fit=crop&w=${width}&q=85`;
 }
 
-export function formatBlogDate(date: string) {
-  return new Intl.DateTimeFormat("en", {
+export function formatBlogDate(date: string, locale: "en" | "fr" = "en") {
+  return new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en", {
     day: "numeric",
     month: "long",
     year: "numeric",

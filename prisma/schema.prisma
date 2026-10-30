@@ -26,6 +26,13 @@ enum TransferRequestStatus {
   CANCELLED
 }
 
+enum ActivityReservationStatus {
+  NEW
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
 enum UserRole {
   ADMIN
   STAFF
@@ -98,6 +105,75 @@ model TransferSetting {
   key       String   @id
   value     String
   updatedAt DateTime @updatedAt
+}
+
+model ActivityCatalogItem {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  data      Json
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model ActivitySetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model ActivityReservation {
+  id                    String                     @id @default(cuid())
+  status                ActivityReservationStatus  @default(NEW)
+  customerName          String
+  customerPhone         String
+  customerEmail         String?
+  hotelAddress          String?
+  notes                 String?
+  estimatedTotal        Float
+  currency              String                     @default("EUR")
+  priceNeedsConfirmation Boolean                   @default(false)
+  createdAt             DateTime                   @default(now())
+  updatedAt             DateTime                   @updatedAt
+  lines                 ActivityReservationLine[]
+
+  @@index([status, createdAt])
+}
+
+model ActivityReservationLine {
+  id               String                       @id @default(cuid())
+  reservationId    String
+  reservation      ActivityReservation          @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  activitySlug     String
+  activityTitle    String
+  activityLocation String
+  rateLabel        String
+  rateUnit         String
+  rateBilling      String
+  ratePrice        Float
+  adults           Int
+  children         Int                           @default(0)
+  date             DateTime                      @db.Date
+  time             String
+  extras           Json
+  lineTotal        Float
+  slots            ConfirmedActivitySlot[]
+
+  @@index([activitySlug, date, time])
+}
+
+model ConfirmedActivitySlot {
+  id                String                 @id @default(cuid())
+  activitySlug      String
+  date              DateTime               @db.Date
+  time              String
+  reservationLineId String                 @unique
+  reservationLine   ActivityReservationLine @relation(fields: [reservationLineId], references: [id], onDelete: Cascade)
+
+  @@unique([activitySlug, date, time])
 }
 
 model TransferRequest {

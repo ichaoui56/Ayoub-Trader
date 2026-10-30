@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { translate, type Locale } from "../i18n";
 
 const sharePlatforms = [
   {
@@ -35,9 +36,11 @@ const sharePlatforms = [
 
 type BlogShareActionsProps = {
   title: string;
+  locale: Locale;
 };
 
-export default function BlogShareActions({ title }: BlogShareActionsProps) {
+export default function BlogShareActions({ title, locale }: BlogShareActionsProps) {
+  const t = (phrase: string) => translate(locale, phrase);
   const [pageUrl, setPageUrl] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [message, setMessage] = useState("");
@@ -49,24 +52,24 @@ export default function BlogShareActions({ title }: BlogShareActionsProps) {
   async function copyLink() {
     try {
       await navigator.clipboard.writeText(pageUrl || window.location.href);
-      setMessage("Link copied — pass the story along.");
+      setMessage(t("Link copied — pass the story along."));
     } catch {
-      setMessage("Couldn’t copy the link. You can copy it from your address bar.");
+      setMessage(t("Couldn’t copy the link. You can copy it from your address bar."));
     }
   }
 
   async function useNativeShare() {
     if (!navigator.share) {
-      setMessage("Choose a platform below to share this story.");
+      setMessage(t("Choose a platform below to share this story."));
       return;
     }
 
     try {
       await navigator.share({ title, url: pageUrl || window.location.href });
-      setMessage("Thanks for sharing this story.");
+      setMessage(t("Thanks for sharing this story."));
     } catch (error) {
       if (error instanceof Error && error.name !== "AbortError") {
-        setMessage("Sharing isn’t available right now. Choose a platform below.");
+        setMessage(t("Sharing isn’t available right now. Choose a platform below."));
       }
     }
   }
@@ -76,13 +79,13 @@ export default function BlogShareActions({ title }: BlogShareActionsProps) {
       <div className="blog-share__intro">
         <span className="blog-share__spark" aria-hidden="true">✳</span>
         <div>
-          <p>Good stories travel</p>
-          <span>Pass this one along</span>
+          <p>{t("Good stories travel")}</p>
+          <span>{t("Pass this one along")}</span>
         </div>
       </div>
       <div className="blog-share__controls">
         <button type="button" className="blog-share__copy" onClick={copyLink} disabled={!pageUrl}>
-          <span aria-hidden="true">⧉</span> Copy link
+          <span aria-hidden="true">⧉</span> {t("Copy link")}
         </button>
         <button
           type="button"
@@ -94,11 +97,11 @@ export default function BlogShareActions({ title }: BlogShareActionsProps) {
             setMessage("");
           }}
         >
-          Share story <span aria-hidden="true">{menuOpen ? "−" : "↗"}</span>
+          {t("Share story")} <span aria-hidden="true">{menuOpen ? "−" : "↗"}</span>
         </button>
         {menuOpen && (
-          <div className="blog-share__menu" id="blog-share-options" aria-label="Share this story">
-            <button type="button" onClick={useNativeShare}>More apps…</button>
+          <div className="blog-share__menu" id="blog-share-options" aria-label={t("Share this story")}>
+            <button type="button" onClick={useNativeShare}>{t("More apps…")}</button>
             {sharePlatforms.map((platform) => (
               <a
                 key={platform.name}
@@ -108,7 +111,7 @@ export default function BlogShareActions({ title }: BlogShareActionsProps) {
                 onClick={(event) => {
                   if (!pageUrl) {
                     event.preventDefault();
-                    setMessage("Preparing the story link. Try again in a moment.");
+                    setMessage(t("Preparing the story link. Try again in a moment."));
                   }
                 }}
               >
