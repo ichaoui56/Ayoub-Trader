@@ -1,7 +1,7 @@
 import "server-only";
 
 import { Prisma } from "@prisma/client";
-import { activities, type Activity, type ManagedActivity } from "../activities";
+import { activities, type Activity, type ManagedActivity, withDefaultGeneralTimes } from "../activities";
 import { prisma } from "./prisma";
 import { getDashboardUser } from "./dashboard-auth";
 
@@ -36,14 +36,14 @@ async function ensureActivityCatalog() {
 }
 
 export async function getPublicActivityCatalog(): Promise<Activity[]> {
-  if (!process.env.DATABASE_URL) return activities;
+  if (!process.env.DATABASE_URL) return activities.map(withDefaultGeneralTimes);
 
   await ensureActivityCatalog();
   const items = await prisma.activityCatalogItem.findMany({
     where: { isActive: true },
     orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
   });
-  return items.map((item) => asActivity(item.data, item.slug));
+  return items.map((item) => withDefaultGeneralTimes(asActivity(item.data, item.slug)));
 }
 
 async function ensureManagedActivityAccess() {
@@ -72,6 +72,6 @@ export async function getManagedActivityCatalog(): Promise<ManagedActivity[]> {
     id: item.id,
     isActive: item.isActive,
     sortOrder: item.sortOrder,
-    activity: asActivity(item.data, item.slug),
+    activity: withDefaultGeneralTimes(asActivity(item.data, item.slug)),
   }));
 }

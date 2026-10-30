@@ -1,26 +1,54 @@
 import { connection } from "next/server";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getTransferDashboardData } from "../server/transfer-actions";
 import { getManagedActivityCatalog, getManagedActivityCount } from "../server/activity-catalog";
-import { getActivityReservationCount, getActivityReservations } from "../server/activity-reservations";
+import { getActivityReservationById, getActivityReservationCount, getActivityReservations } from "../server/activity-reservations";
 import TransferDashboard from "./TransferDashboard";
 
-export type DashboardPage = "overview" | "requests" | "transfers" | "activities" | "activity-reservations";
+export type DashboardPage =
+  | "overview"
+  | "requests"
+  | "request-detail"
+  | "transfers"
+  | "activities"
+  | "activity-detail"
+  | "activity-reservations"
+  | "activity-reservation-detail";
 
 export default async function TransferDashboardWrapper({
   page,
+  detailId,
 }: {
   page: DashboardPage;
+  detailId?: string;
 }) {
   await connection();
   const result = await getTransferDashboardData();
   if (!result.authorized) redirect("/dashboard/loginP");
-  if ((page === "transfers" || page === "activities" || page === "activity-reservations") && result.user.role !== "ADMIN") {
+  if (
+    (page === "transfers" || page === "activities" || page === "activity-detail" || page === "activity-reservations" || page === "activity-reservation-detail") &&
+    result.user.role !== "ADMIN"
+  ) {
     redirect("/dashboard/requests");
   }
-  const managedActivities = page === "activities" ? await getManagedActivityCatalog() : [];
-  const managedActivityCount = page === "activities"
-    ? managedActivities.length
+  const transferRequestDetail = page === "request-detail"
+    ? result.data.requests.find((request) => request.id === detailId) ?? null
+    : null;
+  if (page === "request-detail" && !transferRequestDetail) notFound();
+  const activityReservationDetail = page === "activity-reservation-detail" && detailId
+    ? await getActivityReservationById(detailId)
+    : null;
+  if (page === "activity-reservation-detail" && !activityReservationDetail) notFound();
+  const activityCatalog = page === "activities" || page === "activity-detail"
+    ? await getManagedActivityCatalog()
+    : [];
+  const managedActivities = page === "activities" ? activityCatalog : [];
+  const activityDetail = page === "activity-detail"
+    ? activityCatalog.find((item) => item.activity.slug === detailId) ?? null
+    : null;
+  if (page === "activity-detail" && !activityDetail) notFound();
+  const managedActivityCount = page === "activities" || page === "activity-detail"
+    ? activityCatalog.length
     : result.user.role === "ADMIN"
       ? await getManagedActivityCount()
       : 0;
@@ -37,8 +65,11 @@ export default async function TransferDashboardWrapper({
       page={page}
       managedActivities={managedActivities}
       managedActivityCount={managedActivityCount}
+      activityDetail={activityDetail}
       activityReservations={activityReservations}
       activityReservationCount={activityReservationCount}
+      transferRequestDetail={transferRequestDetail}
+      activityReservationDetail={activityReservationDetail}
     />
   );
 }

@@ -150,6 +150,7 @@ model ActivityReservationLine {
   activitySlug     String
   activityTitle    String
   activityLocation String
+  activityImage    String                       @default("")
   rateLabel        String
   rateUnit         String
   rateBilling      String

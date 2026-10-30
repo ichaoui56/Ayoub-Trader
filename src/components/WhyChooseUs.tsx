@@ -10,7 +10,7 @@ const features = [
 export default function WhyChooseUs({ locale }: { locale: Locale }) {
   const t = (phrase: string) => translate(locale, phrase);
   return (
-    <section className="bg-ink px-5 py-10 text-paper md:px-[4vw] md:py-14">
+    <section id="why-us" className="bg-ink px-5 py-10 text-paper md:px-[4vw] md:py-14">
       <div className="mx-auto grid max-w-[1500px] gap-8 lg:grid-cols-[1.1fr_2fr] lg:items-center">
         <div data-reveal>
           <p className="eyebrow">{t("Why choose us")}</p>

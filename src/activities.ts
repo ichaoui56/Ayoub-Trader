@@ -68,6 +68,19 @@ export type ManagedActivity = {
   activity: Activity;
 };
 
+export const DEFAULT_GENERAL_ACTIVITY_TIMES = ["09h00", "12h00", "15h00"] as const;
+
+export function withDefaultGeneralTimes(activity: Activity): Activity {
+  if (!activity.reservation || activity.reservation.times?.length) return activity;
+  return {
+    ...activity,
+    reservation: {
+      ...activity.reservation,
+      times: [...DEFAULT_GENERAL_ACTIVITY_TIMES],
+    },
+  };
+}
+
 export const activities: Activity[] = [
   {
     slug: "quad-biking",

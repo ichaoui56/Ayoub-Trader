@@ -77,6 +77,7 @@ export async function submitActivityReservation(value: unknown) {
   const catalog = await getPublicActivityCatalog();
   const activitiesBySlug = new Map(catalog.map((activity) => [activity.slug, activity]));
   const requestedSlots = new Set<string>();
+  const requestedDateTimes = new Set<string>();
   let estimatedTotal = 0;
   let priceNeedsConfirmation = false;
   const lines = input.lines.map((value, index) => {
@@ -127,6 +128,11 @@ export async function submitActivityReservation(value: unknown) {
     const slotKey = `${activitySlug}\u0000${date}\u0000${time}`;
     if (requestedSlots.has(slotKey)) throw new Error("The same activity time cannot be added twice.");
     requestedSlots.add(slotKey);
+    const dateTimeKey = `${date}\u0000${time.replace(":", "h")}`;
+    if (requestedDateTimes.has(dateTimeKey)) {
+      throw new Error("Two activities cannot be reserved at the same time. Choose different times.");
+    }
+    requestedDateTimes.add(dateTimeKey);
 
     const units = getUnits(rate, people);
     let lineTotal = rate.billing === "person"
@@ -142,6 +148,7 @@ export async function submitActivityReservation(value: unknown) {
       activitySlug,
       activityTitle: activity.title,
       activityLocation: activity.location,
+      activityImage: activity.image,
       rateLabel: rate.label,
       rateUnit: rate.unit,
       rateBilling: rate.billing,

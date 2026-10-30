@@ -49,18 +49,18 @@ export default function Nav() {
 
   return (
     <>
-      <header className={`fixed inset-x-0 top-0 z-40 text-paper transition-colors duration-300 ${scrolled || pathname !== "/" ? "bg-ink/90 backdrop-blur" : ""}`}>
-        <div className="flex h-16 items-center justify-between gap-6 px-5 md:px-[4vw]">
+      <header className={`site-nav fixed inset-x-0 top-0 z-40 text-paper${scrolled ? " site-nav--scrolled" : pathname !== "/" ? " site-nav--interior" : ""}`}>
+        <div className="site-nav__inner flex h-16 items-center justify-between gap-6">
           <div className="flex items-center gap-8">
             <Logo href={pathname === "/" ? "#top" : "/#top"} />
           </div>
-          <nav aria-label={t("Primary navigation")} className="flex items-center gap-7">
-            <ul className="hidden items-center gap-7 text-sm md:flex">
+          <nav aria-label={t("Primary navigation")} className="site-nav__actions">
+            <ul className="site-nav__links">
               {NAV_LINKS.map((l) => (
                 <li key={l.href}><Link href={homeHref(l.href)} className="hover:text-signal">{t(l.label)}</Link></li>
               ))}
             </ul>
-            <Link href={homeHref("#transfer")} className="hidden whitespace-nowrap bg-signal px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-paper transition hover:bg-paper hover:text-ink sm:inline-flex">
+            <Link href={homeHref("#transfer")} className="site-nav__book hidden whitespace-nowrap bg-signal px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-paper transition hover:bg-paper hover:text-ink sm:inline-flex">
               {t("Book now")} <span className="ml-3" aria-hidden="true">↗</span>
             </Link>
             <div className="site-language-switch" role="group" aria-label={t("Choose language")}>
@@ -76,10 +76,11 @@ export default function Nav() {
               aria-expanded={open}
               aria-controls="site-menu"
               onClick={() => setOpen(true)}
-              className="border border-paper/50 px-4 py-2 text-sm font-semibold hover:border-signal"
+              className="site-nav__menu"
             >
               <span className="md:hidden">{t("Menu")}</span>
-              <span className="hidden md:inline">{t("Explore")}</span>
+              <span className="hidden md:inline 2xl:hidden">{t("Explore")}</span>
+              <span className="hidden 2xl:inline">{t("Menu")}</span>
             </button>
           </nav>
         </div>

@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { ActivityReservationStatus } from "@prisma/client";
+import { Prisma, type ActivityReservationStatus } from "@prisma/client";
 import { getDashboardUser } from "./dashboard-auth";
 import { prisma } from "./prisma";
 
@@ -17,6 +17,7 @@ export type ManagedActivityReservationLine = {
   activitySlug: string;
   activityTitle: string;
   activityLocation: string;
+  activityImage: string;
   rateLabel: string;
   rateUnit: string;
   rateBilling: "person" | "unit";
@@ -45,6 +46,10 @@ export type ManagedActivityReservation = {
   lines: ManagedActivityReservationLine[];
 };
 
+type ActivityReservationWithLines = Prisma.ActivityReservationGetPayload<{
+  include: { lines: true };
+}>;
+
 async function requireActivityReservationAdmin() {
   const user = await getDashboardUser();
   if (!user || user.role !== "ADMIN") {
@@ -66,6 +71,37 @@ export async function getActivityReservations(): Promise<ManagedActivityReservat
     include: { lines: { orderBy: [{ date: "asc" }, { time: "asc" }] } },
     orderBy: [{ createdAt: "desc" }],
   });
+  return serializeActivityReservations(reservations);
+}
+
+export async function getActivityReservationById(id: string): Promise<ManagedActivityReservation | null> {
+  await requireActivityReservationAdmin();
+  const reservation = await prisma.activityReservation.findUnique({
+    where: { id },
+    include: { lines: { orderBy: [{ date: "asc" }, { time: "asc" }] } },
+  });
+  if (!reservation) return null;
+  const [serialized] = await serializeActivityReservations([reservation]);
+  return serialized ?? null;
+}
+
+async function serializeActivityReservations(
+  reservations: ActivityReservationWithLines[],
+): Promise<ManagedActivityReservation[]> {
+  const missingImageSlugs = [...new Set(reservations.flatMap((reservation) =>
+    reservation.lines.filter((line) => !line.activityImage).map((line) => line.activitySlug),
+  ))];
+  const catalogItems = missingImageSlugs.length
+    ? await prisma.activityCatalogItem.findMany({
+      where: { slug: { in: missingImageSlugs } },
+      select: { slug: true, data: true },
+    })
+    : [];
+  const catalogImages = new Map(catalogItems.flatMap((item) => {
+    if (typeof item.data !== "object" || item.data === null || Array.isArray(item.data)) return [];
+    const image = item.data.image;
+    return typeof image === "string" ? [[item.slug, image] as const] : [];
+  }));
 
   return reservations.map((reservation) => ({
     ...reservation,
@@ -74,6 +110,7 @@ export async function getActivityReservations(): Promise<ManagedActivityReservat
     lines: reservation.lines.map((line) => ({
       ...line,
       date: line.date.toISOString().slice(0, 10),
+      activityImage: line.activityImage || catalogImages.get(line.activitySlug) || "",
       rateBilling: line.rateBilling as "person" | "unit",
       extras: Array.isArray(line.extras)
         ? line.extras as unknown as ActivityReservationExtraSnapshot[]

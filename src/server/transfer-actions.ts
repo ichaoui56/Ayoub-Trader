@@ -7,6 +7,7 @@ import {
 } from "node:crypto";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import {
   PrivateServiceKind,
   TransferRequestStatus,
@@ -226,9 +227,9 @@ export async function signOutTransferDashboard() {
     maxAge: 0,
   };
   cookieStore.set(sessionCookie, "", { ...cookieOptions, path: "/" });
-  cookieStore.set(sessionCookie, "", { ...cookieOptions, path: "/dashboard" });
   revalidatePath("/dashboard/transfers");
   revalidatePath("/dashboard/loginP");
+  redirect("/dashboard/loginP");
 }
 
 export async function getTransferDashboardIdentity() {

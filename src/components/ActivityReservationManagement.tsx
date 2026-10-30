@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { updateActivityReservationStatus } from "../server/activity-reservation-actions";
+import { useState } from "react";
+import Link from "next/link";
+import { getActivityImageUrl } from "../activities";
 import type { ManagedActivityReservation } from "../server/activity-reservations";
 
 type ReservationStatus = ManagedActivityReservation["status"];
 type ReservationFilter = "ALL" | ReservationStatus;
+type ReservationView = "rows" | "cards";
 
 const statusLabels: Record<ReservationStatus, string> = {
   NEW: "Needs review",
@@ -32,16 +33,6 @@ function formatDate(value: string) {
   }).format(new Date(`${value.slice(0, 10)}T00:00:00.000Z`));
 }
 
-function formatCreatedAt(value: string) {
-  return new Intl.DateTimeFormat("en", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(new Date(value));
-}
-
 function formatCurrency(value: number, currency: string) {
   return new Intl.NumberFormat("en", {
     style: "currency",
@@ -60,52 +51,12 @@ export default function ActivityReservationManagement({
 }: {
   items: ManagedActivityReservation[];
 }) {
-  const router = useRouter();
   const [filter, setFilter] = useState<ReservationFilter>("ALL");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [statusDraft, setStatusDraft] = useState<ReservationStatus>("NEW");
-  const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState("");
-  const selected = items.find((item) => item.id === selectedId) ?? null;
+  const [view, setView] = useState<ReservationView>("rows");
   const filteredItems = items.filter((item) => filter === "ALL" || item.status === filter);
   const needsReview = items.filter((item) => item.status === "NEW").length;
   const confirmed = items.filter((item) => item.status === "CONFIRMED").length;
   const completed = items.filter((item) => item.status === "COMPLETED").length;
-
-  useEffect(() => {
-    if (!selectedId) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setSelectedId(null);
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [selectedId]);
-
-  function openDetails(reservation: ManagedActivityReservation) {
-    setSelectedId(reservation.id);
-    setStatusDraft(reservation.status);
-    setNotice("");
-  }
-
-  async function saveStatus() {
-    if (!selected || busy || statusDraft === selected.status) return;
-    setBusy(true);
-    setNotice("");
-    try {
-      await updateActivityReservationStatus(selected.id, statusDraft);
-      setNotice("Reservation status updated.");
-      router.refresh();
-    } catch (error) {
-      setNotice(error instanceof Error ? error.message : "Could not update this reservation.");
-    } finally {
-      setBusy(false);
-    }
-  }
 
   return (
     <section className="activity-reservations">
@@ -122,53 +73,111 @@ export default function ActivityReservationManagement({
             <p className="transfer-eyebrow">Guest bookings</p>
             <h2>Reservation requests</h2>
           </div>
-          <nav className="activity-reservations__filters" aria-label="Filter reservations">
-            {filters.map((option) => {
-              const count = option.value === "ALL"
-                ? items.length
-                : items.filter((item) => item.status === option.value).length;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  className={filter === option.value ? "is-active" : ""}
-                  aria-pressed={filter === option.value}
-                  onClick={() => setFilter(option.value)}
-                >
-                  {option.label}<span>{count}</span>
-                </button>
-              );
-            })}
-          </nav>
+          <div className="activity-reservations__toolbar-controls">
+            <nav className="activity-reservations__filters" aria-label="Filter reservations">
+              {filters.map((option) => {
+                const count = option.value === "ALL"
+                  ? items.length
+                  : items.filter((item) => item.status === option.value).length;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={filter === option.value ? "is-active" : ""}
+                    aria-pressed={filter === option.value}
+                    onClick={() => setFilter(option.value)}
+                  >
+                    {option.label}<span>{count}</span>
+                  </button>
+                );
+              })}
+            </nav>
+            <div className="transfer-request-view-toggle" role="group" aria-label="Reservation display">
+              <button type="button" className={view === "rows" ? "is-active" : ""} aria-pressed={view === "rows"} onClick={() => setView("rows")}>
+                <span aria-hidden="true">☷</span> Rows
+              </button>
+              <button type="button" className={view === "cards" ? "is-active" : ""} aria-pressed={view === "cards"} onClick={() => setView("cards")}>
+                <span aria-hidden="true">▦</span> Cards
+              </button>
+            </div>
+          </div>
         </header>
 
         {filteredItems.length ? (
-          <div className="activity-reservations__list">
-            {filteredItems.map((reservation) => (
-              <button
-                className={`activity-reservation-row${reservation.status === "NEW" ? " is-new" : ""}`}
-                key={reservation.id}
-                type="button"
-                onClick={() => openDetails(reservation)}
-                aria-label={`Open reservation for ${reservation.customerName}, ${reservationLabel(reservation)}`}
-              >
-                <span className="activity-reservation-row__date" aria-hidden="true">{reservation.lines[0]?.time ?? "--:--"}</span>
-                <span className="activity-reservation-row__guest">
-                  <strong>{reservation.customerName}</strong>
-                  <small>{reservation.customerPhone}</small>
-                </span>
-                <span className="activity-reservation-row__activity">
-                  <strong>{reservationLabel(reservation)}</strong>
-                  <small>{reservation.lines[0] ? `${formatDate(reservation.lines[0].date)} · ${reservation.lines[0].activityLocation}` : "No activity details"}</small>
-                </span>
-                <span className={`activity-reservation-pill activity-reservation-pill--${reservation.status.toLowerCase()}`}>
-                  {statusLabels[reservation.status]}
-                </span>
-                <strong className="activity-reservation-row__total">{formatCurrency(reservation.estimatedTotal, reservation.currency)}</strong>
-                <span className="activity-reservation-row__arrow" aria-hidden="true">↗</span>
-              </button>
-            ))}
-          </div>
+          view === "rows" ? (
+            <div className="activity-reservations__list">
+              {filteredItems.map((reservation) => (
+                <Link
+                  href={`/dashboard/activity-reservations/${reservation.id}`}
+                  className={`activity-reservation-row${reservation.status === "NEW" ? " is-new" : ""}`}
+                  key={reservation.id}
+                  aria-label={`Open reservation for ${reservation.customerName}, ${reservationLabel(reservation)}`}
+                >
+                  <span className="activity-reservation-row__image" aria-hidden="true">
+                    {reservation.lines[0]?.activityImage
+                      ? <img src={getActivityImageUrl(reservation.lines[0].activityImage, 160)} alt="" />
+                      : <span>✦</span>}
+                  </span>
+                  <span className="activity-reservation-row__date">{reservation.lines[0]?.time ?? "--:--"}</span>
+                  <span className="activity-reservation-row__guest">
+                    <strong>{reservation.customerName}</strong>
+                    <small>{reservation.customerPhone}</small>
+                  </span>
+                  <span className="activity-reservation-row__activity">
+                    <strong>{reservationLabel(reservation)}</strong>
+                    <small>{reservation.lines[0] ? `${formatDate(reservation.lines[0].date)} · ${reservation.lines[0].activityLocation}` : "No activity details"}</small>
+                  </span>
+                  <span className={`activity-reservation-pill activity-reservation-pill--${reservation.status.toLowerCase()}`}>
+                    {statusLabels[reservation.status]}
+                  </span>
+                  <strong className="activity-reservation-row__total">{formatCurrency(reservation.estimatedTotal, reservation.currency)}</strong>
+                  <span className="activity-reservation-row__arrow" aria-hidden="true">↗</span>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="activity-reservation-cards">
+              {filteredItems.map((reservation) => {
+                const firstLine = reservation.lines[0];
+                return (
+                  <Link
+                    href={`/dashboard/activity-reservations/${reservation.id}`}
+                    className={`activity-reservation-card${reservation.status === "NEW" ? " is-new" : ""}`}
+                    key={reservation.id}
+                    aria-label={`Open reservation for ${reservation.customerName}, ${reservationLabel(reservation)}`}
+                  >
+                    <div className="activity-reservation-card__image">
+                      {firstLine?.activityImage
+                        ? <img src={getActivityImageUrl(firstLine.activityImage, 720)} alt="" />
+                        : <span aria-hidden="true">✦</span>}
+                      <span className={`activity-reservation-pill activity-reservation-pill--${reservation.status.toLowerCase()}`}>
+                        {statusLabels[reservation.status]}
+                      </span>
+                      {firstLine && <span className="activity-reservation-card__time">◷ {firstLine.time}</span>}
+                    </div>
+                    <div className="activity-reservation-card__body">
+                      <div className="activity-reservation-card__guest">
+                        <span className="activity-reservation-card__avatar" aria-hidden="true">{reservation.customerName.slice(0, 1).toUpperCase()}</span>
+                        <span><strong>{reservation.customerName}</strong><small>{reservation.customerPhone}</small></span>
+                        <span className="activity-reservation-card__arrow" aria-hidden="true">↗</span>
+                      </div>
+                      <div className="activity-reservation-card__activities">
+                        {reservation.lines.slice(0, 2).map((line) => (
+                          <span key={line.id}><strong>{line.activityTitle}</strong><small>{line.activityLocation}</small></span>
+                        ))}
+                        {reservation.lines.length > 2 && <small>+{reservation.lines.length - 2} more experiences</small>}
+                        {!reservation.lines.length && <span><strong>Activity request</strong><small>No activity details</small></span>}
+                      </div>
+                      <div className="activity-reservation-card__footer">
+                        <span><small>{firstLine ? formatDate(firstLine.date) : "Date not set"}</small><small>{reservation.lines.length} {reservation.lines.length === 1 ? "experience" : "experiences"}</small></span>
+                        <strong>{formatCurrency(reservation.estimatedTotal, reservation.currency)}</strong>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )
         ) : (
           <div className="activity-reservations__empty">
             <span aria-hidden="true">✳</span>
@@ -178,78 +187,6 @@ export default function ActivityReservationManagement({
         )}
       </section>
 
-      {selected && (
-        <div
-          className="activity-reservation-detail-backdrop"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setSelectedId(null);
-          }}
-        >
-          <aside className="activity-reservation-detail" role="dialog" aria-modal="true" aria-labelledby="activity-reservation-detail-title">
-            <header className="activity-reservation-detail__header">
-              <div>
-                <p className="transfer-eyebrow">Reservation · {selected.id.slice(-8).toUpperCase()}</p>
-                <h2 id="activity-reservation-detail-title">{selected.customerName}</h2>
-                <div className="activity-reservation-detail__meta">
-                  <span className={`activity-reservation-pill activity-reservation-pill--${selected.status.toLowerCase()}`}>
-                    {statusLabels[selected.status]}
-                  </span>
-                  <span>Submitted {formatCreatedAt(selected.createdAt)}</span>
-                </div>
-              </div>
-              <button type="button" onClick={() => setSelectedId(null)} aria-label="Close reservation details">×</button>
-            </header>
-
-            <section className="activity-reservation-detail__section">
-              <div className="activity-reservation-detail__section-heading"><span aria-hidden="true">✦</span><h3>Experiences</h3></div>
-              {selected.lines.map((line) => (
-                <article className="activity-reservation-detail__line" key={line.id}>
-                  <div className="activity-reservation-detail__line-heading">
-                    <div><h4>{line.activityTitle}</h4><small>{line.activityLocation}</small></div>
-                    <strong>{formatCurrency(line.lineTotal, selected.currency)}</strong>
-                  </div>
-                  <dl>
-                    <div><dt>Date</dt><dd>{formatDate(line.date)}</dd></div>
-                    <div><dt>Time</dt><dd>{line.time}</dd></div>
-                    <div><dt>Rate</dt><dd>{line.rateLabel} · {formatCurrency(line.ratePrice, selected.currency)} {line.rateUnit}</dd></div>
-                    <div><dt>Guests</dt><dd>{line.adults} adults{line.children ? ` · ${line.children} children` : ""}</dd></div>
-                    {line.extras.length > 0 && <div><dt>Extras</dt><dd>{line.extras.map((extra) => extra.label).join(", ")}</dd></div>}
-                  </dl>
-                </article>
-              ))}
-              <div className="activity-reservation-detail__total">
-                <span>{selected.priceNeedsConfirmation ? "Estimated total · to confirm" : "Estimated total"}</span>
-                <strong>{formatCurrency(selected.estimatedTotal, selected.currency)}</strong>
-              </div>
-            </section>
-
-            <section className="activity-reservation-detail__section">
-              <div className="activity-reservation-detail__section-heading"><span aria-hidden="true">◎</span><h3>Guest details</h3></div>
-              <dl className="activity-reservation-detail__contact">
-                <div><dt>Phone / WhatsApp</dt><dd><a href={`tel:${selected.customerPhone}`}>{selected.customerPhone}</a></dd></div>
-                {selected.customerEmail && <div><dt>Email</dt><dd><a href={`mailto:${selected.customerEmail}`}>{selected.customerEmail}</a></dd></div>}
-                <div><dt>Hotel / pickup</dt><dd>{selected.hotelAddress || "Not provided"}</dd></div>
-                <div><dt>Notes</dt><dd>{selected.notes || "None"}</dd></div>
-              </dl>
-            </section>
-
-            <footer className="activity-reservation-detail__footer">
-              <label htmlFor="activity-reservation-status">Reservation status</label>
-              <select
-                id="activity-reservation-status"
-                value={statusDraft}
-                onChange={(event) => setStatusDraft(event.target.value as ReservationStatus)}
-              >
-                {Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-              </select>
-              {notice && <p role="status">{notice}</p>}
-              <button type="button" disabled={busy || statusDraft === selected.status} onClick={saveStatus}>
-                {busy ? "Saving…" : statusDraft === "CONFIRMED" ? "Confirm reservation" : "Save status"}
-              </button>
-            </footer>
-          </aside>
-        </div>
-      )}
     </section>
   );
 }

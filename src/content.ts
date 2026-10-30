@@ -14,13 +14,21 @@ export const NAV_LINKS = [
   { label: "Places to stay", href: "#stays" },
   { label: "Experiences", href: "#experiences" },
   { label: "Notre Histoire", href: "#concierge" },
+  { label: "How it works", href: "#journey" },
+  { label: "Travel journal", href: "#journal" },
+  { label: "Why choose us", href: "#why-us" },
+  { label: "Plan your trip", href: "#contact" },
 ];
 
 export const MENU_LINKS = [
   { n: "01", label: "Airport transfers", href: "#transfer" },
   { n: "02", label: "Places to stay", href: "#stays" },
   { n: "03", label: "Experiences", href: "#experiences" },
-  { n: "04", label: "Travel journal", href: "/blog" },
+  { n: "04", label: "Notre Histoire", href: "#concierge" },
+  { n: "05", label: "How it works", href: "#journey" },
+  { n: "06", label: "Travel journal", href: "#journal" },
+  { n: "07", label: "Why choose us", href: "#why-us" },
+  { n: "08", label: "Plan your trip", href: "#contact" },
 ];
 
 /** `from`/`to` are scroll-film progress (0–1). All copy lives inside the first 46%. */

@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, type ChangeEvent, type FormEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { deleteManagedActivity, saveManagedActivity } from "../server/activity-actions";
 import {
   getActivityImageUrl,
+  DEFAULT_GENERAL_ACTIVITY_TIMES,
   type Activity,
   type ActivityAvailability,
   type ActivityBookingExtra,
@@ -41,7 +43,7 @@ const emptyActivity = (): Activity => ({
   paymentNote: "",
   reservation: {
     rates: [],
-    times: [],
+    times: [...DEFAULT_GENERAL_ACTIVITY_TIMES],
     extras: [],
     extraSelectionMode: "multiple",
     priceNeedsConfirmation: false,
@@ -283,6 +285,7 @@ export default function ActivityManagement({ items }: { items: ManagedActivity[]
                   ))}
                 </div>
                 <footer>
+                  <Link className="activity-management-card__details" href={`/dashboard/activities/${item.activity.slug}`}>View details <span aria-hidden="true">↗</span></Link>
                   <button type="button" onClick={() => startEdit(item)}>Edit activity <span aria-hidden="true">↗</span></button>
                   <button type="button" className="is-danger" onClick={() => void removeActivity(item)}>Delete</button>
                 </footer>

@@ -11,7 +11,6 @@ import {
   saveTransferLocation,
   saveTransferRoute,
   signOutTransferDashboard,
-  updateTransferRequestStatus,
 } from "../server/transfer-actions";
 import type {
   PrivateServiceData,
@@ -23,7 +22,10 @@ import type {
 } from "../transfers/types";
 import type { ManagedActivity } from "../activities";
 import ActivityManagement from "./ActivityManagement";
+import ActivityCatalogDetails from "./ActivityCatalogDetails";
 import ActivityReservationManagement from "./ActivityReservationManagement";
+import ActivityReservationDetails from "./ActivityReservationDetails";
+import TransferRequestDetails from "./TransferRequestDetails";
 import type { ManagedActivityReservation } from "../server/activity-reservations";
 import type { DashboardPage } from "./TransferDashboardWrapper";
 
@@ -33,8 +35,11 @@ type Props = {
   page: DashboardPage;
   managedActivities: ManagedActivity[];
   managedActivityCount: number;
+  activityDetail: ManagedActivity | null;
   activityReservations: ManagedActivityReservation[];
   activityReservationCount: number;
+  transferRequestDetail: TransferRequestData | null;
+  activityReservationDetail: ManagedActivityReservation | null;
 };
 
 type DashboardTab = "routes" | "private" | "locations";
@@ -273,15 +278,17 @@ export default function TransferDashboard({
   page,
   managedActivities,
   managedActivityCount,
+  activityDetail,
   activityReservations,
   activityReservationCount,
+  transferRequestDetail,
+  activityReservationDetail,
 }: Props) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<DashboardTab>("routes");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarWidth, setSidebarWidth] = useState(264);
   const [resizingSidebar, setResizingSidebar] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
   const [requestCategory, setRequestCategory] = useState<DashboardTab>("routes");
   const [requestStatusFilter, setRequestStatusFilter] = useState<RequestStatusFilter>("ALL");
   const [requestSearch, setRequestSearch] = useState("");
@@ -367,15 +374,20 @@ export default function TransferDashboard({
     .slice(0, 5);
   const departureLocations = data.locations.filter((location) => location.isDeparture);
   const arrivalLocations = data.locations.filter((location) => location.isArrival);
-  const currentRequest = data.requests.find((request) => request.id === selectedRequest);
   const heading = page === "overview"
     ? "Overview"
     : page === "requests"
       ? "Transfer requests"
+      : page === "request-detail"
+        ? "Transfer request details"
       : page === "activities"
         ? "Manage activities"
+          : page === "activity-detail"
+            ? "Activity details"
         : page === "activity-reservations"
           ? "Activity reservations"
+          : page === "activity-reservation-detail"
+            ? "Activity reservation details"
           : "Transfer management";
 
   useEffect(() => {
@@ -439,8 +451,6 @@ export default function TransferDashboard({
 
   async function signOut() {
     await signOutTransferDashboard();
-    router.replace("/dashboard/loginP");
-    router.refresh();
   }
 
   function refresh() {
@@ -606,7 +616,7 @@ export default function TransferDashboard({
           <Link href="/dashboard" className={page === "overview" ? "is-active" : ""} title="Overview">
             <span aria-hidden="true">◫</span><span>Overview</span>
           </Link>
-          <Link href="/dashboard/requests" className={page === "requests" ? "is-active" : ""} title="Transfer requests">
+          <Link href="/dashboard/requests" className={page === "requests" || page === "request-detail" ? "is-active" : ""} title="Transfer requests">
             <span aria-hidden="true">▤</span><span>Transfer requests</span>
             {newRequests > 0 && <b>{newRequests}</b>}
           </Link>
@@ -617,13 +627,13 @@ export default function TransferDashboard({
             </Link>
           )}
           {isAdmin && (
-            <Link href="/dashboard/activities" className={page === "activities" ? "is-active" : ""} title="Manage activities">
+            <Link href="/dashboard/activities" className={page === "activities" || page === "activity-detail" ? "is-active" : ""} title="Manage activities">
               <span aria-hidden="true">✦</span><span>Manage activities</span>
               <b className="transfer-sidebar__count">{managedActivityCount}</b>
             </Link>
           )}
           {isAdmin && (
-            <Link href="/dashboard/activity-reservations" className={page === "activity-reservations" ? "is-active" : ""} title="Activity reservations">
+            <Link href="/dashboard/activity-reservations" className={page === "activity-reservations" || page === "activity-reservation-detail" ? "is-active" : ""} title="Activity reservations">
               <span aria-hidden="true">▤</span><span>Activity reservations</span>
               <b className="transfer-sidebar__count">{activityReservationCount}</b>
             </Link>
@@ -693,7 +703,7 @@ export default function TransferDashboard({
             <div>
               <p className="transfer-eyebrow">Travel operations · Morocco</p>
               <h1>{heading}</h1>
-              <p>{page === "overview" ? "A clear view of your bookings, routes and guest experiences." : page === "requests" ? "Review guest details and keep every booking moving." : page === "activities" ? "Create and publish experiences with complete content and flexible pricing." : page === "activity-reservations" ? "Review guest requests, confirm availability and manage every experience booking." : "Manage all transfer options from one place."}</p>
+              <p>{page === "overview" ? "A clear view of your bookings, routes and guest experiences." : page === "requests" ? "Review guest details and keep every booking moving." : page === "request-detail" ? "Full guest, journey and booking details." : page === "activities" ? "Create and publish experiences with complete content and flexible pricing." : page === "activity-detail" ? "Complete content, schedule and booking setup for this experience." : page === "activity-reservations" ? "Review guest requests, confirm availability and manage every experience booking." : page === "activity-reservation-detail" ? "Guest details, scheduled activities and booking status." : "Manage all transfer options from one place."}</p>
             </div>
             {isAdmin && page === "transfers" && (
               <button type="button" className="transfer-add-button" onClick={startAdd}>
@@ -799,8 +809,20 @@ export default function TransferDashboard({
 
           {page === "activities" && isAdmin && <ActivityManagement items={managedActivities} />}
 
+          {page === "activity-detail" && isAdmin && activityDetail && (
+            <ActivityCatalogDetails item={activityDetail} />
+          )}
+
           {page === "activity-reservations" && isAdmin && (
             <ActivityReservationManagement items={activityReservations} />
+          )}
+
+          {page === "activity-reservation-detail" && isAdmin && activityReservationDetail && (
+            <ActivityReservationDetails item={activityReservationDetail} />
+          )}
+
+          {page === "request-detail" && transferRequestDetail && (
+            <TransferRequestDetails request={transferRequestDetail} />
           )}
 
           {page === "requests" && (
@@ -900,7 +922,7 @@ export default function TransferDashboard({
                         <div className="transfer-request-day__cards">
                           {requests.map((request) => (
                             <article className={`transfer-request-card${request.status === "NEW" ? " is-new" : ""}`} key={request.id}>
-                              <button type="button" className="transfer-request-card__open" onClick={() => setSelectedRequest(request.id)} aria-label={`Open ${request.customerName} request`}>
+                              <Link href={`/dashboard/requests/${request.id}`} className="transfer-request-card__open" aria-label={`Open ${request.customerName} request`}>
                                 <span className="transfer-request-card__topline">
                                   <span className="transfer-request-card__time"><span aria-hidden="true">◷</span>{request.serviceTime || "Time not set"}</span>
                                   <span className={`transfer-status ${statusClasses[request.status]}`}>{statusLabels[request.status]}</span>
@@ -916,7 +938,7 @@ export default function TransferDashboard({
                                   <span><small>Luggage</small><strong>{request.luggageCount} {request.luggageCount === 1 ? "bag" : "bags"}</strong></span>
                                   {request.serviceType === "PRIVATE_SERVICE" && request.status === "CONFIRMED" && <span className="transfer-reserved-slot"><b aria-hidden="true">×</b> Réservé</span>}
                                 </span>
-                              </button>
+                              </Link>
                             </article>
                           ))}
                         </div>
@@ -930,9 +952,9 @@ export default function TransferDashboard({
                         <thead><tr><th>Guest</th><th>Service</th><th>Travel date</th><th>Passengers</th><th>Status</th><th><span className="transfer-sr-only">Open request</span></th></tr></thead>
                         <tbody>
                           {paginatedRequests.map((request) => (
-                            <tr key={request.id} className={request.status === "NEW" ? "is-new" : ""} onClick={() => setSelectedRequest(request.id)} tabIndex={0} onKeyDown={(event) => (event.key === "Enter" || event.key === " ") && (event.preventDefault(), setSelectedRequest(request.id))}>
+                            <tr key={request.id} className={request.status === "NEW" ? "is-new" : ""}>
                               <td>
-                                <span className="transfer-request-guest"><span aria-hidden="true">{request.customerName.slice(0, 1).toUpperCase()}</span><span><strong>{request.customerName}</strong><small>{request.customerPhone}</small></span></span>
+                                <Link className="transfer-request-guest transfer-request-guest__link" href={`/dashboard/requests/${request.id}`} aria-label={`Open ${request.customerName} request`}><span aria-hidden="true">{request.customerName.slice(0, 1).toUpperCase()}</span><span><strong>{request.customerName}</strong><small>{request.customerPhone}</small></span></Link>
                               </td>
                               <td><strong>{request.serviceName}</strong><small>{request.departure}{request.arrival ? ` → ${request.arrival}` : ""}</small></td>
                               <td>
@@ -944,7 +966,7 @@ export default function TransferDashboard({
                               </td>
                               <td><strong>{request.passengerCount} guests</strong><small>{request.luggageCount} bags</small></td>
                               <td><span className={`transfer-status ${statusClasses[request.status]}`}>{statusLabels[request.status]}</span></td>
-                              <td><button type="button" className="transfer-row-open" aria-label={`Open ${request.customerName} request`} onClick={(event) => { event.stopPropagation(); setSelectedRequest(request.id); }}>↗</button></td>
+                              <td><Link href={`/dashboard/requests/${request.id}`} className="transfer-row-open" aria-label={`Open ${request.customerName} request`}>↗</Link></td>
                             </tr>
                           ))}
                         </tbody>
@@ -1175,85 +1197,6 @@ export default function TransferDashboard({
         </div>
       </main>
 
-      {currentRequest && (
-        <div className="transfer-drawer-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setSelectedRequest(null)}>
-          <aside className="transfer-request-drawer" role="dialog" aria-modal="true" aria-labelledby="request-drawer-title" onKeyDown={(event) => event.key === "Escape" && setSelectedRequest(null)}>
-            <header className="transfer-request-drawer__header">
-              <div>
-                <p className="transfer-eyebrow">Guest request · #{currentRequest.id.slice(-8).toUpperCase()}</p>
-                <h2 id="request-drawer-title">{currentRequest.customerName}</h2>
-                <div className="transfer-request-drawer__meta">
-                  <span className={`transfer-status ${statusClasses[currentRequest.status]}`}>{statusLabels[currentRequest.status]}</span>
-                  <span>Received {new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" }).format(new Date(currentRequest.createdAt))}</span>
-                </div>
-              </div>
-              <button type="button" aria-label="Close request details" autoFocus onClick={() => setSelectedRequest(null)}>×</button>
-            </header>
-
-            <section className="transfer-drawer-trip" aria-label="Trip summary">
-              <div className="transfer-drawer-trip__heading">
-                <span>Journey</span>
-                <span>{currentRequest.serviceType.replaceAll("_", " ")}</span>
-              </div>
-              <div className="transfer-drawer-trip__route">
-                <span className={`transfer-drawer-trip__marker${currentRequest.arrival ? "" : " is-single"}`} aria-hidden="true" />
-                <div>
-                  {currentRequest.serviceType === "PRIVATE_SERVICE" ? (
-                    <div className="transfer-drawer-trip__stop"><small>Service</small><strong>{currentRequest.serviceName}</strong></div>
-                  ) : (
-                    <>
-                      <div className="transfer-drawer-trip__stop"><small>From</small><strong>{currentRequest.departure || "Not provided"}</strong></div>
-                      <i aria-hidden="true" />
-                      <div className="transfer-drawer-trip__stop"><small>To</small><strong>{currentRequest.arrival || "Not provided"}</strong></div>
-                    </>
-                  )}
-                </div>
-              </div>
-              {currentRequest.serviceType === "CUSTOM_ROUTE" && <p className="transfer-drawer-trip__service">{currentRequest.serviceName}</p>}
-              <div className="transfer-drawer-trip__stats">
-                <div><span>Date &amp; time</span><strong>{formatDate(currentRequest.serviceDate)}</strong><small>{currentRequest.serviceTime || "Time not set"}</small></div>
-                <div><span>Guests</span><strong>{currentRequest.passengerCount}</strong><small>{currentRequest.passengerCount === 1 ? "guest" : "guests"}</small></div>
-                <div><span>Baggage</span><strong>{currentRequest.luggageCount}</strong><small>{currentRequest.luggageCount === 1 ? "bag" : "bags"}</small></div>
-                <div><span>Price at request</span><strong>{currentRequest.priceAtRequest !== null ? formatCurrency(currentRequest.priceAtRequest, currentRequest.currency) : "Not quoted"}</strong><small>Original quote</small></div>
-              </div>
-            </section>
-
-            <section className="transfer-drawer-section" aria-labelledby="request-guest-heading">
-              <div className="transfer-drawer-section__heading"><span className="transfer-drawer-section__icon" aria-hidden="true">01</span><h3 id="request-guest-heading">Guest details</h3></div>
-              <div className="transfer-drawer-contact-grid">
-                <a href={`tel:${currentRequest.customerPhone}`}><span aria-hidden="true">☎</span><span><small>Phone</small><strong>{currentRequest.customerPhone}</strong></span><b aria-hidden="true">↗</b></a>
-                {currentRequest.customerEmail ? (
-                  <a href={`mailto:${currentRequest.customerEmail}`}><span aria-hidden="true">@</span><span><small>Email</small><strong>{currentRequest.customerEmail}</strong></span><b aria-hidden="true">↗</b></a>
-                ) : (
-                  <div className="is-empty"><span aria-hidden="true">@</span><span><small>Email</small><strong>Not provided</strong></span></div>
-                )}
-              </div>
-            </section>
-
-            <section className="transfer-drawer-section" aria-labelledby="request-logistics-heading">
-              <div className="transfer-drawer-section__heading"><span className="transfer-drawer-section__icon" aria-hidden="true">02</span><h3 id="request-logistics-heading">Arrival details</h3></div>
-              <dl className="transfer-drawer-details">
-                <div><dt>Flight number</dt><dd>{currentRequest.flightNumber || "Not provided"}</dd></div>
-                <div><dt>Hotel / address</dt><dd>{currentRequest.hotelAddress || "Not provided"}</dd></div>
-              </dl>
-            </section>
-
-            <section className="transfer-drawer-section" aria-labelledby="request-notes-heading">
-              <div className="transfer-drawer-section__heading"><span className="transfer-drawer-section__icon" aria-hidden="true">03</span><h3 id="request-notes-heading">Guest notes</h3></div>
-              <p className="transfer-drawer-note">{currentRequest.notes || "No additional notes provided."}</p>
-            </section>
-
-            <footer className="transfer-request-drawer__footer">
-              <label className="transfer-request-status"><span>Booking status</span>
-                <select value={currentRequest.status} disabled={busy} onChange={(event) => runAction(() => updateTransferRequestStatus(currentRequest.id, event.target.value), "Request status updated.")}>
-                  <option value="NEW">New</option><option value="CONFIRMED">Confirmed</option><option value="COMPLETED">Completed</option><option value="CANCELLED">Cancelled</option>
-                </select>
-              </label>
-              <a className="transfer-drawer-contact" href={`https://wa.me/${currentRequest.customerPhone.replace(/\D/g, "")}`} target="_blank" rel="noreferrer"><span>Message guest on WhatsApp</span><span aria-hidden="true">↗</span></a>
-            </footer>
-          </aside>
-        </div>
-      )}
     </div>
   );
 }

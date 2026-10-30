@@ -27,6 +27,13 @@ type ReservationLine = {
   extras: string[];
 };
 
+type ReservationConflict = {
+  line: ReservationLine;
+  existingLines: ReservationLine[];
+};
+
+const RESERVATION_LINES_STORAGE_KEY = "morocco-activity-reservation-lines";
+
 type ReservationContextValue = {
   openReservation: (activity: Activity) => void;
   openReservationCart: () => void;
@@ -51,6 +58,51 @@ function formatReservationDate(date: string, locale: "en" | "fr") {
     year: "numeric",
     timeZone: "UTC",
   }).format(new Date(`${date}T00:00:00Z`));
+}
+
+function normalizeReservationTime(time: string) {
+  return time.replace(":", "h");
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function restoreReservationLines(value: unknown): ReservationLine[] {
+  if (!Array.isArray(value)) return [];
+
+  const restored: ReservationLine[] = [];
+  for (const candidate of value) {
+    if (!isRecord(candidate) || !isRecord(candidate.activity)) continue;
+    const activity = candidate.activity;
+    const reservation = activity.reservation;
+    if (
+      typeof activity.slug !== "string" ||
+      typeof activity.title !== "string" ||
+      typeof activity.image !== "string" ||
+      !isRecord(reservation) ||
+      !Array.isArray(reservation.rates) ||
+      typeof candidate.rateId !== "string" ||
+      !reservation.rates.some((rate) => isRecord(rate) && rate.id === candidate.rateId) ||
+      !Number.isInteger(candidate.adults) || Number(candidate.adults) < 1 ||
+      !Number.isInteger(candidate.children) || Number(candidate.children) < 0 ||
+      typeof candidate.date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(candidate.date) ||
+      typeof candidate.time !== "string" || !/^(?:[01]\d|2[0-3])(?::|h)[0-5]\d$/.test(candidate.time) ||
+      !Array.isArray(candidate.extras) || !candidate.extras.every((extra) => typeof extra === "string")
+    ) continue;
+
+    restored.push({
+      id: restored.length + 1,
+      activity: activity as unknown as Activity,
+      rateId: candidate.rateId,
+      adults: Number(candidate.adults),
+      children: Number(candidate.children),
+      date: candidate.date,
+      time: candidate.time,
+      extras: candidate.extras,
+    });
+  }
+  return restored;
 }
 
 function getRate(activity: Activity, rateId: string): ActivityBookingRate {
@@ -147,18 +199,48 @@ export function ActivityReservationProvider({ children }: { children: ReactNode 
   const [selectedTime, setSelectedTime] = useState("");
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
   const [lines, setLines] = useState<ReservationLine[]>([]);
+  const [linesHydrated, setLinesHydrated] = useState(false);
   const [notice, setNotice] = useState("");
   const [requestStatus, setRequestStatus] = useState("");
   const [bookedTimes, setBookedTimes] = useState<string[]>([]);
   const [availabilityError, setAvailabilityError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successToastOpen, setSuccessToastOpen] = useState(false);
+  const [reservationConflict, setReservationConflict] = useState<ReservationConflict | null>(null);
   const [open, setOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const nextLineId = useRef(0);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const cartCloseButtonRef = useRef<HTMLButtonElement>(null);
+  const conflictKeepButtonRef = useRef<HTMLButtonElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    try {
+      const savedLines = window.localStorage.getItem(RESERVATION_LINES_STORAGE_KEY);
+      if (savedLines) {
+        const restoredLines = restoreReservationLines(JSON.parse(savedLines));
+        setLines(restoredLines);
+        nextLineId.current = restoredLines.length;
+      }
+    } catch (error) {
+      console.warn("Could not restore the activity selection.", error);
+    }
+    setLinesHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!linesHydrated) return;
+    try {
+      if (lines.length) {
+        window.localStorage.setItem(RESERVATION_LINES_STORAGE_KEY, JSON.stringify(lines));
+      } else {
+        window.localStorage.removeItem(RESERVATION_LINES_STORAGE_KEY);
+      }
+    } catch (error) {
+      console.warn("Could not save the activity selection.", error);
+    }
+  }, [lines, linesHydrated]);
 
   const openReservation = useCallback((activity: Activity) => {
     if (!activity.reservation) {
@@ -192,6 +274,11 @@ export function ActivityReservationProvider({ children }: { children: ReactNode 
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
+        if (reservationConflict) {
+          setReservationConflict(null);
+          setSelectedTime("");
+          return;
+        }
         setOpen(false);
         setCartOpen(false);
       }
@@ -203,7 +290,11 @@ export function ActivityReservationProvider({ children }: { children: ReactNode 
       document.removeEventListener("keydown", onKeyDown);
       previousFocusRef.current?.focus();
     };
-  }, [open, cartOpen]);
+  }, [open, cartOpen, reservationConflict]);
+
+  useEffect(() => {
+    if (reservationConflict) conflictKeepButtonRef.current?.focus();
+  }, [reservationConflict]);
 
   useEffect(() => {
     if (!successToastOpen) return;
@@ -295,9 +386,8 @@ export function ActivityReservationProvider({ children }: { children: ReactNode 
       return;
     }
 
-    nextLineId.current += 1;
-    setLines((current) => [...current, {
-      id: nextLineId.current,
+    const line: ReservationLine = {
+      id: nextLineId.current + 1,
       activity: activeActivity,
       rateId: activeRate.id,
       adults,
@@ -305,11 +395,38 @@ export function ActivityReservationProvider({ children }: { children: ReactNode 
       date: selectedDate,
       time: selectedTime,
       extras: selectedExtras,
-    }]);
-    setNotice(`${activeActivity.title} ${t("added to your selection.")}`);
+    };
+    const existingLines = lines.filter((existing) =>
+      existing.date === line.date &&
+      normalizeReservationTime(existing.time) === normalizeReservationTime(line.time),
+    );
+    if (existingLines.length) {
+      setReservationConflict({ line, existingLines });
+      return;
+    }
+    addLineToSelection(line);
+  };
+
+  const addLineToSelection = (line: ReservationLine, replacedLineIds: number[] = []) => {
+    nextLineId.current = Math.max(nextLineId.current, line.id);
+    const replacedIds = new Set(replacedLineIds);
+    setLines((current) => [...current.filter((existing) => !replacedIds.has(existing.id)), line]);
+    setNotice(`${line.activity.title} ${t("added to your selection.")}`);
     setRequestStatus("");
+    setReservationConflict(null);
     setOpen(false);
     setCartOpen(true);
+  };
+
+  const keepExistingAndChooseAnotherTime = () => {
+    setReservationConflict(null);
+    setSelectedTime("");
+    setNotice(t("Choose another time to avoid overlapping activities."));
+  };
+
+  const replaceExistingSelection = () => {
+    if (!reservationConflict) return;
+    addLineToSelection(reservationConflict.line, reservationConflict.existingLines.map((line) => line.id));
   };
 
   const removeLine = (lineId: number) => {
@@ -356,7 +473,7 @@ export function ActivityReservationProvider({ children }: { children: ReactNode 
       setCartOpen(false);
       setSuccessToastOpen(true);
     } catch (error) {
-      setRequestStatus(error instanceof Error ? error.message : t("Your reservation could not be submitted. Please try again."));
+      setRequestStatus(error instanceof Error ? t(error.message) : t("Your reservation could not be submitted. Please try again."));
     } finally {
       setIsSubmitting(false);
     }
@@ -580,6 +697,60 @@ export function ActivityReservationProvider({ children }: { children: ReactNode 
           </section>
         </div>
       )}
+      {reservationConflict && (
+        <div
+          className="activity-reservation-conflict-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) keepExistingAndChooseAnotherTime();
+          }}
+        >
+          <section
+            className="activity-reservation-conflict"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="activity-reservation-conflict-title"
+            aria-describedby="activity-reservation-conflict-description"
+          >
+            <header className="activity-reservation-conflict__header">
+              <span aria-hidden="true">!</span>
+              <div>
+                <p>{t("Time overlap")}</p>
+                <h2 id="activity-reservation-conflict-title">{t("You already have an activity at this time")}</h2>
+              </div>
+            </header>
+            <p className="activity-reservation-conflict__description" id="activity-reservation-conflict-description">
+              {t("These activities share the same date and time. Replace the existing selection, or keep it and choose another time.")}
+            </p>
+            <div className="activity-reservation-conflict__slot">
+              <small>{t("New activity")}</small>
+              <strong>{reservationConflict.line.activity.title}</strong>
+              <span>{formatReservationDate(reservationConflict.line.date, locale)} · {reservationConflict.line.time}</span>
+            </div>
+            <div className="activity-reservation-conflict__existing">
+              <small>{t("Already in your selection")}</small>
+              {reservationConflict.existingLines.map((line) => (
+                <div key={line.id}>
+                  <strong>{line.activity.title}</strong>
+                  <span>{line.time} · {formatPrice(getLineTotal(line.activity, line), locale)}</span>
+                </div>
+              ))}
+            </div>
+            <footer className="activity-reservation-conflict__actions">
+              <button
+                ref={conflictKeepButtonRef}
+                type="button"
+                className="activity-reservation-conflict__keep"
+                onClick={keepExistingAndChooseAnotherTime}
+              >
+                {t("Keep existing and choose another time")}
+              </button>
+              <button type="button" className="activity-reservation-conflict__replace" onClick={replaceExistingSelection}>
+                {t("Replace existing selection")}
+              </button>
+            </footer>
+          </section>
+        </div>
+      )}
       {cartOpen && (
         <div className="activity-cart-backdrop" onMouseDown={(event) => {
           if (event.target === event.currentTarget) setCartOpen(false);
@@ -610,6 +781,7 @@ export function ActivityReservationProvider({ children }: { children: ReactNode 
                   const activity = line.activity;
                   return (
                     <li key={line.id}>
+                      <img className="activity-reservation-lines__image" src={getActivityImageUrl(activity.image, 180)} alt="" />
                       <div>
                         <strong>{activity.title}</strong>
                         <span>{getReservationDescription(activity, line, locale)}</span>
