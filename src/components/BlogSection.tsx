@@ -1,12 +1,15 @@
 import Link from "next/link";
-import { blogPosts, formatBlogDate, getBlogImageUrl } from "../blogs";
+import { formatBlogDate, getBlogImageUrl, type BlogPost } from "../blogs";
 import { localizeTree, translate, type Locale } from "../i18n";
 
-export default function BlogSection({ locale }: { locale: Locale }) {
+export default function BlogSection({ locale, posts }: { locale: Locale; posts: BlogPost[] }) {
   const t = (phrase: string) => translate(locale, phrase);
-  const latestPosts = [...localizeTree(blogPosts, locale)]
-    .sort((first, second) => second.publishedAt.localeCompare(first.publishedAt))
-    .slice(0, 3);
+  const sortedPosts = [...localizeTree(posts, locale)]
+    .sort((first, second) => second.publishedAt.localeCompare(first.publishedAt));
+  const featuredPosts = sortedPosts.filter((post) => post.featuredOnHome);
+  const latestPosts = (featuredPosts.length
+    ? [...featuredPosts, ...sortedPosts.filter((post) => !post.featuredOnHome)]
+    : sortedPosts).slice(0, 3);
 
   return (
     <section id="journal" className="journal-section px-5 py-20 text-ink md:px-[4vw] md:py-28">

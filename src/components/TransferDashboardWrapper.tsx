@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { getTransferDashboardData } from "../server/transfer-actions";
 import { getManagedActivityCatalog, getManagedActivityCount } from "../server/activity-catalog";
 import { getActivityReservationById, getActivityReservationCount, getActivityReservations } from "../server/activity-reservations";
+import { getManagedBlogCatalog, getManagedBlogCount } from "../server/blog-catalog";
 import TransferDashboard from "./TransferDashboard";
 
 export type DashboardPage =
@@ -13,7 +14,8 @@ export type DashboardPage =
   | "activities"
   | "activity-detail"
   | "activity-reservations"
-  | "activity-reservation-detail";
+  | "activity-reservation-detail"
+  | "blogs";
 
 export default async function TransferDashboardWrapper({
   page,
@@ -26,7 +28,7 @@ export default async function TransferDashboardWrapper({
   const result = await getTransferDashboardData();
   if (!result.authorized) redirect("/dashboard/loginP");
   if (
-    (page === "transfers" || page === "activities" || page === "activity-detail" || page === "activity-reservations" || page === "activity-reservation-detail") &&
+    (page === "transfers" || page === "activities" || page === "activity-detail" || page === "activity-reservations" || page === "activity-reservation-detail" || page === "blogs") &&
     result.user.role !== "ADMIN"
   ) {
     redirect("/dashboard/requests");
@@ -58,6 +60,12 @@ export default async function TransferDashboardWrapper({
     : page === "activity-reservations"
       ? activityReservations.length
       : await getActivityReservationCount();
+  const managedBlogs = page === "blogs" ? await getManagedBlogCatalog() : [];
+  const managedBlogCount = result.user.role === "ADMIN"
+    ? page === "blogs"
+      ? managedBlogs.length
+      : await getManagedBlogCount()
+    : 0;
   return (
     <TransferDashboard
       user={result.user}
@@ -68,6 +76,8 @@ export default async function TransferDashboardWrapper({
       activityDetail={activityDetail}
       activityReservations={activityReservations}
       activityReservationCount={activityReservationCount}
+      managedBlogs={managedBlogs}
+      managedBlogCount={managedBlogCount}
       transferRequestDetail={transferRequestDetail}
       activityReservationDetail={activityReservationDetail}
     />

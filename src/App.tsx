@@ -12,9 +12,10 @@ import WhyChooseUs from "./components/WhyChooseUs";
 import FinalCallToAction from "./components/FinalCallToAction";
 import PageLoader from "./components/PageLoader";
 import type { Activity } from "./activities";
+import type { BlogPost } from "./blogs";
 import type { Locale } from "./i18n";
 
-export default function App({ activities, locale }: { activities: Activity[]; locale: Locale }) {
+export default function App({ activities, posts, locale }: { activities: Activity[]; posts: BlogPost[]; locale: Locale }) {
   return (
     <>
       <PageLoader />
@@ -33,7 +34,7 @@ export default function App({ activities, locale }: { activities: Activity[]; lo
           <Experiences activities={activities} locale={locale} />
           <Concierge locale={locale} />
           <JourneySteps locale={locale} />
-          <BlogSection locale={locale} />
+          <BlogSection locale={locale} posts={posts} />
           <WhyChooseUs locale={locale} />
           <FinalCallToAction locale={locale} />
         </ScrollMotion>

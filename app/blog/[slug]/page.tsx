@@ -5,6 +5,7 @@ import { connection } from "next/server";
 import Nav from "../../../src/components/Nav";
 import BlogShareActions from "../../../src/components/BlogShareActions";
 import { blogPosts, formatBlogDate, getBlogImageUrl } from "../../../src/blogs";
+import { getPublicBlogPost, getPublicBlogPosts } from "../../../src/server/blog-catalog";
 import { getLocale } from "../../../src/server/locale";
 import { localizeTree, translate } from "../../../src/i18n";
 
@@ -19,21 +20,32 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: BlogDetailPageProps): Promise<Metadata> {
   const { slug } = await params;
   if (process.env.DATABASE_URL) await connection();
-  const [locale] = await Promise.all([getLocale()]);
-  const post = localizeTree(blogPosts.find((item) => item.slug === slug), locale);
+  const [locale, sourcePost] = await Promise.all([getLocale(), getPublicBlogPost(slug)]);
+  const post = localizeTree(sourcePost, locale);
 
   if (!post) {
     return { title: translate(locale, "Story not found") };
   }
 
+  const title = post.seoTitle || post.title;
+  const description = post.seoDescription || post.excerpt;
+  const socialTitle = post.ogTitle || title;
+  const socialDescription = post.ogDescription || description;
+  const socialImage = getBlogImageUrl(post.ogImage || post.image, 1200);
   return {
-    title: `${post.title} | ${translate(locale, "The Morocco Travel Journal")}`,
-    description: post.excerpt,
+    title: `${title} | ${translate(locale, "The Morocco Travel Journal")}`,
+    description,
+    keywords: post.seoKeywords?.split(",").map((keyword) => keyword.trim()).filter(Boolean),
+    alternates: post.canonicalUrl ? { canonical: post.canonicalUrl } : undefined,
+    robots: post.noIndex ? { index: false, follow: true } : undefined,
     openGraph: {
-      title: `${post.title} | The Morocco Travel Journal`,
-      description: post.excerpt,
-      images: [getBlogImageUrl(post.image, 1200)],
+      type: "article",
+      title: socialTitle,
+      description: socialDescription,
+      images: [socialImage],
+      publishedTime: `${post.publishedAt}T00:00:00.000Z`,
     },
+    twitter: { card: "summary_large_image", title: socialTitle, description: socialDescription, images: [socialImage] },
   };
 }
 
@@ -42,13 +54,14 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
   if (process.env.DATABASE_URL) await connection();
   const locale = await getLocale();
   const t = (phrase: string) => translate(locale, phrase);
-  const post = localizeTree(blogPosts.find((item) => item.slug === slug), locale);
+  const [sourcePost, sourcePosts] = await Promise.all([getPublicBlogPost(slug), getPublicBlogPosts()]);
+  const post = localizeTree(sourcePost, locale);
 
   if (!post) {
     notFound();
   }
 
-  const relatedPosts = localizeTree(blogPosts, locale)
+  const relatedPosts = localizeTree(sourcePosts, locale)
     .filter((item) => item.slug !== post.slug)
     .slice(0, 2);
 

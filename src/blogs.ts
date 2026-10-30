@@ -10,6 +10,15 @@ export type BlogPost = {
   location: string;
   introduction: string;
   sections: { heading: string; paragraphs: string[] }[];
+  featuredOnHome?: boolean;
+  seoTitle?: string;
+  seoDescription?: string;
+  seoKeywords?: string;
+  canonicalUrl?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
+  noIndex?: boolean;
 };
 
 export const blogPosts: BlogPost[] = [
@@ -295,6 +304,7 @@ export function getBlogBySlug(slug: string) {
 }
 
 export function getBlogImageUrl(image: string, width = 1000) {
+  if (/^https?:\/\//i.test(image)) return image;
   return `https://images.unsplash.com/${image}?auto=format&fit=crop&w=${width}&q=85`;
 }
 

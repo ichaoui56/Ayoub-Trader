@@ -49,12 +49,12 @@ export function useScrollFilm(
 
     const frame = () => {
       raf = 0;
-      current += (target - current) * 0.16;
+      current += (target - current) * 0.3;
       if (Math.abs(target - current) < 0.0004) current = target;
 
       if (Number.isFinite(v.duration) && v.duration > 0) {
         desiredTime = current * Math.max(v.duration - 0.04, 0);
-        if (!v.seeking && Math.abs(v.currentTime - desiredTime) > 1 / 48) {
+        if (!v.seeking && Math.abs(v.currentTime - desiredTime) > 1 / 30) {
           v.currentTime = desiredTime;
         }
       }

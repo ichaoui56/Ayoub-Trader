@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import Link from "next/link";
 import Nav from "../../src/components/Nav";
-import { blogPosts, formatBlogDate, getBlogImageUrl } from "../../src/blogs";
+import { formatBlogDate, getBlogImageUrl } from "../../src/blogs";
+import { getPublicBlogPosts } from "../../src/server/blog-catalog";
 import { getLocale } from "../../src/server/locale";
 import { localizeTree, translate } from "../../src/i18n";
 
@@ -17,9 +19,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function BlogPage() {
+  if (process.env.DATABASE_URL) await connection();
+  const posts = await getPublicBlogPosts();
   const locale = await getLocale();
   const t = (phrase: string) => translate(locale, phrase);
-  const localizedPosts = localizeTree(blogPosts, locale);
+  const localizedPosts = localizeTree(posts, locale);
   const [featuredPost, ...otherPosts] = [...localizedPosts].sort((first, second) =>
     second.publishedAt.localeCompare(first.publishedAt),
   );

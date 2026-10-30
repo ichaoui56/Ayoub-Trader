@@ -63,7 +63,7 @@ export default function ScrollFilm({ locale }: { locale: Locale }) {
   }
 
   return (
-    <section id="top" ref={runway} aria-label={translate(locale, "Morocco travel film, scrubbed by scrolling")} className="relative h-[520svh] bg-ink md:h-[600svh]">
+    <section id="top" ref={runway} aria-label={translate(locale, "Morocco travel film, scrubbed by scrolling")} className="relative h-[320svh] bg-ink md:h-[400svh]">
       <div className="sticky top-0 h-svh overflow-hidden">
         <video
           ref={video}
