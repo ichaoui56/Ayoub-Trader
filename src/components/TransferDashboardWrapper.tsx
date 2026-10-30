@@ -4,6 +4,7 @@ import { getTransferDashboardData } from "../server/transfer-actions";
 import { getManagedActivityCatalog, getManagedActivityCount } from "../server/activity-catalog";
 import { getActivityReservationById, getActivityReservationCount, getActivityReservations } from "../server/activity-reservations";
 import { getManagedBlogCatalog, getManagedBlogCount } from "../server/blog-catalog";
+import { getSiteSeoSettings } from "../server/site-seo";
 import TransferDashboard from "./TransferDashboard";
 
 export type DashboardPage =
@@ -15,7 +16,9 @@ export type DashboardPage =
   | "activity-detail"
   | "activity-reservations"
   | "activity-reservation-detail"
-  | "blogs";
+  | "blogs"
+  | "settings"
+  | "seo";
 
 export default async function TransferDashboardWrapper({
   page,
@@ -28,7 +31,7 @@ export default async function TransferDashboardWrapper({
   const result = await getTransferDashboardData();
   if (!result.authorized) redirect("/dashboard/loginP");
   if (
-    (page === "transfers" || page === "activities" || page === "activity-detail" || page === "activity-reservations" || page === "activity-reservation-detail" || page === "blogs") &&
+    (page === "transfers" || page === "activities" || page === "activity-detail" || page === "activity-reservations" || page === "activity-reservation-detail" || page === "blogs" || page === "seo") &&
     result.user.role !== "ADMIN"
   ) {
     redirect("/dashboard/requests");
@@ -66,6 +69,7 @@ export default async function TransferDashboardWrapper({
       ? managedBlogs.length
       : await getManagedBlogCount()
     : 0;
+  const siteSeoSettings = page === "seo" ? await getSiteSeoSettings() : null;
   return (
     <TransferDashboard
       user={result.user}
@@ -78,6 +82,7 @@ export default async function TransferDashboardWrapper({
       activityReservationCount={activityReservationCount}
       managedBlogs={managedBlogs}
       managedBlogCount={managedBlogCount}
+      siteSeoSettings={siteSeoSettings}
       transferRequestDetail={transferRequestDetail}
       activityReservationDetail={activityReservationDetail}
     />

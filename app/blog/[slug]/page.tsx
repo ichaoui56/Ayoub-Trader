@@ -8,6 +8,8 @@ import { blogPosts, formatBlogDate, getBlogImageUrl } from "../../../src/blogs";
 import { getPublicBlogPost, getPublicBlogPosts } from "../../../src/server/blog-catalog";
 import { getLocale } from "../../../src/server/locale";
 import { localizeTree, translate } from "../../../src/i18n";
+import { getSeoImageUrl } from "../../../src/seo";
+import { getSiteSeoSettings } from "../../../src/server/site-seo";
 
 type BlogDetailPageProps = {
   params: Promise<{ slug: string }>;
@@ -20,7 +22,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: BlogDetailPageProps): Promise<Metadata> {
   const { slug } = await params;
   if (process.env.DATABASE_URL) await connection();
-  const [locale, sourcePost] = await Promise.all([getLocale(), getPublicBlogPost(slug)]);
+  const [locale, sourcePost, settings] = await Promise.all([getLocale(), getPublicBlogPost(slug), getSiteSeoSettings()]);
   const post = localizeTree(sourcePost, locale);
 
   if (!post) {
@@ -31,21 +33,30 @@ export async function generateMetadata({ params }: BlogDetailPageProps): Promise
   const description = post.seoDescription || post.excerpt;
   const socialTitle = post.ogTitle || title;
   const socialDescription = post.ogDescription || description;
-  const socialImage = getBlogImageUrl(post.ogImage || post.image, 1200);
+  const socialImage = getSeoImageUrl(post.ogImage || settings.openGraphImage || post.image);
+  const canonicalUrl = post.canonicalUrl || `${settings.siteUrl}/blog/${slug}`;
   return {
-    title: `${title} | ${translate(locale, "The Morocco Travel Journal")}`,
+    title,
     description,
     keywords: post.seoKeywords?.split(",").map((keyword) => keyword.trim()).filter(Boolean),
-    alternates: post.canonicalUrl ? { canonical: post.canonicalUrl } : undefined,
+    alternates: { canonical: canonicalUrl },
     robots: post.noIndex ? { index: false, follow: true } : undefined,
     openGraph: {
       type: "article",
+      siteName: settings.siteName,
+      url: canonicalUrl,
       title: socialTitle,
       description: socialDescription,
       images: [socialImage],
       publishedTime: `${post.publishedAt}T00:00:00.000Z`,
     },
-    twitter: { card: "summary_large_image", title: socialTitle, description: socialDescription, images: [socialImage] },
+    twitter: {
+      card: "summary_large_image",
+      site: settings.twitterHandle || undefined,
+      title: socialTitle,
+      description: socialDescription,
+      images: [socialImage],
+    },
   };
 }
 

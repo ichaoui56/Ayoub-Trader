@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import TransferDashboardWrapper from "../../../src/components/TransferDashboardWrapper";
 
 export const metadata: Metadata = {
-  title: "Manage activities | Morocco Journeys",
+  title: "Manage activities",
   robots: { index: false, follow: false },
 };
 

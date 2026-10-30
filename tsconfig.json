@@ -32,7 +32,8 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "app/**/*.ts",
-    "app/**/*.tsx"
+    "app/**/*.tsx",
+    "prisma/**/*.ts"
   ],
   "exclude": [
     "node_modules"

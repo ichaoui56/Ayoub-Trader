@@ -4,17 +4,22 @@ import Link from "next/link";
 import Nav from "../../src/components/Nav";
 import { formatBlogDate, getBlogImageUrl } from "../../src/blogs";
 import { getPublicBlogPosts } from "../../src/server/blog-catalog";
+import { getSiteSeoSettings } from "../../src/server/site-seo";
 import { getLocale } from "../../src/server/locale";
 import { localizeTree, translate } from "../../src/i18n";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const locale = await getLocale();
+  const [locale, settings] = await Promise.all([getLocale(), getSiteSeoSettings()]);
   return locale === "fr" ? {
-    title: "Le carnet de voyage du Maroc",
-    description: "Regards locaux, récits de voyage et inspirations pour découvrir le Maroc autrement.",
+    title: settings.journalTitleFr,
+    description: settings.journalDescriptionFr,
+    keywords: settings.keywordsFr.split(",").map((keyword) => keyword.trim()).filter(Boolean),
+    alternates: { canonical: "/blog" },
   } : {
-    title: "The Morocco Travel Journal",
-    description: "Local perspectives, thoughtful travel notes, and inspiration for a more considered journey through Morocco.",
+    title: settings.journalTitleEn,
+    description: settings.journalDescriptionEn,
+    keywords: settings.keywordsEn.split(",").map((keyword) => keyword.trim()).filter(Boolean),
+    alternates: { canonical: "/blog" },
   };
 }
 

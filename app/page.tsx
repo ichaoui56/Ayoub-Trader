@@ -5,6 +5,10 @@ import { getLocale } from "../src/server/locale";
 import { getPublicBlogPosts } from "../src/server/blog-catalog";
 import { localizeTree } from "../src/i18n";
 
+export const metadata = {
+  alternates: { canonical: "/" },
+};
+
 export default async function Page() {
   if (process.env.DATABASE_URL) await connection();
   const [catalog, posts, locale] = await Promise.all([getPublicActivityCatalog(), getPublicBlogPosts(), getLocale()]);

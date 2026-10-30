@@ -218,6 +218,74 @@ export async function signInTransferDashboard(usernameInput: string, password: s
   return { ok: true as const };
 }
 
+export async function updateMyDashboardAccount(
+  usernameInput: string,
+  currentPassword: string,
+  newPassword: string,
+  passwordConfirmation: string,
+) {
+  const sessionUser = await requireDashboardAccess();
+  if (!process.env.DATABASE_URL) throw new Error("Account settings require a configured PostgreSQL database.");
+  if (typeof currentPassword !== "string" || !currentPassword || currentPassword.length > 512) {
+    throw new Error("Enter your current password to confirm these changes.");
+  }
+  if (typeof newPassword !== "string" || newPassword.length > 512 || typeof passwordConfirmation !== "string" || passwordConfirmation.length > 512) {
+    throw new Error("The new password is invalid.");
+  }
+
+  const username = cleanText(usernameInput, "Username", 100).toLowerCase();
+  if (username.length < 3 || !/^[a-z0-9._-]+$/.test(username)) {
+    throw new Error("Username must be at least 3 characters and use letters, numbers, dots, underscores, or hyphens.");
+  }
+  if (newPassword && newPassword.length < 8) {
+    throw new Error("New passwords must be at least 8 characters.");
+  }
+  if (newPassword !== passwordConfirmation) {
+    throw new Error("The new password and confirmation do not match.");
+  }
+  if (!newPassword && passwordConfirmation) {
+    throw new Error("Enter a new password before confirming it.");
+  }
+  if (username === sessionUser.username && !newPassword) {
+    throw new Error("There are no account changes to save.");
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: sessionUser.id } });
+  if (!user || !user.isActive || !(await verifyPassword(currentPassword, user.passwordHash))) {
+    throw new Error("Your current password did not match.");
+  }
+
+  const existingUser = await prisma.user.findFirst({
+    where: { username, id: { not: user.id } },
+    select: { id: true },
+  });
+  if (existingUser) throw new Error("That username is already in use.");
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      username,
+      ...(newPassword ? { passwordHash: await hashPassword(newPassword) } : {}),
+    },
+  });
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/settings");
+  return { ok: true as const, username };
+}
+
+export async function verifyMyCurrentDashboardPassword(password: string) {
+  const sessionUser = await requireDashboardAccess();
+  if (typeof password !== "string" || !password || password.length > 512) {
+    return { valid: false as const };
+  }
+  const user = await prisma.user.findUnique({
+    where: { id: sessionUser.id },
+    select: { isActive: true, passwordHash: true },
+  });
+  if (!user?.isActive) return { valid: false as const };
+  return { valid: await verifyPassword(password, user.passwordHash) };
+}
+
 export async function signOutTransferDashboard() {
   const cookieStore = await cookies();
   const cookieOptions = {

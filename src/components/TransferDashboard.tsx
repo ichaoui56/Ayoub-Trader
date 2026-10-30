@@ -28,6 +28,9 @@ import ActivityReservationDetails from "./ActivityReservationDetails";
 import TransferRequestDetails from "./TransferRequestDetails";
 import type { ManagedActivityReservation } from "../server/activity-reservations";
 import BlogManagement from "./BlogManagement";
+import DashboardAccountSettings from "./DashboardAccountSettings";
+import DashboardSeoManagement from "./DashboardSeoManagement";
+import type { SiteSeoSettings } from "../seo";
 import type { ManagedBlogPost } from "../server/blog-catalog";
 import type { DashboardPage } from "./TransferDashboardWrapper";
 
@@ -42,6 +45,7 @@ type Props = {
   activityReservationCount: number;
   managedBlogs: ManagedBlogPost[];
   managedBlogCount: number;
+  siteSeoSettings: SiteSeoSettings | null;
   transferRequestDetail: TransferRequestData | null;
   activityReservationDetail: ManagedActivityReservation | null;
 };
@@ -287,6 +291,7 @@ export default function TransferDashboard({
   activityReservationCount,
   managedBlogs,
   managedBlogCount,
+  siteSeoSettings,
   transferRequestDetail,
   activityReservationDetail,
 }: Props) {
@@ -396,6 +401,10 @@ export default function TransferDashboard({
             ? "Activity reservation details"
           : page === "blogs"
             ? "Journal management"
+          : page === "settings"
+            ? "Account settings"
+          : page === "seo"
+            ? "Website SEO"
           : "Transfer management";
 
   useEffect(() => {
@@ -617,46 +626,58 @@ export default function TransferDashboard({
       <aside className="transfer-sidebar" id="transfer-dashboard-sidebar">
         <a className="transfer-brand" href="/" aria-label="Morocco Journeys home">
           <span className="transfer-brand__mark">M</span>
-          <span><strong>Morocco</strong><small>Journeys · Operations</small></span>
+          <span><strong>Morocco Journeys</strong><small>Travel operations</small></span>
         </a>
-        <div className="transfer-sidebar__section-label">Workspace</div>
         <nav aria-label="Dashboard sections" className="transfer-sidebar__nav">
-          <Link href="/dashboard" className={page === "overview" ? "is-active" : ""} title="Overview">
-            <span aria-hidden="true">◫</span><span>Overview</span>
-          </Link>
-          <Link href="/dashboard/requests" className={page === "requests" || page === "request-detail" ? "is-active" : ""} title="Transfer requests">
-            <span aria-hidden="true">▤</span><span>Transfer requests</span>
-            {newRequests > 0 && <b>{newRequests}</b>}
-          </Link>
-          {isAdmin && (
-            <Link href="/dashboard/transfers" className={page === "transfers" ? "is-active" : ""} title="Transfer management">
-              <span aria-hidden="true">⌖</span><span>Transfers</span>
-              <b className="transfer-sidebar__count">{data.routes.length + data.services.length + data.locations.length}</b>
+          <div className="transfer-sidebar__group">
+            <p className="transfer-sidebar__group-label">Operations</p>
+            <Link href="/dashboard" className={page === "overview" ? "is-active" : ""} title="Overview">
+              <span aria-hidden="true">◫</span><span>Overview</span>
             </Link>
-          )}
-          {isAdmin && (
-            <Link href="/dashboard/activities" className={page === "activities" || page === "activity-detail" ? "is-active" : ""} title="Manage activities">
-              <span aria-hidden="true">✦</span><span>Manage activities</span>
-              <b className="transfer-sidebar__count">{managedActivityCount}</b>
+            <Link href="/dashboard/requests" className={page === "requests" || page === "request-detail" ? "is-active" : ""} title="Transfer requests">
+              <span aria-hidden="true">▤</span><span>Transfer requests</span>
+              {newRequests > 0 && <b className="transfer-sidebar__alert-count">{newRequests}</b>}
             </Link>
-          )}
+            {isAdmin && (
+              <Link href="/dashboard/transfers" className={page === "transfers" ? "is-active" : ""} title="Transfer management">
+                <span aria-hidden="true">⌖</span><span>Transfers</span>
+                <b className="transfer-sidebar__count">{data.routes.length + data.services.length + data.locations.length}</b>
+              </Link>
+            )}
+            {isAdmin && (
+              <Link href="/dashboard/activity-reservations" className={page === "activity-reservations" || page === "activity-reservation-detail" ? "is-active" : ""} title="Activity reservations">
+                <span aria-hidden="true">▤</span><span>Activity reservations</span>
+                <b className="transfer-sidebar__count">{activityReservationCount}</b>
+              </Link>
+            )}
+          </div>
           {isAdmin && (
-            <Link href="/dashboard/activity-reservations" className={page === "activity-reservations" || page === "activity-reservation-detail" ? "is-active" : ""} title="Activity reservations">
-              <span aria-hidden="true">▤</span><span>Activity reservations</span>
-              <b className="transfer-sidebar__count">{activityReservationCount}</b>
-            </Link>
+            <div className="transfer-sidebar__group">
+              <p className="transfer-sidebar__group-label">Catalogue &amp; content</p>
+              <Link href="/dashboard/activities" className={page === "activities" || page === "activity-detail" ? "is-active" : ""} title="Manage activities">
+                <span aria-hidden="true">✦</span><span>Experiences</span>
+                <b className="transfer-sidebar__count">{managedActivityCount}</b>
+              </Link>
+              <Link href="/dashboard/blogs" className={page === "blogs" ? "is-active" : ""} title="Manage journal">
+                <span aria-hidden="true">✎</span><span>Travel journal</span>
+                <b className="transfer-sidebar__count">{managedBlogCount}</b>
+              </Link>
+              <Link href="/dashboard/seo" className={page === "seo" ? "is-active" : ""} title="Website SEO settings">
+                <span aria-hidden="true">⌕</span><span>Website SEO</span>
+              </Link>
+            </div>
           )}
-          {isAdmin && (
-            <Link href="/dashboard/blogs" className={page === "blogs" ? "is-active" : ""} title="Manage journal">
-              <span aria-hidden="true">✎</span><span>Travel journal</span>
-              <b className="transfer-sidebar__count">{managedBlogCount}</b>
+          <div className="transfer-sidebar__group transfer-sidebar__group--account">
+            <p className="transfer-sidebar__group-label">Account</p>
+            <Link href="/dashboard/settings" className={page === "settings" ? "is-active" : ""} title="Account settings">
+              <span aria-hidden="true">⚙</span><span>Account settings</span>
             </Link>
-          )}
+          </div>
         </nav>
         <div className="transfer-sidebar__workspace-card">
           <span className="transfer-sidebar__workspace-icon" aria-hidden="true">✦</span>
-          <strong>Morocco, in motion.</strong>
-          <small>Manage every journey from one place.</small>
+          <div><strong>Morocco, in motion.</strong><small>Every detail, thoughtfully managed.</small></div>
+          <span className="transfer-sidebar__workspace-signal" aria-label="Workspace ready" title="Workspace ready" />
         </div>
       </aside>
 
@@ -717,7 +738,7 @@ export default function TransferDashboard({
             <div>
               <p className="transfer-eyebrow">Travel operations · Morocco</p>
               <h1>{heading}</h1>
-              <p>{page === "overview" ? "A clear view of your bookings, routes and guest experiences." : page === "requests" ? "Review guest details and keep every booking moving." : page === "request-detail" ? "Full guest, journey and booking details." : page === "activities" ? "Create and publish experiences with complete content and flexible pricing." : page === "activity-detail" ? "Complete content, schedule and booking setup for this experience." : page === "activity-reservations" ? "Review guest requests, confirm availability and manage every experience booking." : page === "activity-reservation-detail" ? "Guest details, scheduled activities and booking status." : page === "blogs" ? "Create stories, control publication, and manage search and social previews." : "Manage all transfer options from one place."}</p>
+              <p>{page === "overview" ? "A clear view of your bookings, routes and guest experiences." : page === "requests" ? "Review guest details and keep every booking moving." : page === "request-detail" ? "Full guest, journey and booking details." : page === "activities" ? "Create and publish experiences with complete content and flexible pricing." : page === "activity-detail" ? "Complete content, schedule and booking setup for this experience." : page === "activity-reservations" ? "Review guest requests, confirm availability and manage every experience booking." : page === "activity-reservation-detail" ? "Guest details, scheduled activities and booking status." : page === "blogs" ? "Create stories, control publication, and manage search and social previews." : page === "settings" ? "Update your dashboard username and password." : page === "seo" ? "Manage global metadata, crawling, verification, social previews, and structured identity." : "Manage all transfer options from one place."}</p>
             </div>
             {isAdmin && page === "transfers" && (
               <button type="button" className="transfer-add-button" onClick={startAdd}>
@@ -824,6 +845,10 @@ export default function TransferDashboard({
           {page === "activities" && isAdmin && <ActivityManagement items={managedActivities} />}
 
           {page === "blogs" && isAdmin && <BlogManagement items={managedBlogs} />}
+
+          {page === "settings" && <DashboardAccountSettings username={user.username} role={user.role} />}
+
+          {page === "seo" && isAdmin && siteSeoSettings && <DashboardSeoManagement initialSettings={siteSeoSettings} />}
 
           {page === "activity-detail" && isAdmin && activityDetail && (
             <ActivityCatalogDetails item={activityDetail} />

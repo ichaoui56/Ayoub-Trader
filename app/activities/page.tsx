@@ -6,16 +6,21 @@ import { getActivityImageUrl } from "../../src/activities";
 import { connection } from "next/server";
 import { getPublicActivityCatalog } from "../../src/server/activity-catalog";
 import { getLocale } from "../../src/server/locale";
+import { getSiteSeoSettings } from "../../src/server/site-seo";
 import { localizeTree, translate } from "../../src/i18n";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const locale = await getLocale();
+  const [locale, settings] = await Promise.all([getLocale(), getSiteSeoSettings()]);
   return locale === "fr" ? {
-    title: "Activités et expériences au Maroc | Morocco Journeys",
-    description: "Découvrez les aventures, les activités nautiques, la culture, la gastronomie et le bien-être autour d’Agadir et de Taghazout.",
+    title: settings.activitiesTitleFr,
+    description: settings.activitiesDescriptionFr,
+    keywords: settings.keywordsFr.split(",").map((keyword) => keyword.trim()).filter(Boolean),
+    alternates: { canonical: "/activities" },
   } : {
-    title: "Morocco Activities & Experiences",
-    description: "Explore outdoor adventures, ocean activities, local culture, food, and wellbeing experiences around Agadir and Taghazout.",
+    title: settings.activitiesTitleEn,
+    description: settings.activitiesDescriptionEn,
+    keywords: settings.keywordsEn.split(",").map((keyword) => keyword.trim()).filter(Boolean),
+    alternates: { canonical: "/activities" },
   };
 }
 

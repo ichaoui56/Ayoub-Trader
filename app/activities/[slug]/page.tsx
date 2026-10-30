@@ -9,6 +9,7 @@ import { getLocale } from "../../../src/server/locale";
 import { localizeTree, translate } from "../../../src/i18n";
 import ActivityGallery from "../../../src/components/ActivityGallery";
 import ActivityReserveButton from "../../../src/components/ActivityReserveButton";
+import { getSiteSeoSettings } from "../../../src/server/site-seo";
 
 type ActivityPageProps = {
   params: Promise<{ slug: string }>;
@@ -17,7 +18,7 @@ type ActivityPageProps = {
 export async function generateMetadata({ params }: ActivityPageProps): Promise<Metadata> {
   const { slug } = await params;
   if (process.env.DATABASE_URL) await connection();
-  const [catalog, locale] = await Promise.all([getPublicActivityCatalog(), getLocale()]);
+  const [catalog, locale, settings] = await Promise.all([getPublicActivityCatalog(), getLocale(), getSiteSeoSettings()]);
   const activities = localizeTree(catalog, locale);
   const activity = activities.find((item) => item.slug === slug);
 
@@ -26,10 +27,25 @@ export async function generateMetadata({ params }: ActivityPageProps): Promise<M
   }
 
   return {
-    title: `${activity.title} | Morocco Journeys`,
+    title: activity.title,
     description: activity.summary,
+    keywords: [...new Set([
+      ...(locale === "fr" ? settings.keywordsFr : settings.keywordsEn).split(",").map((keyword) => keyword.trim()).filter(Boolean),
+      activity.category,
+      activity.location,
+    ])],
+    alternates: { canonical: `/activities/${activity.slug}` },
     openGraph: {
-      title: `${activity.title} | Morocco Journeys`,
+      siteName: settings.siteName,
+      url: `${settings.siteUrl}/activities/${activity.slug}`,
+      title: activity.title,
+      description: activity.summary,
+      images: [getActivityImageUrl(activity.image, 1200)],
+    },
+    twitter: {
+      card: "summary_large_image",
+      site: settings.twitterHandle || undefined,
+      title: activity.title,
       description: activity.summary,
       images: [getActivityImageUrl(activity.image, 1200)],
     },
