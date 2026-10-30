@@ -40,5 +40,5 @@ shows a setup error after sign-in.
 
 For an existing database, apply the user/role migration with
 `npm run db:deploy`. For production, set `TRANSFER_ADMIN_USERNAME` and a strong
-`TRANSFER_ADMIN_PASSWORD` (at least 12 characters) before the first dashboard
+`TRANSFER_ADMIN_PASSWORD` (at least 8 characters) before the first dashboard
 sign-in so the bootstrap admin is not created with local-development defaults.

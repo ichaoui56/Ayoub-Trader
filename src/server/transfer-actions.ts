@@ -74,8 +74,8 @@ async function ensureInitialAdminAccount() {
       "Set TRANSFER_ADMIN_USERNAME and a strong TRANSFER_ADMIN_PASSWORD before initializing dashboard users in production.",
     );
   }
-  if (process.env.NODE_ENV === "production" && configuredPassword.length < 12) {
-    throw new Error("TRANSFER_ADMIN_PASSWORD must be at least 12 characters in production.");
+  if (process.env.NODE_ENV === "production" && configuredPassword.length < 8) {
+    throw new Error("TRANSFER_ADMIN_PASSWORD must be at least 8 characters in production.");
   }
   const username = cleanText(configuredUsername, "Admin username", 100).toLowerCase();
 
