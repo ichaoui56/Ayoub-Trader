@@ -52,7 +52,7 @@ export default function Nav() {
       <header className={`site-nav fixed inset-x-0 top-0 z-40 text-paper${scrolled ? " site-nav--scrolled" : pathname !== "/" ? " site-nav--interior" : ""}`}>
         <div className="site-nav__inner flex h-16 items-center justify-between gap-6">
           <div className="flex items-center gap-8">
-            <Logo href={pathname === "/" ? "#top" : "/#top"} />
+            <Logo href={pathname === "/" ? "#top" : "/#top"} compact={scrolled} />
           </div>
           <nav aria-label={t("Primary navigation")} className="site-nav__actions">
             <ul className="site-nav__links">

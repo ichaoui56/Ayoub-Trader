@@ -98,6 +98,7 @@ const french: Record<string, string> = {
   "Reserve your pickup": "Réserver votre transfert",
   "Read the journal": "Lire le carnet",
   "More than a trip. A journey.": "Plus qu’un séjour. Un voyage.",
+  "Website made by": "Site web réalisé par",
   "Back to the beginning ↑": "Retour au début ↑",
   "The Morocco travel journal": "Le carnet de voyage du Maroc",
   "The Morocco Travel Journal": "Le carnet de voyage du Maroc",
@@ -333,6 +334,7 @@ const french: Record<string, string> = {
 };
 
 const english: Record<string, string> = {
+  "Website made by": "Website made by",
   "Aéroport d'Agadir": "Agadir Airport",
   "Vallée du Paradis, véhicule privé": "Private vehicle to Paradise Valley",
   "Jusqu'à 8 personnes · Demi-journée": "Up to 8 people · Half-day",

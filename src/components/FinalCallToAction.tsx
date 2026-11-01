@@ -26,6 +26,15 @@ export default function FinalCallToAction({ locale }: { locale: Locale }) {
         </nav>
         <p>{t("More than a trip. A journey.")}</p>
       </footer>
+      <div className="mt-8 flex flex-col items-center gap-2 border-t border-ink/15 pt-6">
+        <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-ink/50">{t("Website made by")}</p>
+        <svg aria-labelledby="hostel-growth-logo-title" role="img" viewBox="0 0 900 190" className="h-auto rounded-xl w-40 md:w-48">
+          <title id="hostel-growth-logo-title">HostelGrowth</title>
+          <rect width="900" height="190" rx="14" fill="#07121d" />
+          <text x="34" y="140" fill="#fff" fontFamily="Arial, Helvetica, sans-serif" fontSize="108" fontWeight="700" textLength="760" lengthAdjust="spacingAndGlyphs">HostelGrowth</text>
+          <circle cx="832" cy="130" r="17" fill="#f15b40" />
+        </svg>
+      </div>
     </section>
   );
 }
