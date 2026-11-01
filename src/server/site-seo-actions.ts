@@ -29,6 +29,14 @@ function imageUrl(value: unknown, label: string) {
   return result;
 }
 
+function faviconUrl(value: unknown) {
+  const result = text(value, "Site favicon", 1200);
+  if (result && !/^https:\/\//i.test(result)) {
+    throw new Error("Site favicon must be an HTTPS URL.");
+  }
+  return result;
+}
+
 function siteUrl(value: unknown) {
   const result = text(value, "Website URL", 400, true);
   try {
@@ -91,6 +99,7 @@ function parseSettings(value: unknown): SiteSeoSettings {
     openGraphDescriptionEn: text(input.openGraphDescriptionEn, "English social description", 320),
     openGraphDescriptionFr: text(input.openGraphDescriptionFr, "French social description", 320),
     openGraphImage: imageUrl(input.openGraphImage, "Default social image"),
+    favicon: faviconUrl(input.favicon),
     twitterHandle,
     googleVerification: text(input.googleVerification, "Google verification token", 500),
     bingVerification: text(input.bingVerification, "Bing verification token", 500),

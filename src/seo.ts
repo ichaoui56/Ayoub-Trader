@@ -21,6 +21,7 @@ export type SiteSeoSettings = {
   openGraphDescriptionEn: string;
   openGraphDescriptionFr: string;
   openGraphImage: string;
+  favicon: string;
   twitterHandle: string;
   googleVerification: string;
   bingVerification: string;
@@ -57,6 +58,7 @@ export function getDefaultSiteSeoSettings(): SiteSeoSettings {
     openGraphDescriptionEn: "A thoughtful Morocco concierge for seamless airport transfers, handpicked stays and unforgettable local experiences.",
     openGraphDescriptionFr: "Une conciergerie marocaine attentive pour vos transferts aéroport, hébergements choisis et expériences locales inoubliables.",
     openGraphImage: "",
+    favicon: "",
     twitterHandle: "",
     googleVerification: "",
     bingVerification: "",

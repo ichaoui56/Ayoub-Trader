@@ -14,6 +14,11 @@ function isWebp(bytes: Uint8Array) {
     String.fromCharCode(...bytes.subarray(8, 12)) === "WEBP";
 }
 
+function isPng(bytes: Uint8Array) {
+  const signature = [137, 80, 78, 71, 13, 10, 26, 10];
+  return bytes.length >= signature.length && signature.every((byte, index) => bytes[index] === byte);
+}
+
 export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
   const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
@@ -40,7 +45,7 @@ export async function POST(request: NextRequest) {
   }
   if (user.role !== "ADMIN") {
     return NextResponse.json(
-      { error: "Only an administrator can upload outing images." },
+      { error: "Only an administrator can upload site images." },
       { status: 403 },
     );
   }
@@ -57,16 +62,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "The image upload form is invalid." }, { status: 400 });
   }
 
-  if (!(file instanceof File) || file.type !== "image/webp") {
-    return NextResponse.json({ error: "Upload a compressed WebP image." }, { status: 400 });
+  if (!(file instanceof File) || !["image/webp", "image/png"].includes(file.type)) {
+    return NextResponse.json({ error: "Upload a compressed PNG or WebP image." }, { status: 400 });
   }
   if (file.size === 0 || file.size > MAX_IMAGE_BYTES) {
     return NextResponse.json({ error: "The compressed image must be 100 KB or smaller." }, { status: 413 });
   }
 
   const imageBytes = new Uint8Array(await file.arrayBuffer());
-  if (!isWebp(imageBytes)) {
-    return NextResponse.json({ error: "The uploaded file is not a valid WebP image." }, { status: 400 });
+  if (!(file.type === "image/webp" ? isWebp(imageBytes) : isPng(imageBytes))) {
+    return NextResponse.json({ error: "The uploaded file does not match its PNG or WebP format." }, { status: 400 });
   }
 
   if (!process.env.PINATA_JWT && !process.env.JWT) {
@@ -85,7 +90,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const uploadFile = new File([imageBytes], file.name || "outing.webp", { type: "image/webp" });
+    const uploadFile = new File([imageBytes], file.name || (file.type === "image/png" ? "image.png" : "image.webp"), { type: file.type });
     const { cid } = await pinata.upload.public.file(uploadFile);
     const url = await pinata.gateways.public.convert(cid);
 

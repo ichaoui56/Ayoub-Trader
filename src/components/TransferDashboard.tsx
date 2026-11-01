@@ -626,7 +626,7 @@ export default function TransferDashboard({
       <aside className="transfer-sidebar" id="transfer-dashboard-sidebar">
         <a className="transfer-brand" href="/" aria-label="Morocco Journeys home">
           <span className="transfer-brand__mark">M</span>
-          <span><strong>Morocco Journeys</strong><small>Travel operations</small></span>
+          <span><strong>MH TRAVELLING</strong><small>Travel operations</small></span>
         </a>
         <nav aria-label="Dashboard sections" className="transfer-sidebar__nav">
           <div className="transfer-sidebar__group">

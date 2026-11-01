@@ -19,6 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: { default: title, template: settings.titleTemplate },
     description,
     keywords: (french ? settings.keywordsFr : settings.keywordsEn).split(",").map((keyword) => keyword.trim()).filter(Boolean),
+    icons: settings.favicon ? { icon: settings.favicon } : undefined,
     robots: { index: settings.allowIndexing, follow: settings.allowFollowing },
     verification: {
       google: settings.googleVerification || undefined,

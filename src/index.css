@@ -15957,11 +15957,19 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
 
 .dashboard-seo__heading {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
   gap: 1.5rem;
   border-bottom: 1px solid var(--seo-line);
   padding-bottom: 1.1rem;
+}
+
+.dashboard-seo__heading-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 .dashboard-seo__heading h2 {
@@ -16137,6 +16145,40 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
   height: 1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
+}
+
+.dashboard-seo-remove {
+  min-height: 2.2rem;
+  border: 1px solid #e4cccc;
+  border-radius: 0.2rem;
+  background: #fff8f7;
+  padding: 0.5rem 0.7rem;
+  color: #a13f3c;
+  cursor: pointer;
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.dashboard-seo-remove:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.dashboard-seo-image-field__preview--favicon {
+  display: grid;
+  width: 4rem;
+  aspect-ratio: 1;
+  place-items: center;
+  background-color: #f5f6f3;
+  background-image: linear-gradient(45deg, #e6e9e3 25%, transparent 25%), linear-gradient(-45deg, #e6e9e3 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e6e9e3 75%), linear-gradient(-45deg, transparent 75%, #e6e9e3 75%);
+  background-position: 0 0, 0 0.25rem, 0.25rem -0.25rem, -0.25rem 0;
+  background-size: 0.5rem 0.5rem;
+}
+
+.dashboard-seo-image-field__preview--favicon img {
+  width: 2rem;
+  height: 2rem;
+  object-fit: contain;
 }
 
 .dashboard-seo-toggles {

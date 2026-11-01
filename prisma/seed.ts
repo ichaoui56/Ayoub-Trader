@@ -1,4 +1,5 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import { randomBytes, scrypt as scryptCallback } from "node:crypto";
+import { Prisma, PrismaClient, UserRole } from "@prisma/client";
 import { activities } from "../src/activities";
 import { blogPosts } from "../src/blogs";
 import { getDefaultSiteSeoSettings, siteSeoSettingKey } from "../src/seo";
@@ -9,7 +10,28 @@ const transferSeedKey = "transfer-catalog-v1";
 const activitySeedKey = "activity-catalog-v1";
 const blogSeedKey = "blog-catalog-v1";
 
+async function hashPassword(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  const hash = await new Promise<Buffer>((resolve, reject) => {
+    scryptCallback(password, salt, 64, (error, key) => {
+      if (error) reject(error);
+      else resolve(key);
+    });
+  });
+  return `scrypt$${salt}$${hash.toString("hex")}`;
+}
+
 async function seed() {
+  const adminUsername = (process.env.TRANSFER_ADMIN_USERNAME ?? "admin").trim().toLowerCase();
+  const adminPassword = process.env.TRANSFER_ADMIN_PASSWORD;
+  if (adminUsername.length === 0 || adminUsername.length > 100) {
+    throw new Error("TRANSFER_ADMIN_USERNAME must be between 1 and 100 characters.");
+  }
+  if (adminPassword && adminPassword.length < 8) {
+    throw new Error("TRANSFER_ADMIN_PASSWORD must be at least 8 characters.");
+  }
+  const adminPasswordHash = adminPassword ? await hashPassword(adminPassword) : null;
+
   const featuredSlugs = new Set(
     [...blogPosts]
       .sort((first, second) => second.publishedAt.localeCompare(first.publishedAt))
@@ -35,6 +57,13 @@ async function seed() {
       create: { key: transferSeedKey, value: "seeded" },
       update: {},
     });
+    if (adminPasswordHash) {
+      await transaction.user.upsert({
+        where: { username: adminUsername },
+        update: { passwordHash: adminPasswordHash, role: UserRole.ADMIN, isActive: true },
+        create: { username: adminUsername, passwordHash: adminPasswordHash, role: UserRole.ADMIN },
+      });
+    }
 
     await transaction.activityCatalogItem.createMany({
       data: activities.map((activity, sortOrder) => ({
@@ -76,7 +105,7 @@ async function seed() {
       create: { key: siteSeoSettingKey, value: JSON.stringify(defaultSeo) },
       update: {},
     });
-  });
+  }, { timeout: 15_000 });
 
   const [routes, privateServices, locations, activityCount, blogCount, seoSettings] = await Promise.all([
     prisma.transferRoute.count(),
@@ -94,6 +123,7 @@ async function seed() {
   console.log(`Activities: ${activityCount}`);
   console.log(`Blog posts: ${blogCount}`);
   console.log(`Site SEO settings: ${seoSettings ? "present" : "missing"}`);
+  console.log(`Admin user: ${adminPasswordHash ? "seeded from configured credentials" : "skipped (set TRANSFER_ADMIN_PASSWORD to seed)"}`);
 }
 
 seed()

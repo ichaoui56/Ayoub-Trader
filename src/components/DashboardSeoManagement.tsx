@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { saveSiteSeoSettings } from "../server/site-seo-actions";
 import type { SiteSeoSettings } from "../seo";
 
-type SeoImageKey = "openGraphImage" | "organizationLogo";
+type SeoImageKey = "openGraphImage" | "organizationLogo" | "favicon";
 
 function imageSource(value: string) {
   if (!value) return "";
@@ -47,6 +47,34 @@ async function compressSeoImage(file: File) {
   throw new Error("This image could not be reduced below 100 KB. Try a simpler or smaller photo.");
 }
 
+async function compressFavicon(file: File) {
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+    throw new Error("Choose a PNG, JPEG, or WebP image for the favicon.");
+  }
+  if (file.size > 15 * 1024 * 1024) throw new Error("Choose an image smaller than 15 MB.");
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const image = new Image();
+    image.src = objectUrl;
+    await image.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = 64;
+    canvas.height = 64;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Your browser could not prepare the favicon.");
+    const scale = Math.min(64 / image.naturalWidth, 64 / image.naturalHeight);
+    const width = Math.max(1, Math.round(image.naturalWidth * scale));
+    const height = Math.max(1, Math.round(image.naturalHeight * scale));
+    context.clearRect(0, 0, 64, 64);
+    context.drawImage(image, (64 - width) / 2, (64 - height) / 2, width, height);
+    const png = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+    if (!png || png.size > 100_000) throw new Error("The favicon must be 100 KB or smaller after compression.");
+    return png;
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
 export default function DashboardSeoManagement({ initialSettings }: { initialSettings: SiteSeoSettings }) {
   const router = useRouter();
   const [settings, setSettings] = useState(() => structuredClone(initialSettings));
@@ -66,9 +94,10 @@ export default function DashboardSeoManagement({ initialSettings }: { initialSet
     setUploadingImage(key);
     setNotice(null);
     try {
-      const compressed = await compressSeoImage(file);
+      const compressed = key === "favicon" ? await compressFavicon(file) : await compressSeoImage(file);
       const uploadForm = new FormData();
-      uploadForm.append("file", compressed, key === "openGraphImage" ? "site-social-preview.webp" : "organization-logo.webp");
+      const filename = key === "favicon" ? "site-favicon.png" : key === "openGraphImage" ? "site-social-preview.webp" : "organization-logo.webp";
+      uploadForm.append("file", compressed, filename);
       const response = await fetch("/api/files", { method: "POST", body: uploadForm, credentials: "same-origin" });
       const result: unknown = await response.json();
       if (!response.ok) {
@@ -79,7 +108,8 @@ export default function DashboardSeoManagement({ initialSettings }: { initialSet
       }
       if (typeof result !== "string" || !/^https:\/\//i.test(result)) throw new Error("Image storage returned an invalid URL.");
       update(key, result);
-      setNotice({ type: "success", text: key === "openGraphImage" ? "Default social preview uploaded." : "Organization logo uploaded." });
+      const message = key === "openGraphImage" ? "Default social preview uploaded." : key === "organizationLogo" ? "Organization logo uploaded." : "Favicon uploaded.";
+      setNotice({ type: "success", text: message });
     } catch (error) {
       setNotice({ type: "error", text: error instanceof Error ? error.message : "Image upload failed." });
     } finally {
@@ -111,7 +141,9 @@ export default function DashboardSeoManagement({ initialSettings }: { initialSet
           <h2 id="dashboard-seo-title">Website SEO control</h2>
           <p>Manage the site-wide metadata and search settings inherited by public pages. Individual stories can still override their own metadata.</p>
         </div>
-        <span className="dashboard-seo__mark" aria-hidden="true">⌕</span>
+        <div className="dashboard-seo__heading-actions">
+          <span className="dashboard-seo__mark" aria-hidden="true">⌕</span>
+        </div>
       </header>
 
       {notice && <p className={`transfer-notice transfer-notice--${notice.type}`} role="status">{notice.text}</p>}
@@ -133,7 +165,24 @@ export default function DashboardSeoManagement({ initialSettings }: { initialSet
         </fieldset>
 
         <fieldset className="dashboard-seo-panel">
-          <legend><span>02</span> Search and social previews</legend>
+          <legend><span>02</span> Site favicon</legend>
+          <div className="dashboard-seo-grid">
+            <div className="dashboard-seo-image-field">
+              <label>Favicon URL<input value={settings.favicon} onChange={(event) => update("favicon", event.target.value)} maxLength={1200} placeholder="Upload a favicon or paste an HTTPS URL" /></label>
+              <div className="dashboard-seo-image-field__tools">
+                <div className="dashboard-seo-image-field__preview dashboard-seo-image-field__preview--favicon">
+                  {settings.favicon && <img src={settings.favicon} alt="Current site favicon" />}
+                </div>
+                <label className="dashboard-seo-upload">{uploadingImage === "favicon" ? "Uploading…" : "Upload favicon"}<input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => void uploadImage(event, "favicon")} disabled={uploadingImage !== null} /></label>
+                <button type="button" className="dashboard-seo-remove" onClick={() => update("favicon", "")} disabled={!settings.favicon || uploadingImage !== null}>Remove favicon</button>
+              </div>
+              <small>PNG, JPEG, or WebP. Uploaded icons are fitted to a transparent 64 × 64 PNG. Save SEO settings to publish changes.</small>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset className="dashboard-seo-panel">
+          <legend><span>03</span> Search and social previews</legend>
           <div className="dashboard-seo-grid">
             <label>Open Graph title · English<input value={settings.openGraphTitleEn} onChange={(event) => update("openGraphTitleEn", event.target.value)} maxLength={180} /></label>
             <label>Open Graph title · French<input value={settings.openGraphTitleFr} onChange={(event) => update("openGraphTitleFr", event.target.value)} maxLength={180} /></label>
@@ -152,7 +201,7 @@ export default function DashboardSeoManagement({ initialSettings }: { initialSet
         </fieldset>
 
         <fieldset className="dashboard-seo-panel">
-          <legend><span>03</span> Crawling and verification</legend>
+          <legend><span>04</span> Crawling and verification</legend>
           <div className="dashboard-seo-toggles">
             <label><input type="checkbox" checked={settings.allowIndexing} onChange={(event) => update("allowIndexing", event.target.checked)} /><span><strong>Allow search indexing</strong><small>Ask search engines to include public pages in results.</small></span></label>
             <label><input type="checkbox" checked={settings.allowFollowing} onChange={(event) => update("allowFollowing", event.target.checked)} /><span><strong>Allow link following</strong><small>Ask search engines to follow links from public pages.</small></span></label>
@@ -165,7 +214,7 @@ export default function DashboardSeoManagement({ initialSettings }: { initialSet
         </fieldset>
 
         <fieldset className="dashboard-seo-panel">
-          <legend><span>04</span> Activities and journal page metadata</legend>
+          <legend><span>05</span> Activities and journal page metadata</legend>
           <div className="dashboard-seo-grid">
             <label>Activities page title · English<input value={settings.activitiesTitleEn} onChange={(event) => update("activitiesTitleEn", event.target.value)} maxLength={180} required /></label>
             <label>Activities page title · French<input value={settings.activitiesTitleFr} onChange={(event) => update("activitiesTitleFr", event.target.value)} maxLength={180} required /></label>
@@ -179,7 +228,7 @@ export default function DashboardSeoManagement({ initialSettings }: { initialSet
         </fieldset>
 
         <fieldset className="dashboard-seo-panel">
-          <legend><span>05</span> Organization structured data</legend>
+          <legend><span>06</span> Organization structured data</legend>
           <p className="dashboard-seo-panel__intro">This identity is emitted as Organization and WebSite JSON-LD to help crawlers understand the site and its official profiles.</p>
           <div className="dashboard-seo-grid">
             <label>Organization name<input value={settings.organizationName} onChange={(event) => update("organizationName", event.target.value)} maxLength={120} required /></label>
