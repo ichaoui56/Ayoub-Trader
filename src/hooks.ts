@@ -26,10 +26,12 @@ export function usePrefersReducedMotion() {
 export function useScrollFilm(
   runway: RefObject<HTMLElement | null>,
   video: RefObject<HTMLVideoElement | null>,
+  source: string,
   enabled: boolean,
 ) {
   const [progress, setProgress] = useState(0);
   const [loadProgress, setLoadProgress] = useState(0);
+  const [loadDeterminate, setLoadDeterminate] = useState(false);
   const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
@@ -44,23 +46,13 @@ export function useScrollFilm(
     let lastRenderAt = 0;
     let desiredTime = 0;
     let mediaReady = false;
+    let objectUrl: string | null = null;
+    const controller = new AbortController();
 
-    const updateLoadProgress = () => {
-      const duration = v.duration;
-      if (!Number.isFinite(duration) || duration <= 0) return;
-
-      let bufferedDuration = 0;
-      for (let index = 0; index < v.buffered.length; index += 1) {
-        bufferedDuration += v.buffered.end(index) - v.buffered.start(index);
-      }
-
-      const startsAtBeginning = v.buffered.length > 0 && v.buffered.start(0) <= 0.05;
-      const reachesEnd = v.buffered.length > 0 && v.buffered.end(v.buffered.length - 1) >= duration - 0.1;
-      const isFullyBuffered = startsAtBeginning && reachesEnd && bufferedDuration >= duration - 0.1;
-      const nextProgress = isFullyBuffered ? 1 : Math.min(Math.floor(clamp(bufferedDuration / duration) * 100) / 100, 0.99);
-
-      mediaReady = isFullyBuffered;
-      setLoadProgress(nextProgress);
+    const onLoadedData = () => {
+      mediaReady = true;
+      setLoadDeterminate(true);
+      setLoadProgress(1);
     };
 
     const measure = () => {
@@ -95,15 +87,45 @@ export function useScrollFilm(
     };
     const stop = () => v.pause();
     const onMediaError = () => setLoadError(true);
+    const loadFilm = async () => {
+      try {
+        const response = await fetch(source, { signal: controller.signal });
+        if (!response.ok) throw new Error(`Film request failed: ${response.status}`);
+
+        const total = Number(response.headers.get("content-length"));
+        const hasContentLength = Number.isFinite(total) && total > 0;
+        setLoadDeterminate(hasContentLength);
+        const chunks: BlobPart[] = [];
+        let loaded = 0;
+
+        if (response.body) {
+          const reader = response.body.getReader();
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value);
+            loaded += value.byteLength;
+            if (hasContentLength) {
+              setLoadProgress(Math.min(Math.floor((loaded / total) * 100) / 100, 0.99));
+            }
+          }
+        } else {
+          chunks.push(await response.blob());
+          if (hasContentLength) setLoadProgress(0.99);
+        }
+
+        const blob = new Blob(chunks, { type: response.headers.get("content-type") || "video/mp4" });
+        objectUrl = URL.createObjectURL(blob);
+        v.src = objectUrl;
+        v.load();
+      } catch {
+        if (!controller.signal.aborted) setLoadError(true);
+      }
+    };
 
     v.pause();
     v.addEventListener("play", stop);
-    v.addEventListener("loadedmetadata", updateLoadProgress);
-    v.addEventListener("durationchange", updateLoadProgress);
-    v.addEventListener("progress", updateLoadProgress);
-    v.addEventListener("loadeddata", updateLoadProgress);
-    v.addEventListener("canplay", updateLoadProgress);
-    v.addEventListener("canplaythrough", updateLoadProgress);
+    v.addEventListener("loadeddata", onLoadedData);
     v.addEventListener("error", onMediaError);
     if (enabled) {
       v.addEventListener("seeked", kick);
@@ -113,25 +135,24 @@ export function useScrollFilm(
       document.addEventListener("visibilitychange", kick);
       kick();
     }
-    updateLoadProgress();
+    void loadFilm();
 
     return () => {
       cancelAnimationFrame(raf);
+      controller.abort();
       v.removeEventListener("play", stop);
-      v.removeEventListener("loadedmetadata", updateLoadProgress);
-      v.removeEventListener("durationchange", updateLoadProgress);
-      v.removeEventListener("progress", updateLoadProgress);
-      v.removeEventListener("loadeddata", updateLoadProgress);
-      v.removeEventListener("canplay", updateLoadProgress);
-      v.removeEventListener("canplaythrough", updateLoadProgress);
+      v.removeEventListener("loadeddata", onLoadedData);
       v.removeEventListener("error", onMediaError);
       v.removeEventListener("seeked", kick);
       window.removeEventListener("scroll", kick);
       window.removeEventListener("resize", kick);
       window.removeEventListener("pageshow", kick);
       document.removeEventListener("visibilitychange", kick);
+      v.removeAttribute("src");
+      v.load();
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [runway, video, enabled]);
+  }, [runway, video, source, enabled]);
 
-  return { progress, loadProgress, loadError };
+  return { progress, loadProgress, loadDeterminate, loadError };
 }

@@ -37,7 +37,7 @@ export default function ScrollFilm({ locale }: { locale: Locale }) {
   const reduced = usePrefersReducedMotion();
   const runway = useRef<HTMLElement>(null);
   const video = useRef<HTMLVideoElement>(null);
-  const { progress: p, loadProgress, loadError } = useScrollFilm(runway, video, !reduced);
+  const { progress: p, loadProgress, loadDeterminate, loadError } = useScrollFilm(runway, video, MEDIA.film, !reduced);
   const chapters = CHAPTERS.map((chapter) => ({
     ...chapter,
     kicker: translate(locale, chapter.kicker),
@@ -67,7 +67,6 @@ export default function ScrollFilm({ locale }: { locale: Locale }) {
       <div className="sticky top-0 h-svh overflow-hidden">
         <video
           ref={video}
-          src={MEDIA.film}
           poster={MEDIA.poster}
           muted
           playsInline
@@ -82,12 +81,22 @@ export default function ScrollFilm({ locale }: { locale: Locale }) {
           <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center bg-ink/55 px-6 text-paper backdrop-blur-[2px]" role="status" aria-live="polite" aria-label={`${translate(locale, "Preparing travel film")}: ${Math.round(loadProgress * 100)}%`}>
             <div className="w-full max-w-xs">
               <p className="text-[11px] font-bold uppercase tracking-[0.22em]">{translate(locale, "Preparing the film")}</p>
-              <div className="mt-4 h-px bg-paper/30" role="progressbar" aria-label={translate(locale, "Film loading progress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(loadProgress * 100)}>
-                <div className="h-full origin-left bg-signal transition-[width] duration-300" style={{ width: `${loadProgress * 100}%` }} />
+              <div
+                className="mt-4 h-px bg-paper/30"
+                role="progressbar"
+                aria-label={translate(locale, "Film loading progress")}
+                aria-valuemin={loadDeterminate ? 0 : undefined}
+                aria-valuemax={loadDeterminate ? 100 : undefined}
+                aria-valuenow={loadDeterminate ? Math.round(loadProgress * 100) : undefined}
+              >
+                <div
+                  className={`h-full origin-left bg-signal ${loadDeterminate ? "transition-[width] duration-300" : "w-1/3 animate-pulse"}`}
+                  style={loadDeterminate ? { width: `${loadProgress * 100}%` } : undefined}
+                />
               </div>
               <p className="mt-3 flex justify-between text-xs text-paper/80">
                 <span>{translate(locale, "Loading full film")}</span>
-                <span>{Math.round(loadProgress * 100)}%</span>
+                {loadDeterminate && <span>{Math.round(loadProgress * 100)}%</span>}
               </p>
             </div>
           </div>
