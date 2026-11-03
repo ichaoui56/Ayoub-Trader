@@ -160,14 +160,6 @@ function parseActivity(value: unknown): Activity {
     }
   }
 
-  const bookingUrl = text(input.bookingUrl, "Partner booking URL", 1200, false);
-  if (bookingUrl) {
-    try {
-      if (new URL(bookingUrl).protocol !== "https:") throw new Error();
-    } catch {
-      throw new Error("Partner booking URL must be a valid HTTPS link.");
-    }
-  }
   const ratingInput = input.rating ? record(input.rating, "Rating") : undefined;
   const privateOptionInput = input.privateOption ? record(input.privateOption, "Private option") : undefined;
   const faqInput = input.faqs ?? [];
@@ -214,7 +206,7 @@ function parseActivity(value: unknown): Activity {
       }] : []),
     ] : undefined,
     pickup: text(input.pickup, "Pickup details", 600, false),
-    bookingUrl: bookingUrl || undefined,
+    
     included,
     paymentNote: text(input.paymentNote, "Payment note", 600, false) || undefined,
     reservation,

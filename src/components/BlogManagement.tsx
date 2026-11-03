@@ -296,7 +296,7 @@ export default function BlogManagement({ items }: { items: ManagedBlogPost[] }) 
                 <div className="blog-management-seo__preview">
                   <small>SEARCH PREVIEW</small>
                   <strong>{draft.post.seoTitle || draft.post.title || "Your story title"}</strong>
-                  <span>{draft.post.canonicalUrl || `https://moroccojourneys.com/blog/${draft.post.slug || "your-story"}`}</span>
+                  <span>{draft.post.canonicalUrl || `https://mhtraveling.com/blog/${draft.post.slug || "your-story"}`}</span>
                   <p>{draft.post.seoDescription || draft.post.excerpt || "Your search description will appear here."}</p>
                 </div>
                 <div className="blog-management-form__grid">

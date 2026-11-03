@@ -70,20 +70,11 @@ export default function Experiences({ activities, locale }: { activities: Activi
                       {activity.pickup.toLowerCase().includes("included") ? "Pickup included" : "Pickup on request"}
                     </span>
                   )}
-                  {activity.reservation ? (
+                  
                     <ActivityReserveButton activity={activity} className="experience-product-card__reserve">
                       {t("Reserve")} <span aria-hidden="true">↗</span>
                     </ActivityReserveButton>
-                  ) : activity.bookingUrl ? (
-                    <a
-                      className="experience-product-card__reserve"
-                      href={activity.bookingUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {t("Reserve")} <span aria-hidden="true">↗</span>
-                    </a>
-                  ) : null}
+                 
                 </div>
               </div>
             </article>

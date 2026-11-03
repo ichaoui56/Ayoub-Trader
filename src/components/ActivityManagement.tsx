@@ -38,7 +38,6 @@ const emptyActivity = (): Activity => ({
   goodToKnow: [],
   popular: false,
   pickup: "",
-  bookingUrl: "",
   included: [],
   paymentNote: "",
   reservation: {

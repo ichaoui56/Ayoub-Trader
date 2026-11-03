@@ -98,7 +98,7 @@ export default async function ActivityDetailPage({ params }: ActivityPageProps) 
                 {activity.duration && <div><span aria-hidden="true">◷</span><p><small>{t("Time to allow")}</small>{activity.duration}</p></div>}
                 <div><span aria-hidden="true">↗</span><p><small>{t("Pace")}</small>{activity.pace}</p></div>
               </div>
-              {activity.bookingUrl || activity.reservation ? (
+              {activity.reservation ? (
                 <aside className="activity-booking-card" aria-label={`${t("Booking information for")} ${activity.title}`}>
                   <div className="activity-booking-card__heading">
                     <div>
@@ -126,9 +126,7 @@ export default async function ActivityDetailPage({ params }: ActivityPageProps) 
                       {t("Build a reservation request")} <span aria-hidden="true">↗</span>
                     </ActivityReserveButton>
                   )}
-                  {activity.bookingUrl && <a className="activity-detail__partner-link" href={activity.bookingUrl} target="_blank" rel="noopener noreferrer">
-                    {t("Book directly with our partner")} <span aria-hidden="true">↗</span>
-                  </a>}
+
                   {activity.paymentNote && <p className="activity-booking-card__note">{activity.paymentNote}</p>}
                 </aside>
               ) : (

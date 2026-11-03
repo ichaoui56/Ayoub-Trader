@@ -37,7 +37,7 @@ export const siteSeoSettingKey = "site-seo-v1";
 export function getDefaultSiteSeoSettings(): SiteSeoSettings {
   return {
     siteName: "Morocco Journeys",
-    siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://moroccojourneys.com",
+    siteUrl: "https://mhtraveling.com",
     titleTemplate: "%s | Morocco Journeys",
     titleEn: "Morocco Journeys — Every arrival, considered.",
     titleFr: "Morocco Journeys — Chaque arrivée, pensée avec soin.",

@@ -44,7 +44,6 @@ export type Activity = {
   gallery?: ActivityImage[];
   priceOptions?: { label: string; price: string; unit?: string }[];
   pickup?: string;
-  bookingUrl?: string;
   included?: string[];
   paymentNote?: string;
   rating?: { label: string; url: string };
@@ -104,7 +103,7 @@ export const activities: Activity[] = [
       { title: "Ride the trails", description: "Enjoy two hours of guided quad riding across tracks, dunes, and the coast." },
       { title: "Sandboard and take a break", description: "Stop for sandboarding, Moroccan tea, photos, and the return ride." },
     ],
-    goodToKnow: ["Departures are listed at 09:00 and 14:00; confirm your preferred time when booking.", "Wear closed shoes and clothes you don't mind getting dusty; bring sunglasses and sun protection.", "The operator advises against riding during pregnancy or with back problems."],
+    goodToKnow: ["Departures are listed at 09:00 and 14:00; share your preferred time when requesting this experience.", "Wear closed shoes and clothes you don't mind getting dusty; bring sunglasses and sun protection.", "The operator advises against riding during pregnancy or with back problems."],
     popular: true,
     gallery: [
       { src: "https://www.bookagadirexperience.com/images/quad/quad-riders-cheering.jpg", alt: "Quad riders celebrating beside the Atlantic coast" },
@@ -119,7 +118,6 @@ export const activities: Activity[] = [
       { label: "Shared quad", price: "36 €", unit: "per quad" },
     ],
     pickup: "Included from your accommodation in Agadir or Taghazout",
-    bookingUrl: "https://www.bookagadirexperience.com/fr/quad-agadir",
     reservation: {
       times: ["09h00", "14h00"],
       rates: [
@@ -160,12 +158,11 @@ export const activities: Activity[] = [
       { title: "Get ready", description: "Meet the watersports team and follow their instructions before heading out." },
       { title: "Ride the bay", description: "Enjoy your 30-minute session and return to shore at the agreed time." },
     ],
-    goodToKnow: ["One jet ski accommodates up to two people.", "The operator confirms the schedule before booking; sea conditions may affect availability."],
+    goodToKnow: ["One jet ski accommodates up to two people.", "The operator confirms the schedule in advance; sea conditions may affect availability."],
     popular: true,
     gallery: [{ src: "https://www.bookagadirexperience.com/images/jetski/jet-ski-rider-blue.jpg", alt: "A rider on a blue and white jet ski on the water" }],
     priceOptions: [{ label: "Jet ski", price: "80 €", unit: "per jet ski" }],
     pickup: "Included",
-    bookingUrl: "https://www.bookagadirexperience.com/fr/jet-ski-agadir",
     reservation: {
       rates: [{ id: "jetski", label: "Jet ski", price: 80, unit: "per jet ski", billing: "unit", peoplePerUnit: 2, description: "Up to 2 people per jet ski" }],
     },
@@ -194,18 +191,17 @@ export const activities: Activity[] = [
       { title: "Prepare on the beach", description: "Get your equipment and review the conditions and safety guidance." },
       { title: "Practice and review", description: "Surf with individual coaching, then take away tips to keep progressing." },
     ],
-    goodToKnow: ["Daily sessions are listed at 08:30, 10:30, 12:30, and 14:30; confirm your choice when booking.", "The two-hour lesson does not include travel time.", "Pickup can be discussed with the team; drinks are not included."],
+    goodToKnow: ["Daily sessions are listed at 08:30, 10:30, 12:30, and 14:30; confirm your choice with the operator in advance.", "The two-hour lesson does not include travel time.", "Pickup can be discussed with the team; drinks are not included."],
     popular: true,
     gallery: [{ src: "https://www.bookagadirexperience.com/images/partners/cours-surf-agadir-echauffement-plage.jpg", alt: "Surfers warming up on the beach before a lesson near Agadir" }],
     priceOptions: [{ label: "Private lesson", price: "40 €", unit: "per person" }],
     pickup: "By request; confirm your address with the operator",
-    bookingUrl: "https://www.bookagadirexperience.com/fr/cours-de-surf-tamraght",
     reservation: {
       times: ["08h30", "10h30", "12h30", "14h30"],
       rates: [{ id: "private-lesson", label: "Private surf lesson", price: 40, unit: "per person", billing: "person" }],
     },
     included: ["Private two-hour surf lesson", "Surf equipment", "Personal coaching"],
-    paymentNote: "No online payment. Pay on the day of the activity after your booking is confirmed.",
+    paymentNote: "No online payment. Pay on the day of the activity after the details are confirmed.",
   },
   {
     slug: "buggy-ride",
@@ -228,21 +224,20 @@ export const activities: Activity[] = [
       { title: "Get ready to ride", description: "Meet the team and follow their instructions before setting off." },
       { title: "Explore the tracks", description: "Ride through sandy terrain and return to your accommodation." },
     ],
-    goodToKnow: ["Choose the number of buggies based on your group; each buggy seats up to two people.", "The operator confirms the activity time before booking."],
+    goodToKnow: ["Choose the number of buggies based on your group; each buggy seats up to two people.", "The operator confirms the activity time in advance."],
     popular: true,
     gallery: [{ src: "https://www.bookagadirexperience.com/images/temp/buggy-sahara-drift.jpg", alt: "An off-road buggy drifting across orange desert sand" }],
     priceOptions: [{ label: "Buggy", price: "90 €", unit: "per buggy, up to 2 people" }],
     pickup: "Included",
-    bookingUrl: "https://www.bookagadirexperience.com/fr/buggy-agadir",
     reservation: {
       rates: [{ id: "buggy", label: "Buggy", price: 90, unit: "per buggy", billing: "unit", peoplePerUnit: 2, description: "Up to 2 people per buggy" }],
     },
     included: ["Buggy ride", "Pickup and return"],
-    paymentNote: "No online payment. Pay on the day of the activity after your booking is confirmed.",
+    paymentNote: "No online payment. Pay on the day of the activity after the details are confirmed.",
     faqs: [
       { question: "How much does a buggy ride cost?", answer: "The price is 90 € per buggy, with up to two people in each buggy." },
-      { question: "Is pickup included?", answer: "Yes. Share your hotel or address when booking." },
-      { question: "When does the ride start?", answer: "The operator confirms the schedule before booking." },
+      { question: "Is pickup included?", answer: "Yes. Share your hotel or address with the operator in advance." },
+      { question: "When does the ride start?", answer: "The operator confirms the schedule in advance." },
     ],
   },
   {
@@ -276,7 +271,6 @@ export const activities: Activity[] = [
       { label: "Children aged 3–12", price: "23 €", unit: "per child" },
     ],
     pickup: "Included from your hotel in Agadir",
-    bookingUrl: "https://www.bookagadirexperience.com/fr/excursion-mini-sahara-agadir",
     reservation: {
       rates: [{ id: "shared-excursion", label: "Shared excursion", price: 45, unit: "per adult", billing: "person" }],
       childRate: { price: 23, label: "Children aged 3–12" },
@@ -340,7 +334,7 @@ export const activities: Activity[] = [
       { title: "Cruise the coastline", description: "Enjoy the views and the time on the water at an easy pace." },
       { title: "Return to port", description: "Head back to the marina according to the trip schedule and conditions." },
     ],
-    goodToKnow: ["Bring a light layer, sun protection, and any personal medication.", "The route and stops depend on weather and sea conditions.", "Confirm what is included with the operator before booking."],
+    goodToKnow: ["Bring a light layer, sun protection, and any personal medication.", "The route and stops depend on weather and sea conditions.", "Confirm what is included with the operator in advance."],
     popular: false,
     priceOptions: [{ label: "Boat trip", price: "50 €", unit: "per person" }],
     reservation: {
@@ -406,7 +400,6 @@ export const activities: Activity[] = [
     ],
     priceOptions: [{ label: "Shared excursion", price: "20 €", unit: "per person" }],
     pickup: "Included; pickup and return",
-    bookingUrl: "https://www.bookagadirexperience.com/fr/vallee-du-paradis-agadir",
     reservation: {
       rates: [{ id: "shared-excursion", label: "Shared excursion", price: 20, unit: "per person", billing: "person" }],
     },

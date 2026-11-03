@@ -687,11 +687,7 @@ export function ActivityReservationProvider({ children }: { children: ReactNode 
                     {t("Add to selection")} <span aria-hidden="true">＋</span>
                   </button>
                 </div>
-                {activeActivity.bookingUrl && (
-                  <a className="activity-reservation-partner" href={activeActivity.bookingUrl} target="_blank" rel="noopener noreferrer">
-                    {t("Prefer to book directly with the partner?")} <span>{t("Open partner page ↗")}</span>
-                  </a>
-                )}
+               
               </div>
             </div>
           </section>

@@ -27,6 +27,15 @@ strong password before production deployment. Existing user accounts are not
 overwritten by these bootstrap settings. `ADMIN` users can manage the catalogue;
 `STAFF` users can review and update transfer requests.
 
+WhatsApp Cloud API alerts can be enabled by adding the `WHATSAPP_*` values from
+`.env.example` to `.env.local`. Add the access token from Meta there; never put it
+in client code or commit it. The sandbox sends plain-text alerts while its
+recipient session is active. For production alerts outside the 24-hour messaging
+window, create an approved template with one body placeholder for the dashboard
+URL, then set `WHATSAPP_TEMPLATE_NAME` and `WHATSAPP_TEMPLATE_LANGUAGE`.
+Activity reservations and transfer requests are saved even if WhatsApp is
+unavailable; delivery failures are logged on the server.
+
 ```sh
 npm run db:generate
 npm run db:deploy

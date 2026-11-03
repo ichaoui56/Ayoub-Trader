@@ -137,15 +137,11 @@ export default function ActivityDirectory({ activities, locale }: ActivityDirect
                   <Link href={`/activities/${activity.slug}`} className="directory-card__details">
                     {t("View details")} <span aria-hidden="true">↗</span>
                   </Link>
-                  {activity.reservation ? (
+                  
                     <ActivityReserveButton activity={activity} className="directory-card__book">
                       {t("Reserve")} <span aria-hidden="true">↗</span>
                     </ActivityReserveButton>
-                  ) : activity.bookingUrl ? (
-                    <a href={activity.bookingUrl} target="_blank" rel="noopener noreferrer" className="directory-card__book">
-                      {t("Book")} <span aria-hidden="true">↗</span>
-                    </a>
-                  ) : null}
+                 
                 </div>
               </div>
             </article>
