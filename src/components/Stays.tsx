@@ -3,29 +3,32 @@ import { translate, type Locale } from "../i18n";
 const stays = [
   {
     name: "Roof House Hostel",
-    detail: "A sociable surf stay in the heart of Taghazout, with shared lounges and a rooftop atmosphere.",
+    detail: "A sunlit courtyard opens onto a long pool, framed by palms, cacti and loungers for a slower pace between surf sessions.",
+    imageAlt: "A swimmer in the courtyard pool, surrounded by palms and cacti",
     location: "BigBlue Alley, Taghazout",
     type: "Surf hostel",
-    highlights: ["Free breakfast", "Wi-Fi", "Airport shuttle"],
-    image: "photo-1502680390469-be75c86b636f",
+    highlights: ["Courtyard pool", "Sun loungers", "Cactus garden"],
+    image: "/DSC00088.jpg",
     href: "https://roofhousetaghazout.com/",
   },
   {
     name: "SurfsHub Hostel",
-    detail: "A relaxed base for surf days, with an open-air terrace to wind down after the beach.",
+    detail: "A warm, quiet room pairs natural textures with a hammock by the window, made for slow mornings after a day outside.",
+    imageAlt: "A warm-toned guest room with a bed and a hammock beside the window",
     location: "Taghazout",
     type: "Surf hostel",
-    highlights: ["Sun terrace", "Free Wi-Fi", "Shared spaces"],
-    image: "photo-1507525428034-b723cf961d3e",
+    highlights: ["Window hammock", "Natural textures", "Soft daylight"],
+    image: "/WhatsApp Image 2026-11-02 at 23.55.45.jpeg",
     href: "https://www.booking.com/hotel/ma/surfshub-hostel.html",
   },
   {
     name: "Hashpoint Surf Camp",
-    detail: "A surf house with an on-site surf school, for a stay built around the waves.",
+    detail: "A welcoming terrace brings people together on cushioned seating, with hillside views as a backdrop for unhurried evenings.",
+    imageAlt: "A group gathered on a cushioned terrace overlooking the hillside",
     location: "Taghazout",
     type: "Surf house & school",
-    highlights: ["Surf lessons", "Surf house", "Local surf spots"],
-    image: "photo-1518837695005-2083093ee35b",
+    highlights: ["Shared terrace", "Cushioned seating", "Hillside views"],
+    image: "/WhatsApp Image 2026-11-02 at 23.55.45 (1).jpeg",
     href: "https://www.hashpointsurfcamp.com/the-house",
   },
 ];
@@ -53,8 +56,8 @@ export default function Stays({ locale }: { locale: Locale }) {
               <figure data-frame className="stay-card__image">
                 <img
                   data-frame-image
-                  src={`https://images.unsplash.com/${stay.image}?auto=format&fit=crop&w=1000&q=85`}
-                  alt={`${t(stay.name)} in ${t(stay.location)}`}
+                  src={stay.image}
+                  alt={t(stay.imageAlt)}
                   loading="lazy"
                   className="h-full w-full object-cover"
                 />
@@ -65,11 +68,11 @@ export default function Stays({ locale }: { locale: Locale }) {
                 <h3>{t(stay.name)}</h3>
                 <p className="stay-card__location">{t(stay.location)}</p>
                 <p className="stay-card__detail">{t(stay.detail)}</p>
-                <ul className="stay-card__highlights" aria-label={t("Hostel highlights")}>
+                <ul className="stay-card__highlights" aria-label={t("Stay highlights")}>
                   {stay.highlights.map((highlight) => <li key={highlight}>{t(highlight)}</li>)}
                 </ul>
                 <a className="stay-card__link" href={stay.href} target="_blank" rel="noreferrer">
-                  {t("Visit hostel")}
+                  {t("Explore stay")}
                   <span aria-hidden="true">↗</span>
                 </a>
               </div>

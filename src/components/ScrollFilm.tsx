@@ -37,7 +37,7 @@ export default function ScrollFilm({ locale }: { locale: Locale }) {
   const reduced = usePrefersReducedMotion();
   const runway = useRef<HTMLElement>(null);
   const video = useRef<HTMLVideoElement>(null);
-  const p = useScrollFilm(runway, video, !reduced);
+  const { progress: p, loadProgress, loadError } = useScrollFilm(runway, video, !reduced);
   const chapters = CHAPTERS.map((chapter) => ({
     ...chapter,
     kicker: translate(locale, chapter.kicker),
@@ -78,6 +78,23 @@ export default function ScrollFilm({ locale }: { locale: Locale }) {
           aria-hidden="true"
           className="absolute inset-0 h-full w-full object-cover"
         />
+        {loadProgress < 1 && !loadError && (
+          <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center bg-ink/55 px-6 text-paper backdrop-blur-[2px]" role="status" aria-live="polite" aria-label={`${translate(locale, "Preparing travel film")}: ${Math.round(loadProgress * 100)}%`}>
+            <div className="w-full max-w-xs">
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em]">{translate(locale, "Preparing the film")}</p>
+              <div className="mt-4 h-px bg-paper/30" role="progressbar" aria-label={translate(locale, "Film loading progress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(loadProgress * 100)}>
+                <div className="h-full origin-left bg-signal transition-[width] duration-300" style={{ width: `${loadProgress * 100}%` }} />
+              </div>
+              <p className="mt-3 flex justify-between text-xs text-paper/80">
+                <span>{translate(locale, "Loading full film")}</span>
+                <span>{Math.round(loadProgress * 100)}%</span>
+              </p>
+            </div>
+          </div>
+        )}
+        {loadError && (
+          <p className="absolute bottom-5 right-5 z-20 text-xs text-paper/80">{translate(locale, "Film unavailable; showing poster")}</p>
+        )}
         <div className="absolute inset-0 bg-gradient-to-r from-ink/80 via-ink/20 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-ink/35 via-transparent to-ink/20" />
         <div className="absolute inset-x-0 top-0 z-10 h-[2px] bg-paper/20">
