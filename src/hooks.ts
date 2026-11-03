@@ -88,40 +88,43 @@ export function useScrollFilm(
     const stop = () => v.pause();
     const onMediaError = () => setLoadError(true);
     const loadFilm = async () => {
-      try {
-        const response = await fetch(source, { signal: controller.signal });
-        if (!response.ok) throw new Error(`Film request failed: ${response.status}`);
+      const response = await fetch(source, { signal: controller.signal });
+      if (!response.ok) throw new Error(`Film request failed: ${response.status}`);
 
-        const total = Number(response.headers.get("content-length"));
-        const hasContentLength = Number.isFinite(total) && total > 0;
-        setLoadDeterminate(hasContentLength);
-        const chunks: BlobPart[] = [];
-        let loaded = 0;
+      const total = Number(response.headers.get("content-length"));
+      const hasContentLength = Number.isFinite(total) && total > 0;
+      setLoadDeterminate(hasContentLength);
+      const chunks: BlobPart[] = [];
+      let loaded = 0;
 
-        if (response.body) {
-          const reader = response.body.getReader();
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            chunks.push(value);
-            loaded += value.byteLength;
-            if (hasContentLength) {
-              setLoadProgress(Math.min(Math.floor((loaded / total) * 100) / 100, 0.99));
-            }
+      if (response.body) {
+        const reader = response.body.getReader();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          loaded += value.byteLength;
+          if (hasContentLength) {
+            setLoadProgress(Math.min(Math.floor((loaded / total) * 100) / 100, 0.99));
           }
-        } else {
-          chunks.push(await response.blob());
-          if (hasContentLength) setLoadProgress(0.99);
         }
-
-        const blob = new Blob(chunks, { type: response.headers.get("content-type") || "video/mp4" });
-        objectUrl = URL.createObjectURL(blob);
-        v.src = objectUrl;
-        v.load();
-      } catch {
-        if (!controller.signal.aborted) setLoadError(true);
+      } else {
+        chunks.push(await response.blob());
+        if (hasContentLength) setLoadProgress(0.99);
       }
+
+      if (controller.signal.aborted) return;
+      const blob = new Blob(chunks, { type: response.headers.get("content-type") || "video/mp4" });
+      objectUrl = URL.createObjectURL(blob);
+      v.src = objectUrl;
+      v.load();
     };
+
+    void loadFilm().catch(() => {
+      if (!controller.signal.aborted) {
+        setLoadError(true);
+      }
+    });
 
     v.pause();
     v.addEventListener("play", stop);
@@ -135,8 +138,6 @@ export function useScrollFilm(
       document.addEventListener("visibilitychange", kick);
       kick();
     }
-    void loadFilm();
-
     return () => {
       cancelAnimationFrame(raf);
       controller.abort();

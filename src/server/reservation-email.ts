@@ -166,8 +166,15 @@ async function deliverNotification(options: {
       text: options.text,
       html: options.html,
     });
-  } catch {
-    console.error(`Reservation email delivery failed for ${options.kind} ${options.id}.`);
+  } catch (error) {
+    const details = error instanceof Error
+      ? error as Error & { code?: string; command?: string; responseCode?: number }
+      : null;
+    console.error(`Reservation email delivery failed for ${options.kind} ${options.id}.`, {
+      code: details?.code ?? "UNKNOWN",
+      command: details?.command,
+      responseCode: details?.responseCode,
+    });
   }
 }
 
