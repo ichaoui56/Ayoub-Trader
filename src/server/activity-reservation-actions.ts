@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getPublicActivityCatalog } from "./activity-catalog";
 import { getDashboardUser } from "./dashboard-auth";
 import { prisma } from "./prisma";
+import { sendActivityReservationNotification } from "./reservation-email";
 
 function record(value: unknown, label: string): Record<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
@@ -192,7 +193,21 @@ export async function submitActivityReservation(value: unknown) {
         })),
       },
     },
-    select: { id: true },
+    select: { id: true, currency: true, createdAt: true },
+  });
+
+  await sendActivityReservationNotification({
+    id: reservation.id,
+    customerName,
+    customerPhone,
+    customerEmail: customerEmail || null,
+    hotelAddress: hotelAddress || null,
+    notes: notes || null,
+    estimatedTotal,
+    currency: reservation.currency,
+    priceNeedsConfirmation,
+    createdAt: reservation.createdAt,
+    lines,
   });
 
   revalidatePath("/dashboard/activity-reservations");

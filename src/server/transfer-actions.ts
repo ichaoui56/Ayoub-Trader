@@ -34,6 +34,7 @@ import type {
   TransferRequestInput,
   TransferRouteData,
 } from "../transfers/types";
+import { sendTransferReservationNotification } from "./reservation-email";
 
 const sessionCookie = "morocco-transfer-admin";
 const sessionDuration = 8 * 60 * 60;
@@ -720,6 +721,7 @@ export async function createTransferRequest(input: TransferRequestInput) {
     },
   });
 
+  await sendTransferReservationNotification(created);
   revalidatePath("/dashboard/transfers");
   return { ok: true as const, requestId: created.id };
 }
