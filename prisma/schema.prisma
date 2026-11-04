@@ -53,9 +53,12 @@ model User {
 model TransferRoute {
   id        String            @id @default(cuid())
   from      String
+  fromFr    String?
   to        String
+  toFr      String?
   price     Float
   notes     String            @default("")
+  notesFr   String            @default("")
   currency  String            @default("EUR")
   isActive  Boolean           @default(true)
   sortOrder Int               @default(0)
@@ -70,15 +73,19 @@ model TransferRoute {
 model PrivateTransferService {
   id             String             @id @default(cuid())
   name           String             @unique
+  nameFr         String?
   kind           PrivateServiceKind @default(OUTING)
   description    String
+  descriptionFr  String             @default("")
   price          Float
   currency       String             @default("EUR")
   passengerLimit Int                @default(8)
   duration       String             @default("À définir")
+  durationFr     String             @default("")
   startTimes     String[]           @default([])
   image          String             @default("")
   imageAlt       String             @default("")
+  imageAltFr     String             @default("")
   isActive       Boolean            @default(true)
   sortOrder      Int                @default(0)
   createdAt      DateTime           @default(now())
@@ -91,6 +98,7 @@ model PrivateTransferService {
 model TransferLocation {
   id          String   @id @default(cuid())
   name        String   @unique
+  nameFr      String?
   isActive    Boolean  @default(true)
   isDeparture Boolean  @default(true)
   isArrival   Boolean  @default(true)

@@ -469,11 +469,35 @@ export function translate(locale: Locale, phrase: string): string {
   return locale === "fr" ? french[phrase] ?? frenchContent[phrase] ?? phrase : english[phrase] ?? phrase;
 }
 
+export function mergeLocalizedContent(base: unknown, localized: unknown): unknown {
+  if (localized === undefined) return base;
+  if (Array.isArray(localized)) {
+    return localized.map((item, index) => mergeLocalizedContent(Array.isArray(base) ? base[index] : undefined, item));
+  }
+  if (typeof localized === "object" && localized !== null) {
+    const baseRecord = typeof base === "object" && base !== null && !Array.isArray(base)
+      ? base as Record<string, unknown>
+      : {};
+    return Object.fromEntries(Object.entries(localized).map(([key, item]) => [
+      key,
+      mergeLocalizedContent(baseRecord[key], item),
+    ]).concat(Object.entries(baseRecord).filter(([key]) => !(key in localized))));
+  }
+  return localized;
+}
+
 export function localizeTree<T>(value: T, locale: Locale): T {
   if (typeof value === "string") return translate(locale, value) as T;
   if (Array.isArray(value)) return value.map((item) => localizeTree(item, locale)) as T;
   if (typeof value === "object" && value !== null) {
-    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, localizeTree(item, locale)])) as T;
+    const source = value as Record<string, unknown>;
+    const translations = source.translations;
+    const localized = typeof translations === "object" && translations !== null && !Array.isArray(translations)
+      ? (translations as Record<string, unknown>)[locale]
+      : undefined;
+    const { translations: _translations, ...base } = source;
+    const merged = mergeLocalizedContent(base, localized) as Record<string, unknown>;
+    return Object.fromEntries(Object.entries(merged).map(([key, item]) => [key, localizeTree(item, locale)])) as T;
   }
   return value;
 }

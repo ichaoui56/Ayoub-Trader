@@ -1,0 +1,13 @@
+ALTER TABLE "TransferRoute"
+ADD COLUMN "fromFr" TEXT,
+ADD COLUMN "toFr" TEXT,
+ADD COLUMN "notesFr" TEXT NOT NULL DEFAULT '';
+
+ALTER TABLE "PrivateTransferService"
+ADD COLUMN "nameFr" TEXT,
+ADD COLUMN "descriptionFr" TEXT NOT NULL DEFAULT '',
+ADD COLUMN "durationFr" TEXT NOT NULL DEFAULT '',
+ADD COLUMN "imageAltFr" TEXT NOT NULL DEFAULT '';
+
+ALTER TABLE "TransferLocation"
+ADD COLUMN "nameFr" TEXT;

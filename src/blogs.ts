@@ -19,7 +19,26 @@ export type BlogPost = {
   ogDescription?: string;
   ogImage?: string;
   noIndex?: boolean;
+  translations?: Partial<Record<"en" | "fr", Record<string, unknown>>>;
 };
+
+export function getBlogTranslation(post: BlogPost): Record<string, unknown> {
+  return {
+    title: post.title,
+    category: post.category,
+    excerpt: post.excerpt,
+    imageAlt: post.imageAlt,
+    readingTime: post.readingTime,
+    location: post.location,
+    introduction: post.introduction,
+    sections: post.sections,
+    seoTitle: post.seoTitle,
+    seoDescription: post.seoDescription,
+    seoKeywords: post.seoKeywords,
+    ogTitle: post.ogTitle,
+    ogDescription: post.ogDescription,
+  };
+}
 
 export const blogPosts: BlogPost[] = [
   {

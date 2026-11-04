@@ -1,9 +1,12 @@
 export type TransferRouteData = {
   id: string;
   from: string;
+  fromFr: string;
   to: string;
+  toFr: string;
   price: number;
   notes: string;
+  notesFr: string;
   currency: string;
   isActive: boolean;
   sortOrder: number;
@@ -12,15 +15,19 @@ export type TransferRouteData = {
 export type PrivateServiceData = {
   id: string;
   name: string;
+  nameFr: string;
   kind: "OUTING" | "PRIVATE_VISIT" | "CHAUFFEUR";
   description: string;
+  descriptionFr: string;
   price: number;
   currency: string;
   passengerLimit: number;
   duration: string;
+  durationFr: string;
   startTimes: string[];
   image: string;
   imageAlt: string;
+  imageAltFr: string;
   isActive: boolean;
   sortOrder: number;
 };
@@ -34,6 +41,7 @@ export type ReservedPrivateSlot = {
 export type TransferLocationData = {
   id: string;
   name: string;
+  nameFr: string;
   isActive: boolean;
   isDeparture: boolean;
   isArrival: boolean;
@@ -95,22 +103,29 @@ export type TransferRequestInput = {
 export type RouteInput = {
   id?: string;
   from: string;
+  fromFr: string;
   to: string;
+  toFr: string;
   price: number;
   notes: string;
+  notesFr: string;
   isActive: boolean;
 };
 
 export type PrivateServiceInput = {
   id?: string;
   name: string;
+  nameFr: string;
   kind: "OUTING" | "PRIVATE_VISIT" | "CHAUFFEUR";
   description: string;
+  descriptionFr: string;
   price: number;
   passengerLimit: number;
   duration: string;
+  durationFr: string;
   startTimes: string[];
   image: string;
   imageAlt: string;
+  imageAltFr: string;
   isActive: boolean;
 };

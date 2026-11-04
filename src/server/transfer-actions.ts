@@ -335,9 +335,12 @@ export async function getTransferDashboardData(): Promise<
       routes: routes.map((route) => ({
         id: route.id,
         from: route.from,
+        fromFr: route.fromFr ?? "",
         to: route.to,
+        toFr: route.toFr ?? "",
         price: route.price,
         notes: route.notes,
+        notesFr: route.notesFr,
         currency: route.currency,
         isActive: route.isActive,
         sortOrder: route.sortOrder,
@@ -345,21 +348,26 @@ export async function getTransferDashboardData(): Promise<
       services: services.map((service) => ({
         id: service.id,
         name: service.name,
+        nameFr: service.nameFr ?? "",
         kind: service.kind,
         description: service.description,
+        descriptionFr: service.descriptionFr,
         price: service.price,
         currency: service.currency,
         passengerLimit: service.passengerLimit,
         duration: service.duration,
+        durationFr: service.durationFr,
         startTimes: service.startTimes,
         image: service.image,
         imageAlt: service.imageAlt,
+        imageAltFr: service.imageAltFr,
         isActive: service.isActive,
         sortOrder: service.sortOrder,
       })),
       locations: locations.map((location) => ({
         id: location.id,
         name: location.name,
+        nameFr: location.nameFr ?? "",
         isActive: location.isActive,
         isDeparture: location.isDeparture,
         isArrival: location.isArrival,
@@ -396,14 +404,21 @@ export async function getPublicTransferCatalog() {
       bookingEnabled: false,
       routes: defaultRoutes.map((route, sortOrder) => ({
         ...route,
+        fromFr: route.from,
+        toFr: route.to,
         id: `catalog-route-${sortOrder}`,
         notes: "",
+        notesFr: "",
         currency: "EUR",
         isActive: true,
         sortOrder,
       })),
       services: defaultPrivateServices.map((service, sortOrder) => ({
         ...service,
+        nameFr: service.name,
+        descriptionFr: service.description,
+        durationFr: service.duration,
+        imageAltFr: service.imageAlt ?? "",
         id: `catalog-service-${sortOrder}`,
         currency: "EUR",
         image: service.image ?? "",
@@ -415,6 +430,7 @@ export async function getPublicTransferCatalog() {
       locations: defaultTransferLocations.map((name, sortOrder) => ({
         id: `catalog-location-${sortOrder}`,
         name,
+        nameFr: name,
         isActive: true,
         isDeparture: true,
         isArrival: true,
@@ -440,12 +456,23 @@ export async function getPublicTransferCatalog() {
   ]);
   return {
     bookingEnabled: true,
-    routes: routes as TransferRouteData[],
+    routes: routes.map((route) => ({
+      ...route,
+      fromFr: route.fromFr ?? route.from,
+      toFr: route.toFr ?? route.to,
+    })) as TransferRouteData[],
     services: services.map((service) => ({
       ...service,
+      nameFr: service.nameFr ?? service.name,
+      descriptionFr: service.descriptionFr || service.description,
+      durationFr: service.durationFr || service.duration,
+      imageAltFr: service.imageAltFr || service.imageAlt,
       startTimes: service.startTimes,
     })),
-    locations: locations as TransferLocationData[],
+    locations: locations.map((location) => ({
+      ...location,
+      nameFr: location.nameFr ?? location.name,
+    })) as TransferLocationData[],
     reservedPrivateSlots: confirmedPrivateRequests.flatMap((request) =>
       request.privateServiceId && request.serviceTime
         ? [{
@@ -465,9 +492,12 @@ export async function saveTransferRoute(input: RouteInput) {
   if (from === to) throw new Error("Departure and arrival must be different.");
   const data = {
     from,
+    fromFr: cleanText(input.fromFr, "French departure", 120),
     to,
+    toFr: cleanText(input.toFr, "French arrival", 120),
     price: cleanPrice(input.price),
     notes: cleanText(input.notes, "Trip notes", 500, false),
+    notesFr: cleanText(input.notesFr, "French trip notes", 500, false),
     isActive: assertBoolean(input.isActive, "Status"),
   };
   const route = input.id
@@ -491,14 +521,18 @@ export async function savePrivateTransferService(input: PrivateServiceInput) {
   if (!kindValues.includes(input.kind)) throw new Error("Choose a valid private service type.");
   const data = {
     name: cleanText(input.name, "Name", 120),
+    nameFr: cleanText(input.nameFr, "French name", 120),
     kind: input.kind,
     description: cleanText(input.description, "Description", 500, false),
+    descriptionFr: cleanText(input.descriptionFr, "French description", 500, false),
     price: cleanPrice(input.price),
     passengerLimit: cleanInteger(input.passengerLimit, "Passenger limit", 1, 100),
     duration: cleanText(input.duration, "Duration", 80),
+    durationFr: cleanText(input.durationFr, "French duration", 80),
     startTimes: normalizeStartTimes(input.startTimes),
     image: cleanText(input.image, "Image", 1000, false),
     imageAlt: cleanText(input.imageAlt, "Image description", 240, false),
+    imageAltFr: cleanText(input.imageAltFr, "French image description", 240, false),
     isActive: assertBoolean(input.isActive, "Status"),
   };
   if (data.image && /^https?:\/\//i.test(data.image)) {
@@ -527,6 +561,7 @@ export async function deletePrivateTransferService(id: string) {
 export async function saveTransferLocation(input: {
   id?: string;
   name: string;
+  nameFr: string;
   isActive: boolean;
   isDeparture: boolean;
   isArrival: boolean;
@@ -539,6 +574,7 @@ export async function saveTransferLocation(input: {
   }
   const data = {
     name: cleanText(input.name, "Location", 120),
+    nameFr: cleanText(input.nameFr, "French location", 120),
     isActive: assertBoolean(input.isActive, "Status"),
     isDeparture,
     isArrival,
@@ -680,7 +716,7 @@ export async function createTransferRequest(input: TransferRequestInput) {
     if (departure === arrival) throw new Error("Departure and arrival must be different.");
     const locations = await prisma.transferLocation.findMany({
       where: { isActive: true, name: { in: [departure, arrival] } },
-      select: { name: true, isDeparture: true, isArrival: true },
+      select: { name: true, nameFr: true, isDeparture: true, isArrival: true },
     });
     const departureAvailable = locations.some((location) => location.name === departure && location.isDeparture);
     const arrivalAvailable = locations.some((location) => location.name === arrival && location.isArrival);
@@ -688,7 +724,10 @@ export async function createTransferRequest(input: TransferRequestInput) {
       throw new Error("Choose an available departure and arrival location.");
     }
     if (
-      (departure.startsWith("Autre") || arrival.startsWith("Autre")) &&
+      locations.some((location) =>
+        [departure, arrival].includes(location.name) &&
+        /\b(autre|other)\b/i.test(`${location.name} ${location.nameFr ?? ""}`),
+      ) &&
       !notes
     ) {
       throw new Error("Add the exact location in the notes.");

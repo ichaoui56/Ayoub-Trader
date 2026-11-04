@@ -173,7 +173,7 @@ async function compressPrivateImage(file: File) {
   throw new Error("This image could not be reduced below 100 KB. Try a simpler or smaller photo.");
 }
 
-function PrivateImageUpload({ initialImage, initialAlt }: { initialImage: string; initialAlt: string }) {
+function PrivateImageUpload({ initialImage, initialAlt, initialAltFr }: { initialImage: string; initialAlt: string; initialAltFr: string }) {
   const [image, setImage] = useState(initialImage);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -240,6 +240,9 @@ function PrivateImageUpload({ initialImage, initialAlt }: { initialImage: string
       {error && <p className="transfer-form-error" role="alert">{error}</p>}
       <label className="transfer-image-upload__alt">Description de l’image (accessibilité)
         <input name="imageAlt" defaultValue={initialAlt} maxLength={240} placeholder="Décrivez brièvement la photo" />
+      </label>
+      <label className="transfer-image-upload__alt">Description de l’image (français)
+        <input name="imageAltFr" defaultValue={initialAltFr} maxLength={240} placeholder="Décrivez brièvement la photo" />
       </label>
     </div>
   );
@@ -534,9 +537,12 @@ export default function TransferDashboard({
       () => saveTransferRoute({
         id: editingRoute?.id,
         from: String(values.get("from") ?? ""),
+        fromFr: String(values.get("fromFr") ?? ""),
         to: String(values.get("to") ?? ""),
+        toFr: String(values.get("toFr") ?? ""),
         price: Number(values.get("price")),
         notes: String(values.get("notes") ?? ""),
+        notesFr: String(values.get("notesFr") ?? ""),
         isActive: values.get("isActive") === "on",
       }),
       editingRoute ? "Airport transfer updated." : "Airport transfer added.",
@@ -567,14 +573,18 @@ export default function TransferDashboard({
       () => savePrivateTransferService({
         id: editingService?.id,
         name: String(values.get("name") ?? ""),
+        nameFr: String(values.get("nameFr") ?? ""),
         kind: String(values.get("kind") ?? "OUTING") as PrivateServiceData["kind"],
         description: String(values.get("description") ?? ""),
+        descriptionFr: String(values.get("descriptionFr") ?? ""),
         price: Number(values.get("price")),
         passengerLimit: Number(values.get("passengerLimit")),
         duration: String(values.get("duration") ?? "Demi-journée"),
+        durationFr: String(values.get("durationFr") ?? ""),
         startTimes,
         image: String(values.get("image") ?? ""),
         imageAlt: String(values.get("imageAlt") ?? ""),
+        imageAltFr: String(values.get("imageAltFr") ?? ""),
         isActive: values.get("isActive") === "on",
       }),
       editingService ? "Private outing updated." : "Private outing added.",
@@ -589,6 +599,7 @@ export default function TransferDashboard({
       () => saveTransferLocation({
         id: editingLocation?.id,
         name: String(values.get("name") ?? ""),
+        nameFr: String(values.get("nameFr") ?? ""),
         isActive: values.get("isActive") === "on",
         isDeparture: values.get("isDeparture") === "on",
         isArrival: values.get("isArrival") === "on",
@@ -1191,11 +1202,16 @@ export default function TransferDashboard({
                 {addMode === "route" && (
                   <form className="transfer-editor transfer-modal-form" onSubmit={submitRoute} key={`route-${editingRoute?.id ?? "new"}`}>
                     <div className="transfer-field-pair">
-                      <label>Départ<input name="from" defaultValue={editingRoute?.from ?? ""} placeholder="Ex. Aéroport d’Agadir" required maxLength={120} /></label>
-                      <label>Arrivée<input name="to" defaultValue={editingRoute?.to ?? ""} placeholder="Ex. Taghazout" required maxLength={120} /></label>
+                      <label>Departure (English)<input name="from" defaultValue={editingRoute?.from ?? ""} placeholder="e.g. Agadir Airport" required maxLength={120} /></label>
+                      <label>Départ (français)<input name="fromFr" defaultValue={editingRoute?.fromFr ?? ""} placeholder="Ex. Aéroport d’Agadir" required maxLength={120} /></label>
+                      <label>Arrival (English)<input name="to" defaultValue={editingRoute?.to ?? ""} placeholder="e.g. Taghazout" required maxLength={120} /></label>
+                      <label>Arrivée (français)<input name="toFr" defaultValue={editingRoute?.toFr ?? ""} placeholder="Ex. Taghazout" required maxLength={120} /></label>
                     </div>
                     <label>Prix du trajet (€)<input name="price" type="number" min="0" max="100000" step="0.5" defaultValue={editingRoute?.price ?? ""} placeholder="30" required /></label>
-                    <label>Remarques sur le trajet<textarea name="notes" rows={3} maxLength={500} defaultValue={editingRoute?.notes ?? ""} placeholder="Détails utiles pour ce trajet…" /></label>
+                    <div className="transfer-field-pair">
+                      <label>Trip notes (English)<textarea name="notes" rows={3} maxLength={500} defaultValue={editingRoute?.notes ?? ""} /></label>
+                      <label>Remarques (français)<textarea name="notesFr" rows={3} maxLength={500} defaultValue={editingRoute?.notesFr ?? ""} /></label>
+                    </div>
                     <label className="transfer-checkbox"><input name="isActive" type="checkbox" defaultChecked={editingRoute?.isActive ?? true} /><span>Afficher ce trajet sur le site</span></label>
                     <div className="transfer-editor__actions"><button type="submit" disabled={busy}>{busy ? "Enregistrement…" : isEditing ? "Enregistrer les modifications" : "Ajouter le trajet"} <span aria-hidden="true">→</span></button><button type="button" className="transfer-cancel" onClick={closeEditor}>Annuler</button></div>
                   </form>
@@ -1203,18 +1219,25 @@ export default function TransferDashboard({
 
                 {addMode === "service" && (
                   <form className="transfer-editor transfer-modal-form" onSubmit={submitService} key={`service-${editingService?.id ?? "new"}`}>
-                    <label>Nom de la sortie<input name="name" defaultValue={editingService?.name ?? ""} placeholder="Ex. Excursion à Paradise Valley" required maxLength={120} /></label>
+                    <div className="transfer-field-pair">
+                      <label>Outing name (English)<input name="name" defaultValue={editingService?.name ?? ""} required maxLength={120} /></label>
+                      <label>Nom de la sortie (français)<input name="nameFr" defaultValue={editingService?.nameFr ?? ""} placeholder="Ex. Excursion à Paradise Valley" required maxLength={120} /></label>
+                    </div>
                     <div className="transfer-field-pair">
                       <label>Nombre maximum de personnes<input name="passengerLimit" type="number" min="1" max="100" defaultValue={editingService?.passengerLimit ?? 8} required /></label>
                       <label>Prix sortie privée (€)<input name="price" type="number" min="0" max="100000" step="0.5" defaultValue={editingService?.price ?? ""} placeholder="80" required /></label>
                     </div>
                     <div className="transfer-field-pair transfer-field-pair--start-times">
-                      <label>Durée<select name="duration" defaultValue={editingService?.duration ?? "Demi-journée"}><option>Demi-journée</option><option>Journée complète</option><option>Personnalisée</option></select></label>
+                      <label>Duration (English)<input name="duration" defaultValue={editingService?.duration ?? "Half day"} required maxLength={80} /></label>
+                      <label>Durée (français)<input name="durationFr" defaultValue={editingService?.durationFr ?? "Demi-journée"} required maxLength={80} /></label>
                       <PrivateServiceStartTimes initialTimes={editingService?.startTimes ?? []} />
                     </div>
                     <input type="hidden" name="kind" value={editingService?.kind ?? "OUTING"} />
-                    <label>Remarques sur la sortie<textarea name="description" rows={3} maxLength={500} defaultValue={editingService?.description ?? ""} placeholder="Décrivez le programme ou les informations utiles…" /></label>
-                    <PrivateImageUpload initialImage={editingService?.image ?? ""} initialAlt={editingService?.imageAlt ?? ""} />
+                    <div className="transfer-field-pair">
+                      <label>Outing description (English)<textarea name="description" rows={3} maxLength={500} defaultValue={editingService?.description ?? ""} /></label>
+                      <label>Description de la sortie (français)<textarea name="descriptionFr" rows={3} maxLength={500} defaultValue={editingService?.descriptionFr ?? ""} /></label>
+                    </div>
+                    <PrivateImageUpload initialImage={editingService?.image ?? ""} initialAlt={editingService?.imageAlt ?? ""} initialAltFr={editingService?.imageAltFr ?? ""} />
                     <label className="transfer-checkbox"><input name="isActive" type="checkbox" defaultChecked={editingService?.isActive ?? true} /><span>Afficher cette sortie sur le site</span></label>
                     <div className="transfer-editor__actions"><button type="submit" disabled={busy}>{busy ? "Enregistrement…" : isEditing ? "Enregistrer les modifications" : "Ajouter la sortie"} <span aria-hidden="true">→</span></button><button type="button" className="transfer-cancel" onClick={closeEditor}>Annuler</button></div>
                   </form>
@@ -1222,7 +1245,10 @@ export default function TransferDashboard({
 
                 {addMode === "location" && (
                   <form className="transfer-editor transfer-modal-form" onSubmit={submitLocation} key={`location-${editingLocation?.id ?? "new"}`}>
-                    <label>Nom du lieu<input name="name" defaultValue={editingLocation?.name ?? ""} placeholder="Ex. Aéroport d’Agadir" required maxLength={120} /></label>
+                    <div className="transfer-field-pair">
+                      <label>Location name (English)<input name="name" defaultValue={editingLocation?.name ?? ""} placeholder="e.g. Agadir Airport" required maxLength={120} /></label>
+                      <label>Nom du lieu (français)<input name="nameFr" defaultValue={editingLocation?.nameFr ?? ""} placeholder="Ex. Aéroport d’Agadir" required maxLength={120} /></label>
+                    </div>
                     <fieldset className="transfer-location-roles">
                       <legend>Afficher ce lieu dans les menus</legend>
                       <label className="transfer-checkbox"><input name="isDeparture" type="checkbox" defaultChecked={editingLocation?.isDeparture ?? true} /><span>Départ</span></label>

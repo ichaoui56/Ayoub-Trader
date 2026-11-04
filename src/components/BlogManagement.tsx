@@ -4,10 +4,18 @@ import { useState, type ChangeEvent, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { deleteManagedBlogPost, saveManagedBlogPost } from "../server/blog-actions";
-import { getBlogImageUrl, type BlogPost } from "../blogs";
+import { getBlogImageUrl, getBlogTranslation, type BlogPost } from "../blogs";
+import { localizeTree } from "../i18n";
 import type { ManagedBlogPost } from "../server/blog-catalog";
 
-type BlogDraft = { id: string | null; isPublished: boolean; post: BlogPost };
+type BlogDraft = {
+  id: string | null;
+  isPublished: boolean;
+  locale: "en" | "fr";
+  post: BlogPost;
+  englishPost: BlogPost;
+  frenchPost: BlogPost;
+};
 
 const emptyPost = (): BlogPost => ({
   slug: "",
@@ -31,6 +39,11 @@ const emptyPost = (): BlogPost => ({
   ogImage: "",
   noIndex: false,
 });
+
+function withoutTranslations(post: BlogPost): BlogPost {
+  const { translations: _translations, ...content } = post;
+  return content;
+}
 
 function slugFromTitle(value: string) {
   return value
@@ -104,16 +117,33 @@ export default function BlogManagement({ items }: { items: ManagedBlogPost[] }) 
 
   function startCreate() {
     setNotice(null);
-    setDraft({ id: null, isPublished: false, post: emptyPost() });
+    const post = emptyPost();
+    setDraft({ id: null, isPublished: false, locale: "en", post, englishPost: post, frenchPost: structuredClone(post) });
   }
 
   function startEdit(item: ManagedBlogPost) {
     setNotice(null);
-    setDraft({ id: item.id, isPublished: item.isPublished, post: structuredClone(item.post) });
+    const englishPost = withoutTranslations(localizeTree(item.post, "en"));
+    const frenchPost = withoutTranslations(localizeTree(item.post, "fr"));
+    setDraft({ id: item.id, isPublished: item.isPublished, locale: "en", post: englishPost, englishPost, frenchPost });
   }
 
   function updatePost<K extends keyof BlogPost>(key: K, value: BlogPost[K]) {
-    setDraft((current) => current ? { ...current, post: { ...current.post, [key]: value } } : current);
+    setDraft((current) => {
+      if (!current) return current;
+      const post = { ...current.post, [key]: value };
+      if (["slug", "publishedAt", "featuredOnHome", "image", "ogImage", "canonicalUrl", "noIndex"].includes(key)) {
+        return {
+          ...current,
+          post,
+          englishPost: { ...current.englishPost, [key]: value },
+          frenchPost: { ...current.frenchPost, [key]: value },
+        };
+      }
+      return current.locale === "fr"
+        ? { ...current, post, frenchPost: post }
+        : { ...current, post, englishPost: post };
+    });
   }
 
   function updateSection(index: number, updates: Partial<BlogPost["sections"][number]>) {
@@ -165,7 +195,10 @@ export default function BlogManagement({ items }: { items: ManagedBlogPost[] }) 
     setBusy(true);
     setNotice(null);
     try {
-      await saveManagedBlogPost(draft.id, draft.post, draft.isPublished);
+      await saveManagedBlogPost(draft.id, {
+        ...draft.englishPost,
+        translations: { fr: getBlogTranslation(draft.frenchPost) },
+      }, draft.isPublished);
       setDraft(null);
       setNotice({ type: "success", text: draft.id ? "Blog post updated." : "Blog post created." });
       router.refresh();
@@ -242,13 +275,17 @@ export default function BlogManagement({ items }: { items: ManagedBlogPost[] }) 
               <button type="button" aria-label="Close blog editor" disabled={busy || uploading} onClick={() => setDraft(null)}>×</button>
             </header>
             <form onSubmit={submit} className="blog-management-form">
+              <div className="content-language-switch" role="group" aria-label="Story content language">
+                <button type="button" className={draft.locale === "en" ? "is-active" : ""} aria-pressed={draft.locale === "en"} onClick={() => setDraft({ ...draft, locale: "en", post: draft.englishPost })}>English</button>
+                <button type="button" className={draft.locale === "fr" ? "is-active" : ""} aria-pressed={draft.locale === "fr"} onClick={() => setDraft({ ...draft, locale: "fr", post: draft.frenchPost })}>Français</button>
+              </div>
               <fieldset>
                 <legend>Story details</legend>
                 <div className="blog-management-form__grid">
                   <label className="is-wide">Title<input value={draft.post.title} onChange={(event) => {
                     const title = event.target.value;
                     updatePost("title", title);
-                    if (!draft.id) updatePost("slug", slugFromTitle(title));
+                    if (!draft.id && draft.locale === "en") updatePost("slug", slugFromTitle(title));
                   }} maxLength={180} required /></label>
                   <label>URL slug<input value={draft.post.slug} onChange={(event) => updatePost("slug", slugFromTitle(event.target.value))} maxLength={120} required /></label>
                   <label>Category<input value={draft.post.category} onChange={(event) => updatePost("category", event.target.value)} maxLength={100} required placeholder="City notes, On the road…" /></label>

@@ -2,7 +2,8 @@
 
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import type { BlogPost } from "../blogs";
+import { getBlogTranslation, type BlogPost } from "../blogs";
+import { mergeLocalizedContent } from "../i18n";
 import { getDashboardUser } from "./dashboard-auth";
 import { prisma } from "./prisma";
 
@@ -70,7 +71,7 @@ function parseBlogPost(value: unknown): BlogPost {
     }
   }
 
-  return {
+  const post: BlogPost = {
     slug,
     title: text(input.title, "Title", 180),
     category: text(input.category, "Category", 100),
@@ -92,6 +93,16 @@ function parseBlogPost(value: unknown): BlogPost {
     ogImage,
     noIndex: input.noIndex === true,
   };
+  if (input.translations !== undefined) {
+    const translations = record(input.translations, "Blog translations");
+    if (translations.fr !== undefined) {
+      const frenchContent = record(translations.fr, "French blog translation");
+      const { translations: _translations, ...baseContent } = input;
+      const frenchPost = parseBlogPost(mergeLocalizedContent(baseContent, frenchContent));
+      post.translations = { fr: getBlogTranslation(frenchPost) };
+    }
+  }
+  return post;
 }
 
 async function requireBlogAdmin() {

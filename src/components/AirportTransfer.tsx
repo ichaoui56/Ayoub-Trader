@@ -13,6 +13,7 @@ import type {
 
 type BookingTab = "routes" | "private" | "custom";
 type FieldValues = Record<string, string>;
+type FieldOption = string | { value: string; label: string };
 
 type Catalog = {
   locale: Locale;
@@ -50,7 +51,7 @@ function Field({
   values: FieldValues;
   setValue: (name: string, value: string) => void;
   type?: string;
-  options?: readonly string[];
+  options?: readonly FieldOption[];
   placeholder?: string;
   required?: boolean;
   helper?: string;
@@ -72,7 +73,9 @@ function Field({
           required={required}
         >
           <option value="">{placeholder ?? "Choisir"}</option>
-          {options.map((option) => <option key={option}>{option}</option>)}
+          {options.map((option) => typeof option === "string"
+            ? <option key={option}>{option}</option>
+            : <option key={option.value} value={option.value}>{option.label}</option>)}
         </select>
       ) : (
         <input
@@ -352,6 +355,16 @@ export default function AirportTransfer({
 
   const selectedRoute = routes.find((route) => route.id === selectedRouteId);
   const selectedPrivate = privateServices.find((service) => service.id === selectedPrivateId);
+  const routeFrom = (route: TransferRouteData) => locale === "fr" ? route.fromFr || route.from : route.from;
+  const routeTo = (route: TransferRouteData) => locale === "fr" ? route.toFr || route.to : route.to;
+  const serviceName = (service: PrivateServiceData) => locale === "fr" ? service.nameFr || service.name : service.name;
+  const serviceDescription = (service: PrivateServiceData) => locale === "fr" ? service.descriptionFr || service.description : service.description;
+  const serviceDuration = (service: PrivateServiceData) => locale === "fr" ? service.durationFr || service.duration : service.duration;
+  const isOtherLocation = (value: string | undefined) => {
+    if (!value) return false;
+    const location = locations.find((item) => item.name === value);
+    return /^(autre|other)\b/i.test(value) || !!location && /\b(autre|other)\b/i.test(`${location.name} ${location.nameFr}`);
+  };
 
   const setValue = (name: string, value: string) => {
     setValues((current) => ({
@@ -379,7 +392,7 @@ export default function AirportTransfer({
         return;
       }
       if (
-        (values.departure?.startsWith("Autre") || values.arrival?.startsWith("Autre")) &&
+        (isOtherLocation(values.departure) || isOtherLocation(values.arrival)) &&
         !values.remarks?.trim()
       ) {
         setMessage(t("Précisez votre lieu de départ ou d'arrivée dans les remarques."));
@@ -536,8 +549,8 @@ export default function AirportTransfer({
                     >
                       <span className="booking-option__icon" aria-hidden="true">✈</span>
                       <span className="booking-option__route">
-                        <span className="booking-option__from">{route.from}</span>
-                        <span className="booking-option__destination"><span aria-hidden="true">→</span> {route.to}</span>
+                        <span className="booking-option__from">{routeFrom(route)}</span>
+                        <span className="booking-option__destination"><span aria-hidden="true">→</span> {routeTo(route)}</span>
                       </span>
                       <span className="booking-option__price"><span>{t("À partir de")}</span><strong>{route.price} €</strong></span>
                       <button
@@ -567,7 +580,7 @@ export default function AirportTransfer({
                   disabled={!selectedRoute}
                   onClick={() => setMobileRouteStep("booking")}
                 >
-                  {t("Continuer avec")} {selectedRoute?.to ?? t("un trajet")}
+                  {t("Continuer avec")} {selectedRoute ? routeTo(selectedRoute) : t("un trajet")}
                   <span>{t("À partir de")} {selectedRoute?.price ?? "—"} €</span>
                   <span aria-hidden="true">→</span>
                 </button>
@@ -585,7 +598,7 @@ export default function AirportTransfer({
                   <span className="booking-selected__icon" aria-hidden="true">✈</span>
                   <div>
                     <span className="booking-selected__eyebrow">{t("Votre trajet")}</span>
-                    <h3>{selectedRoute.from} <span aria-hidden="true">→</span> {selectedRoute.to}</h3>
+                    <h3>{routeFrom(selectedRoute)} <span aria-hidden="true">→</span> {routeTo(selectedRoute)}</h3>
                     <p>{t("À partir de")} <strong>{selectedRoute.price} €</strong></p>
                   </div>
                   <button
@@ -627,13 +640,13 @@ export default function AirportTransfer({
                       key={service.id}
                       className={`booking-private-card${selectedPrivateId === service.id ? " is-selected" : ""}`}
                     >
-                      <img src={sharedImageUrl(service.image)} alt={service.imageAlt} loading="lazy" decoding="async" />
+                      <img src={sharedImageUrl(service.image)} alt={locale === "fr" ? service.imageAltFr || service.imageAlt : service.imageAlt} loading="lazy" decoding="async" />
                       <div className="booking-private-card__body">
                         <span className="booking-badge">♙ {t("Privé")}</span>
-                        <h4>{service.name}</h4>
-                        <p>{service.description}</p>
+                        <h4>{serviceName(service)}</h4>
+                        <p>{serviceDescription(service)}</p>
                         <small className="booking-private-card__capacity">
-                          {t("Jusqu'à")} {service.passengerLimit} {t("personnes")} · {service.duration}
+                          {t("Jusqu'à")} {service.passengerLimit} {t("personnes")} · {serviceDuration(service)}
                         </small>
                         {service.startTimes.length > 0 && (
                           <small className="booking-private-card__capacity">
@@ -667,10 +680,10 @@ export default function AirportTransfer({
                   <img src={sharedImageUrl(selectedPrivate.image)} alt="" />
                   <div>
                     <span className="booking-badge">♙ {t("Privé")}</span>
-                    <h3>{selectedPrivate.name}</h3>
-                    <p>{selectedPrivate.description}</p>
+                    <h3>{serviceName(selectedPrivate)}</h3>
+                    <p>{serviceDescription(selectedPrivate)}</p>
                     <small className="booking-private-card__capacity">
-                      {t("Jusqu'à")} {selectedPrivate.passengerLimit} {t("personnes")} · {selectedPrivate.duration}
+                      {t("Jusqu'à")} {selectedPrivate.passengerLimit} {t("personnes")} · {serviceDuration(selectedPrivate)}
                     </small>
                     <strong className="booking-selected__price">{selectedPrivate.price} €</strong>
                   </div>
@@ -740,10 +753,10 @@ export default function AirportTransfer({
                   </div>
                 </div>
                 <div className="booking-location-grid">
-                  <Field name="departure" label={t("Départ")} values={values} setValue={setValue} options={locations.filter((location) => location.isDeparture).map((location) => location.name)} placeholder={t("Choisir")} required />
-                  <Field name="arrival" label={t("Arrivée")} values={values} setValue={setValue} options={locations.filter((location) => location.isArrival).map((location) => location.name)} placeholder={t("Choisir")} required />
+                  <Field name="departure" label={t("Départ")} values={values} setValue={setValue} options={locations.filter((location) => location.isDeparture).map((location) => ({ value: location.name, label: locale === "fr" ? location.nameFr || location.name : location.name }))} placeholder={t("Choisir")} required />
+                  <Field name="arrival" label={t("Arrivée")} values={values} setValue={setValue} options={locations.filter((location) => location.isArrival).map((location) => ({ value: location.name, label: locale === "fr" ? location.nameFr || location.name : location.name }))} placeholder={t("Choisir")} required />
                 </div>
-                {(values.departure?.startsWith("Autre") || values.arrival?.startsWith("Autre")) && (
+                {(isOtherLocation(values.departure) || isOtherLocation(values.arrival)) && (
                   <p className="booking-field__helper booking-location-helper">
                     {t("Indiquez votre lieu exact dans les remarques ci-dessous.")}
                   </p>

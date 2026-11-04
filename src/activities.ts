@@ -58,6 +58,7 @@ export type Activity = {
     extraSelectionMode?: "single" | "multiple";
     priceNeedsConfirmation?: boolean;
   };
+  translations?: Partial<Record<"en" | "fr", Record<string, unknown>>>;
 };
 
 export type ManagedActivity = {
@@ -66,6 +67,42 @@ export type ManagedActivity = {
   sortOrder: number;
   activity: Activity;
 };
+
+export function getActivityTranslation(activity: Activity): Record<string, unknown> {
+  const translation: Record<string, unknown> = {
+    title: activity.title,
+    category: activity.category,
+    summary: activity.summary,
+    imageAlt: activity.imageAlt,
+    gallery: activity.gallery?.map(({ alt }) => ({ alt })),
+    location: activity.location,
+    duration: activity.duration,
+    pace: activity.pace,
+    overview: activity.overview,
+    highlights: activity.highlights,
+    itinerary: activity.itinerary,
+    goodToKnow: activity.goodToKnow,
+    pickup: activity.pickup,
+    included: activity.included,
+    paymentNote: activity.paymentNote,
+    priceOptions: activity.priceOptions?.map(({ label, unit }) => ({ label, unit })),
+    rating: activity.rating ? { label: activity.rating.label } : undefined,
+    privateOption: activity.privateOption ? {
+      title: activity.privateOption.title,
+      description: activity.privateOption.description,
+      price: activity.privateOption.price,
+    } : undefined,
+    faqs: activity.faqs,
+  };
+  if (activity.reservation) {
+    translation.reservation = {
+      rates: activity.reservation.rates.map(({ label, unit, description }) => ({ label, unit, description })),
+      extras: activity.reservation.extras?.map(({ label, unit }) => ({ label, unit })),
+      childRate: activity.reservation.childRate ? { label: activity.reservation.childRate.label } : undefined,
+    };
+  }
+  return Object.fromEntries(Object.entries(translation).filter(([, value]) => value !== undefined));
+}
 
 export const DEFAULT_GENERAL_ACTIVITY_TIMES = ["09h00", "12h00", "15h00"] as const;
 

@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import type { Activity, ActivityBookingExtra, ActivityBookingRate, ActivityImage } from "../activities";
+import { getActivityTranslation, type Activity, type ActivityBookingExtra, type ActivityBookingRate, type ActivityImage } from "../activities";
+import { mergeLocalizedContent } from "../i18n";
 import { prisma } from "./prisma";
 import { getDashboardUser } from "./dashboard-auth";
 
@@ -228,6 +229,15 @@ function parseActivity(value: unknown): Activity {
     };
   }
   if (faqs.length) activity.faqs = faqs;
+  if (input.translations !== undefined) {
+    const translations = record(input.translations, "Activity translations");
+    if (translations.fr !== undefined) {
+      const frenchContent = record(translations.fr, "French activity translation");
+      const { translations: _translations, ...baseContent } = input;
+      const frenchActivity = parseActivity(mergeLocalizedContent(baseContent, frenchContent));
+      activity.translations = { fr: getActivityTranslation(frenchActivity) };
+    }
+  }
   return activity;
 }
 

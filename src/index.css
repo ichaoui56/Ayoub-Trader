@@ -10323,6 +10323,34 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
   padding: 1rem 1.25rem;
 }
 
+.content-language-switch {
+  display: inline-flex;
+  width: max-content;
+  gap: 0.15rem;
+  border: 1px solid #dce5dc;
+  border-radius: 0.25rem;
+  background: #eef3ee;
+  padding: 0.2rem;
+}
+
+.content-language-switch button {
+  min-height: 2rem;
+  border: 0;
+  border-radius: 0.18rem;
+  background: transparent;
+  padding: 0.35rem 0.75rem;
+  color: #536159;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.63rem;
+  font-weight: 750;
+}
+
+.content-language-switch button.is-active {
+  background: #26734d;
+  color: #fff;
+}
+
 .activity-management-form fieldset {
   display: grid;
   min-width: 0;
