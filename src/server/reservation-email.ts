@@ -136,6 +136,8 @@ async function deliverNotification(options: {
   text: string;
   replyTo: string | null;
 }) {
+  const resendApiKey = process.env.RESEND_API_KEY;
+  const resendFrom = process.env.RESEND_FROM_EMAIL;
   const host = process.env.SMTP_HOST;
   const user = process.env.SMTP_USER;
   const password = process.env.SMTP_PASSWORD;
@@ -143,6 +145,48 @@ async function deliverNotification(options: {
   const port = Number(process.env.SMTP_PORT || 465);
   const secure = process.env.SMTP_SECURE?.toLowerCase() === "true" ||
     (!process.env.SMTP_SECURE && port === 465);
+
+  if (resendApiKey) {
+    if (!resendFrom || !recipient) {
+      console.error("Reservation email skipped: RESEND_FROM_EMAIL or CONTACT_EMAIL is missing.");
+      return;
+    }
+
+    try {
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${resendApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: resendFrom,
+          to: [recipient],
+          subject: options.subject.replace(/[\r\n]/g, " "),
+          html: options.html,
+          text: options.text,
+          ...(options.replyTo ? { reply_to: options.replyTo } : {}),
+        }),
+      });
+
+      if (!response.ok) {
+        console.error(`Reservation email delivery failed for ${options.kind} ${options.id}.`, {
+          code: "RESEND_API_ERROR",
+          command: "POST /emails",
+          responseCode: response.status,
+        });
+      }
+    } catch (error) {
+      const details = error instanceof Error
+        ? error as Error & { code?: string }
+        : null;
+      console.error(`Reservation email delivery failed for ${options.kind} ${options.id}.`, {
+        code: details?.code ?? "UNKNOWN",
+        command: "POST /emails",
+      });
+    }
+    return;
+  }
 
   if (!host || !user || !password || !recipient || !Number.isInteger(port) || port < 1 || port > 65535) {
     console.error("Reservation email skipped: SMTP settings are incomplete or invalid.");
