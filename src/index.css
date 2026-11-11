@@ -16330,9 +16330,123 @@ dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 80%, transpar
   color: #f27854;
 }
 
+.concierge-management__copy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.concierge-management__localized {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem 0.65rem;
+  min-width: 0;
+  border: 1px solid #e6ece5;
+  border-radius: 0.2rem;
+  background: #fbfcfa;
+  padding: 0.65rem;
+}
+
+.concierge-management__localized > p {
+  grid-column: 1 / -1;
+  color: #536159;
+  font-size: 0.61rem;
+  font-weight: 800;
+}
+
+.concierge-management__localized > label {
+  display: grid;
+  align-content: start;
+  gap: 0.3rem;
+  min-width: 0;
+  color: #748078;
+  font-size: 0.56rem;
+  font-weight: 700;
+}
+
+.concierge-management__localized input,
+.concierge-management__localized textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #dce4dc;
+  border-radius: 0.2rem;
+  background: #fff;
+  padding: 0.55rem;
+  color: #293630;
+  font: inherit;
+  font-size: 0.64rem;
+  font-weight: 500;
+}
+
+.concierge-management__localized textarea {
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.concierge-management__localized input:focus,
+.concierge-management__localized textarea:focus {
+  outline: 2px solid rgb(39 115 77 / 25%);
+  border-color: #478464;
+}
+
+.concierge-management__values {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.concierge-management__value {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  border-bottom: 1px solid #e6ece5;
+  padding: 0.2rem 0 0.8rem;
+}
+
+.concierge-management__value-heading {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.concierge-management__value-heading strong {
+  color: #28714d;
+  font-size: 0.62rem;
+}
+
+.concierge-management__add-value {
+  margin-top: 0.8rem;
+}
+
+.concierge-management__add-value:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.concierge-management__toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: #536159;
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
+.concierge-management__toggle input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #28714d;
+}
+
 @media (max-width: 760px) {
   .dashboard-seo-grid,
-  .dashboard-seo-toggles {
+  .dashboard-seo-toggles,
+  .concierge-management__copy-grid,
+  .concierge-management__value {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .concierge-management__localized {
     grid-template-columns: minmax(0, 1fr);
   }
 

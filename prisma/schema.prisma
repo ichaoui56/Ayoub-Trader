@@ -152,6 +152,12 @@ model BlogSetting {
   updatedAt DateTime @updatedAt
 }
 
+model ConciergeSetting {
+  id        String   @id @default("homepage")
+  data      Json
+  updatedAt DateTime @updatedAt
+}
+
 model ActivityReservation {
   id                    String                     @id @default(cuid())
   status                ActivityReservationStatus  @default(NEW)

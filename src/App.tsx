@@ -14,8 +14,9 @@ import PageLoader from "./components/PageLoader";
 import type { Activity } from "./activities";
 import type { BlogPost } from "./blogs";
 import type { Locale } from "./i18n";
+import type { ConciergeSectionSettings } from "./concierge";
 
-export default function App({ activities, posts, locale }: { activities: Activity[]; posts: BlogPost[]; locale: Locale }) {
+export default function App({ activities, posts, locale, concierge }: { activities: Activity[]; posts: BlogPost[]; locale: Locale; concierge: ConciergeSectionSettings }) {
   return (
     <>
       <PageLoader />
@@ -32,7 +33,7 @@ export default function App({ activities, posts, locale }: { activities: Activit
           <AirportTransferWrapper locale={locale} />
           <Stays locale={locale} />
           <Experiences activities={activities} locale={locale} />
-          <Concierge locale={locale} />
+          <Concierge locale={locale} settings={concierge} />
           <JourneySteps locale={locale} />
           <BlogSection locale={locale} posts={posts} />
           <WhyChooseUs locale={locale} />

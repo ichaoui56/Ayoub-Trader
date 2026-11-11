@@ -30,7 +30,9 @@ import type { ManagedActivityReservation } from "../server/activity-reservations
 import BlogManagement from "./BlogManagement";
 import DashboardAccountSettings from "./DashboardAccountSettings";
 import DashboardSeoManagement from "./DashboardSeoManagement";
+import ConciergeManagement from "./ConciergeManagement";
 import type { SiteSeoSettings } from "../seo";
+import type { ConciergeSectionSettings } from "../concierge";
 import type { ManagedBlogPost } from "../server/blog-catalog";
 import type { DashboardPage } from "./TransferDashboardWrapper";
 
@@ -46,6 +48,7 @@ type Props = {
   managedBlogs: ManagedBlogPost[];
   managedBlogCount: number;
   siteSeoSettings: SiteSeoSettings | null;
+  conciergeSettings: ConciergeSectionSettings | null;
   transferRequestDetail: TransferRequestData | null;
   activityReservationDetail: ManagedActivityReservation | null;
 };
@@ -295,6 +298,7 @@ export default function TransferDashboard({
   managedBlogs,
   managedBlogCount,
   siteSeoSettings,
+  conciergeSettings,
   transferRequestDetail,
   activityReservationDetail,
 }: Props) {
@@ -673,6 +677,9 @@ export default function TransferDashboard({
                 <span aria-hidden="true">✎</span><span>Travel journal</span>
                 <b className="transfer-sidebar__count">{managedBlogCount}</b>
               </Link>
+              <Link href="/dashboard/concierge" className={page === "concierge" ? "is-active" : ""} title="Manage Concierge section">
+                <span aria-hidden="true">✦</span><span>Concierge section</span>
+              </Link>
               <Link href="/dashboard/seo" className={page === "seo" ? "is-active" : ""} title="Website SEO settings">
                 <span aria-hidden="true">⌕</span><span>Website SEO</span>
               </Link>
@@ -860,6 +867,8 @@ export default function TransferDashboard({
           {page === "settings" && <DashboardAccountSettings username={user.username} role={user.role} />}
 
           {page === "seo" && isAdmin && siteSeoSettings && <DashboardSeoManagement initialSettings={siteSeoSettings} />}
+
+          {page === "concierge" && isAdmin && conciergeSettings && <ConciergeManagement initialSettings={conciergeSettings} />}
 
           {page === "activity-detail" && isAdmin && activityDetail && (
             <ActivityCatalogDetails item={activityDetail} />
