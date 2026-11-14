@@ -5,6 +5,6 @@ import TransferDashboardLogin from "./TransferDashboardLogin";
 
 export default async function TransferDashboardLoginWrapper() {
   await connection();
-  if (await getTransferDashboardIdentity()) redirect("/dashboard/transfers");
+  if (await getTransferDashboardIdentity()) redirect("/dashboard");
   return <TransferDashboardLogin />;
 }

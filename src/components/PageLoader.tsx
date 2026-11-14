@@ -71,7 +71,7 @@ export default function PageLoader() {
       className={`page-loader${leaving ? " page-loader--leaving" : ""}`}
       role="status"
       aria-live="polite"
-      aria-label={leaving ? "Your journey is ready" : "Loading the website"}
+      aria-label={leaving ? "Ayoub Trader is ready" : "Loading the trading film"}
     >
       <div className="page-loader__cloud page-loader__cloud--one" aria-hidden="true" />
       <div className="page-loader__cloud page-loader__cloud--two" aria-hidden="true" />
@@ -79,14 +79,14 @@ export default function PageLoader() {
       <div className="page-loader__cloud page-loader__cloud--four" aria-hidden="true" />
 
       <div className="page-loader__content">
-        <p className="page-loader__eyebrow">Morocco Journeys</p>
+        <p className="page-loader__eyebrow">Ayoub Trader</p>
         <p className="page-loader__title">
-          {leaving ? "Your journey awaits." : "Preparing your journey."}
+          {leaving ? "Trade with discipline." : "Preparing your trading film."}
         </p>
         <div
           className="page-loader__track"
           role="progressbar"
-          aria-label="Loading page media"
+          aria-label="Loading the trading film"
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={progress}

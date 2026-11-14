@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Logo from "./Logo";
+import LogoCircle from "./LogoCircle";
 import { translate, type Locale } from "../i18n";
 
 export default function FinalCallToAction({ locale }: { locale: Locale }) {
@@ -16,7 +17,7 @@ export default function FinalCallToAction({ locale }: { locale: Locale }) {
         </div>
       </div>
       <footer className="flex flex-col gap-5 pt-6 text-xs text-ink/60 md:flex-row md:items-center md:justify-between">
-        <Logo className="text-ink" />
+        <LogoCircle className="text-ink" />
         <nav aria-label={t("Footer navigation")} className="flex flex-wrap gap-x-6 gap-y-2">
           <Link href="#transfer">{t("Airport transfers")}</Link>
           <Link href="#stays">{t("Places to stay")}</Link>

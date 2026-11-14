@@ -1,16 +1,20 @@
 import type { MetadataRoute } from "next";
-import { connection } from "next/server";
-import { getSiteSeoSettings } from "../src/server/site-seo";
 
-export default async function robots(): Promise<MetadataRoute.Robots> {
-  if (process.env.DATABASE_URL) await connection();
-  const settings = await getSiteSeoSettings();
+export default function robots(): MetadataRoute.Robots {
+  const configuredUrl = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.SITE_URL;
+  let sitemap: string | undefined;
+  try {
+    const url = new URL(configuredUrl ?? "");
+    if (url.protocol === "https:") sitemap = `${url.origin}/sitemap.xml`;
+  } catch {
+    sitemap = undefined;
+  }
   return {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/dashboard", "/api"],
+      disallow: ["/dashboard", "/api", "/activities", "/blog", "/blogs"],
     },
-    sitemap: `${settings.siteUrl}/sitemap.xml`,
+    ...(sitemap ? { sitemap } : {}),
   };
 }

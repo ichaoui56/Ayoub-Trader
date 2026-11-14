@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { signInTransferDashboard } from "../server/transfer-actions";
+import Logo from "./Logo";
 
 export default function TransferDashboardLogin() {
   const router = useRouter();
@@ -37,13 +38,10 @@ export default function TransferDashboardLogin() {
   return (
     <main className="transfer-login">
       <div className="transfer-login__panel">
-        <a className="transfer-brand" href="/" aria-label="Morocco Journeys home">
-          <span className="transfer-brand__mark">M</span>
-          <span><strong>Morocco</strong><small>Journeys · Operations</small></span>
-        </a>
+        <Logo href="/" className="mb-10" />
         <p className="transfer-eyebrow">Private operations space</p>
         <h1>Welcome<br /><span>back.</span></h1>
-        <p className="transfer-login__intro">Sign in to manage routes, private services, and incoming travel requests.</p>
+        <p className="transfer-login__intro">Sign in to review trading applications, recurring coaching schedules, and manually verified payments.</p>
         <form onSubmit={submit}>
           <label htmlFor="transfer-admin-username">Username</label>
           <input
@@ -72,8 +70,8 @@ export default function TransferDashboardLogin() {
       </div>
       <div className="transfer-login__image" aria-hidden="true">
         <div>
-          <span>Morocco Journeys</span>
-          <p>Every arrival,<br />considered.</p>
+          <span>Ayoub Trader</span>
+          <p>Review carefully.<br />Activate manually.</p>
         </div>
       </div>
     </main>

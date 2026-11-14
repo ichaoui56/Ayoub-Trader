@@ -1,7 +1,7 @@
 const base = "https://media.scrollhaus.ai/sites/freight-forward/assets/";
 
 export const MEDIA = {
-  film: "/Aerial_drone_video_of_resort_a253ca43_1080p_scrub.mp4",
+  film: "/ayoub-trader.MP4",
   filmAlt: `${base}e8eb434f-d097-4b1b-b9e6-c8b46fa43040.mp4`,
   poster: "/aerial_resort_1080p_poster.jpg",
   terminal: `${base}terminal.jpg`,
@@ -10,37 +10,29 @@ export const MEDIA = {
 } as const;
 
 export const NAV_LINKS = [
-  { label: "Airport transfers", href: "#transfer" },
-  { label: "Places to stay", href: "#stays" },
-  { label: "Experiences", href: "#experiences" },
-  { label: "Notre Histoire", href: "#concierge" },
-  { label: "How it works", href: "#journey" },
-  { label: "Travel journal", href: "#journal" },
-  { label: "Why choose us", href: "#why-us" },
-  { label: "Plan your trip", href: "#contact" },
+  { label: "Services", href: "#services" },
+  { label: "Private rooms", href: "/private-rooms" },
+  { label: "Copy trading", href: "/copy-trading" },
+  { label: "Coaching", href: "/coaching" },
 ];
 
 export const MENU_LINKS = [
-  { n: "01", label: "Airport transfers", href: "#transfer" },
-  { n: "02", label: "Places to stay", href: "#stays" },
-  { n: "03", label: "Experiences", href: "#experiences" },
-  { n: "04", label: "Notre Histoire", href: "#concierge" },
-  { n: "05", label: "How it works", href: "#journey" },
-  { n: "06", label: "Travel journal", href: "#journal" },
-  { n: "07", label: "Why choose us", href: "#why-us" },
-  { n: "08", label: "Plan your trip", href: "#contact" },
+  { n: "01", label: "Services", href: "#services" },
+  { n: "02", label: "Private rooms", href: "/private-rooms" },
+  { n: "03", label: "Copy trading", href: "/copy-trading" },
+  { n: "04", label: "Coaching", href: "/coaching" },
 ];
 
-/** `from`/`to` are scroll-film progress (0–1). All copy lives inside the first 46%. */
+/** `from`/`to` are scroll-film progress (0–1). */
 export const CHAPTERS = [
-  { id: "plan", n: "01", kicker: "Your arrival", title: "A warm welcome. A smooth start.",
-    body: "Your driver is ready when you land, so the first moments of your trip feel easy.",
+  { id: "plan", n: "01", kicker: "The foundation", title: "Build a plan before a position.",
+    body: "Learn to prepare, define risk, and approach the market with clear rules.",
     from: 0.13, to: 0.23, pos: "left-5 right-5 bottom-24 md:right-auto md:left-[6vw] md:top-[56%] md:bottom-auto md:w-[28vw]" },
-  { id: "connections", n: "02", kicker: "The little details", title: "Every detail, already considered.",
-    body: "Thoughtful transfers, handpicked stays and local recommendations—connected around you.",
+  { id: "connections", n: "02", kicker: "Broker connection", title: "Keep account access in your hands.",
+    body: "Copy trading requires broker-supported authorization. Never share a password or API key through a form or chat.",
     from: 0.26, to: 0.36, pos: "left-5 right-5 bottom-24 md:left-auto md:right-[6vw] md:top-[20%] md:bottom-auto md:w-[27vw]" },
-  { id: "follow", n: "03", kicker: "Your Morocco", title: "Arrive curious. Leave with stories.",
-    body: "Make space for the places, people and experiences you came all this way to discover.",
+  { id: "follow", n: "03", kicker: "Consistent coaching", title: "Reserve time for the work.",
+    body: "Choose one recurring daily session time and keep it through the full coaching month.",
     from: 0.39, to: 0.46, pos: "left-5 right-5 bottom-24 md:right-auto md:left-[9vw] md:top-[30%] md:bottom-auto md:w-[26vw]" },
 ] as const;
 

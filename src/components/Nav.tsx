@@ -60,8 +60,8 @@ export default function Nav() {
                 <li key={l.href}><Link href={homeHref(l.href)} className="hover:text-signal">{t(l.label)}</Link></li>
               ))}
             </ul>
-            <Link href={homeHref("#transfer")} className="site-nav__book hidden whitespace-nowrap bg-signal px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-paper transition hover:bg-paper hover:text-ink sm:inline-flex">
-              {t("Book now")} <span className="ml-3" aria-hidden="true">↗</span>
+            <Link href={homeHref("#coaching")} className="site-nav__book hidden whitespace-nowrap bg-signal px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-paper transition hover:bg-paper hover:text-ink sm:inline-flex">
+              {t("Coaching plans")} <span className="ml-3" aria-hidden="true">↗</span>
             </Link>
             <div className="site-language-switch" role="group" aria-label={t("Choose language")}>
               {(["en", "fr"] as const).map((option) => (
@@ -104,7 +104,7 @@ export default function Nav() {
               </li>
             ))}
           </ul>
-          <p className="text-sm text-paper/60">{t("Every mile, considered.")}</p>
+          <p className="text-sm text-paper/60">{t("Trade with discipline.")}</p>
         </div>
       )}
     </>

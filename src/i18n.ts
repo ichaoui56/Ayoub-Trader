@@ -2,6 +2,12 @@ export type Locale = "en" | "fr";
 import { frenchContent } from "./content-locale";
 
 const french: Record<string, string> = {
+  "Services": "Services",
+  "Private rooms": "Espace VIP privé",
+  "Copy trading": "Copy trading",
+  "Coaching": "Coaching",
+  "Coaching plans": "Formules de coaching",
+  "Trade with discipline.": "Trader avec discipline.",
   "Airport transfers": "Transferts aéroport",
   "Experiences": "Expériences",
   "Notre Histoire": "Notre histoire",
