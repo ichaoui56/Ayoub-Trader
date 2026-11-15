@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Logo from "./Logo";
 import LogoCircle from "./LogoCircle";
 import { translate, type Locale } from "../i18n";
 
