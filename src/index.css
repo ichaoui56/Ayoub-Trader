@@ -13,6 +13,26 @@ html { background: var(--color-paper); scroll-behavior: smooth; }
 body { font-family: var(--font-sans); background: var(--color-paper); color: var(--color-ink); -webkit-font-smoothing: antialiased; }
 section[id] { scroll-margin-top: 5rem; }
 
+.trading-services-background {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("/Minimalist%20Green%20Growth%20World%20Map%20Background.png");
+  background-position: center;
+  background-size: cover;
+  opacity: 0.7;
+}
+
+@media (max-width: 767px) {
+  .trading-services-background {
+    inset: 0 0 auto;
+    height: 100%;
+    background-image: url("/Mint%20Green%20Global%20Growth%20Background.png");
+    background-position: center top;
+    background-size: cover;
+  }
+}
+
 .trading-service-shell:hover > .trading-service-card,
 .trading-service-shell:focus-within > .trading-service-card {
   

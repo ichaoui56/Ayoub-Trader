@@ -33,4 +33,4 @@ The admin portal is at `/dashboard`; sign-in remains at `/dashboard/loginP`. The
 - Coaching dates and times use `Africa/Casablanca`. Admins can block a full date or 15-minute-aligned time range. A block cannot overlap an existing booking.
 - Coaching subscriptions record their start/end dates, expected and remaining sessions, and expire when the dashboard processes the expiry check. Completing a session reduces the remaining count.
 - `DATABASE_URL` is required for application submission and dashboard management. Set it before testing booking concurrency or applying the migration.
-- Trading involves risk. The website makes no return guarantees and does not provide investment advice.
+- Trading involves risk. The website makes no return guarantees and does not provide investment advice.# Ayoub-Trader
