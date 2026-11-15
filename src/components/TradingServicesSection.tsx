@@ -193,7 +193,7 @@ export default function TradingServicesSection() {
   }, []);
 
   return (
-    <section ref={section} id="services" className="relative overflow-hidden bg-[#F5F9F5] px-5 py-20 md:px-10 md:py-24">
+    <section ref={section} id="services" className="trading-services-section mak relative overflow-hidden px-5 py-20 md:px-10 md:py-24">
       <div aria-hidden="true" className="trading-services-background" />
       <div className="relative mx-auto max-w-[1440px]">
         <div className="flex flex-wrap items-end justify-between gap-8 border-b border-ink/15 pb-8 md:pb-10">

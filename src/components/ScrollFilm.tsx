@@ -16,12 +16,12 @@ function HeroCopy({ opacity = 1 }: { opacity?: number }) {
       <p className="mb-4 flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.22em] text-paper/90 md:mb-6">
         <span className="h-px w-7 bg-signal" /> Trading education
       </p>
-      <h1 className="hero-title font-display font-extrabold uppercase">
+      <h2 className="hero-title font-display font-extrabold uppercase">
         <span className="block whitespace-nowrap">Build skill.</span>
         <span className="block whitespace-nowrap text-signal">Trade with</span>
         <span className="block whitespace-nowrap">a clear plan.</span>
         <span className="block whitespace-nowrap text-signal">Stay disciplined.</span>
-      </h1>
+      </h2>
       <p className="mt-5 max-w-md text-sm leading-relaxed text-paper/90 [text-shadow:0_1px_8px_rgb(0_0_0/35%)] md:mt-7 md:text-base">
         Coaching, private community access, and broker-authorized copy trading. Every application is reviewed before access is activated.
       </p>
@@ -46,7 +46,7 @@ export default function ScrollFilm({ locale }: { locale: Locale }) {
 
   if (reduced) {
     return (
-      <section id="top" aria-label="Ayoub Trader introduction" className="bg-ink">
+      <section id="market-intro" aria-label="Ayoub Trader introduction" className="bg-ink">
         <div className="relative min-h-svh overflow-hidden">
           <img src={MEDIA.poster} alt="Ayoub Trader logo" className="absolute inset-0 h-full w-full bg-ink object-contain p-8" />
           <div className="absolute inset-0 bg-gradient-to-r from-ink/80 via-ink/25 to-transparent" />
@@ -62,7 +62,7 @@ export default function ScrollFilm({ locale }: { locale: Locale }) {
   }
 
   return (
-    <section id="top" ref={runway} aria-label="Ayoub Trader film, scrubbed by scrolling" className="relative h-[320svh] bg-ink md:h-[400svh]">
+    <section id="market-intro" ref={runway} aria-label="Ayoub Trader film, scrubbed by scrolling" className="relative h-[320svh] bg-ink md:h-[400svh]">
       <div className="sticky top-0 h-svh overflow-hidden">
         <video
           ref={video}

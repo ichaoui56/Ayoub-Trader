@@ -13,6 +13,173 @@ html { background: var(--color-paper); scroll-behavior: smooth; }
 body { font-family: var(--font-sans); background: var(--color-paper); color: var(--color-ink); -webkit-font-smoothing: antialiased; }
 section[id] { scroll-margin-top: 5rem; }
 
+.open-account-section {
+  --open-account-overlap: 3rem;
+  --account-ink: #071e22;
+  --account-green: #00c875;
+  --account-dark-green: #006b43;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 0;
+  margin-top: calc(var(--open-account-overlap) * -1);
+  background: transparent;
+  padding: calc(7.5rem + var(--open-account-overlap)) 0 2.75rem;
+}
+
+.open-account-section::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background-color: #e8fff5;
+  background-image: url("/HERO/Abstract%20Emerald%20Waves%20and%20Finance%20Chart.png");
+  background-position: center;
+  background-size: cover;
+  content: "";
+  mask-image: linear-gradient(to bottom, transparent, #000 var(--open-account-overlap), #000 calc(100% - 7rem), transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 var(--open-account-overlap), #000 calc(100% - 7rem), transparent);
+}
+
+.open-account-section::after {
+  position: absolute;
+  z-index: 0;
+  inset: 0 0 auto;
+  height: calc(var(--open-account-overlap) + 3rem);
+  background: linear-gradient(to bottom, rgb(232 255 245 / 8%), rgb(232 255 245 / 38%) 55%, transparent);
+  content: "";
+  pointer-events: none;
+  
+}
+
+.open-account::after {
+  position: absolute;
+  z-index: 0;
+  inset: 0 0 auto;
+  height: calc(var(--open-account-overlap) + 3rem);
+  background: linear-gradient(to bottom, rgb(232 255 245 / 8%), rgb(232 255 245 / 38%) 55%, transparent);
+  content: "";
+  pointer-events: none;
+  
+}
+
+.open-account-inner { position: relative; z-index: 1; width: min(1440px, calc(100% - 3rem)); margin-inline: auto; }
+.open-account-hero { display: grid; grid-template-areas: "copy visual" "actions visual"; grid-template-columns: minmax(0, .98fr) minmax(0, 1.02fr); align-items: center; gap: 1.5rem clamp(1.5rem, 3vw, 3rem); }
+.open-account-copy { grid-area: copy; animation: open-account-rise 700ms cubic-bezier(.2, .7, .2, 1) both; }
+
+.open-account-badge { display: inline-flex; min-height: 2.5rem; align-items: center; gap: .55rem; border: 1px solid rgb(0 200 117 / 28%); border-radius: 999px; background: rgb(0 200 117 / 12%); padding: .5rem 1rem; color: var(--account-ink); font-size: .82rem; font-weight: 750; }
+.open-account-badge svg { width: 1.05rem; height: 1.05rem; color: var(--account-dark-green); }
+.open-account-copy h1 { margin-top: 1.4rem; color: var(--account-ink); font-family: var(--font-display); font-size: clamp(2.75rem, 3.4vw, 3.35rem); font-weight: 800; line-height: .98; letter-spacing: 0; text-wrap: balance; }
+.open-account-copy h1 span { color: var(--account-dark-green); }
+.open-account-copy h1 .open-account-title-line { display: inline-block; font-size: .88em; white-space: nowrap; }
+.open-account-description { max-width: 39rem; margin-top: 1.25rem; color: #435b59; font-size: 1rem; font-weight: 500; line-height: 1.6; }
+
+.open-account-visual { position: relative; grid-area: visual; align-self: start; width: 100%; aspect-ratio: 1.72; min-height: 300px; margin-top: 1.5rem; animation: open-account-device-in 850ms 100ms cubic-bezier(.2, .7, .2, 1) both; }
+.open-account-visual::before { position: absolute; z-index: -1; inset: 36% -2% 28%; border: 1px solid rgb(0 200 117 / 36%); border-radius: 50%; box-shadow: 0 0 22px rgb(0 200 117 / 25%), inset 0 0 18px rgb(0 200 117 / 12%); content: ""; transform: rotate(-9deg); animation: open-account-orbit 18s linear infinite; }
+.open-account-device-image { object-fit: contain; mix-blend-mode: multiply; filter: drop-shadow(0 22px 26px rgb(7 30 34 / 20%)); mask-image: radial-gradient(ellipse at center, #000 65%, transparent 99%); }
+
+.open-account-actions { grid-area: actions; display: flex; flex-direction: column; align-items: flex-start; gap: 1.5rem; animation: open-account-rise 750ms 120ms cubic-bezier(.2, .7, .2, 1) both; }
+.open-account-benefits { display: grid; width: 100%; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65rem; margin: 0; padding: 0; list-style: none; }
+.open-account-benefits li { display: flex; min-width: 0; min-height: 4.1rem; align-items: center; gap: .6rem; border: 1px solid rgb(0 107 67 / 14%); border-radius: 14px; background: rgb(255 255 255 / 68%); padding: .7rem .75rem; box-shadow: 0 5px 16px rgb(7 30 34 / 4%); transition: border-color 260ms ease, box-shadow 260ms ease; }
+.open-account-benefit-icon { width: 1.35rem; height: 1.35rem; flex: 0 0 auto; color: var(--account-dark-green); }
+.open-account-benefits li span { display: grid; min-width: 0; gap: .15rem; }
+.open-account-benefits strong { color: var(--account-ink); font-size: .72rem; line-height: 1.15; }
+.open-account-benefits small { color: #62736e; font-size: .62rem; line-height: 1.2; }
+
+.open-account-cta { display: inline-flex; min-height: 3.35rem; align-items: center; justify-content: center; gap: 1.1rem; border: 1px solid rgb(255 255 255 / 50%); border-radius: 999px; background: linear-gradient(115deg, #00c875, #009951 75%, #006b43); padding: .85rem 1.55rem; color: #fff; font-size: .9rem; font-weight: 750; box-shadow: 0 12px 28px rgb(0 126 75 / 25%); transition: transform 250ms ease, box-shadow 250ms ease, filter 250ms ease; }
+.open-account-cta:hover { transform: translateY(-3px); filter: saturate(1.1); box-shadow: 0 17px 34px rgb(0 107 67 / 32%); }
+.open-account-cta:active { transform: translateY(0); }
+.open-account-cta:focus-visible { outline: 3px solid #006b43; outline-offset: 4px; }
+.open-account-cta svg { width: 1.15rem; height: 1.15rem; transition: transform 250ms ease; }
+.open-account-cta:hover svg { transform: translateX(4px); }
+
+.open-account-process { margin-top: 2.5rem; border: 1px solid rgb(255 255 255 / 85%); border-radius: 28px; background: rgb(255 255 255 / 58%); padding: 1.4rem; box-shadow: 0 18px 50px rgb(7 30 34 / 7%), inset 0 1px 0 rgb(255 255 255 / 75%); backdrop-filter: blur(12px); animation: open-account-rise 800ms 200ms cubic-bezier(.2, .7, .2, 1) both; }
+.open-account-process h2 { display: flex; align-items: center; justify-content: center; gap: .35em; margin: 0 0 1.25rem; color: var(--account-ink); font-family: var(--font-display); font-size: 2rem; font-weight: 800; line-height: 1; letter-spacing: 0; text-align: center; }
+.open-account-process h2 span { color: var(--account-dark-green); }
+.open-account-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.1rem; margin: 0; padding: 0; list-style: none; }
+.open-account-step { position: relative; display: flex; min-width: 0; min-height: 12rem; flex-direction: column; align-items: center; justify-content: center; border: 1px solid rgb(0 107 67 / 9%); border-radius: 20px; background: rgb(255 255 255 / 91%); padding: 1.3rem 1rem 1.15rem; text-align: center; box-shadow: 0 8px 20px rgb(7 30 34 / 5%); transition: box-shadow 260ms ease, border-color 260ms ease; }
+.open-account-step:not(:last-child)::after { position: absolute; top: 50%; right: -1.1rem; width: 1.1rem; height: 2px; background: linear-gradient(90deg, rgb(0 107 67 / 24%), rgb(0 200 117 / 56%)); content: ""; }
+.open-account-step:not(:last-child)::before { position: absolute; top: calc(50% - 4px); left: 100%; z-index: 1; width: 8px; height: 8px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px rgb(0 200 117 / 22%), 0 0 12px 4px rgb(0 200 117 / 58%); content: ""; animation: open-account-step-light 2.4s ease-in-out infinite; }
+.open-account-step:nth-child(2)::before { animation-delay: .6s; }
+.open-account-step:nth-child(3)::before { animation-delay: 1.2s; }
+.open-account-step-number { position: absolute; top: .8rem; left: .8rem; display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: 50%; background: linear-gradient(145deg, #00c875, #006b43); color: #fff; font-size: .75rem; font-weight: 800; box-shadow: 0 5px 12px rgb(0 107 67 / 22%); }
+.open-account-step-icon { display: grid; width: 4rem; height: 4rem; place-items: center; border: 1px solid rgb(0 200 117 / 18%); border-radius: 50%; background: linear-gradient(145deg, #f7fffb, #ccf9e4); color: var(--account-dark-green); }
+.open-account-step-icon svg { width: 1.8rem; height: 1.8rem; }
+.open-account-step h3 { margin: .7rem 0 0; color: var(--account-ink); font-size: .98rem; font-weight: 750; line-height: 1.2; }
+.open-account-step p { max-width: 16rem; margin: .45rem 0 0; color: #62736e; font-size: .8rem; line-height: 1.4; }
+
+@keyframes open-account-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes open-account-device-in { from { opacity: 0; transform: translateX(24px) scale(.98); } to { opacity: 1; transform: translateX(0) scale(1); } }
+@keyframes open-account-orbit { to { transform: rotate(351deg); } }
+@keyframes open-account-step-light { 0%, 12% { opacity: 0; transform: translateX(0) scale(.6); } 35% { opacity: 1; transform: translateX(.35rem) scale(1); } 70% { opacity: .8; transform: translateX(.75rem) scale(.9); } 100% { opacity: 0; transform: translateX(1rem) scale(.6); } }
+
+@media (max-width: 1024px) {
+  .open-account-section { padding-top: calc(7rem + var(--open-account-overlap)); }
+  .open-account-inner { width: min(100% - 2.5rem, 900px); }
+  .open-account-copy h1 { font-size: 3rem; }
+  .open-account-visual { min-height: 260px; }
+  .open-account-benefits { gap: .45rem; }
+  .open-account-benefits li { flex-direction: column; align-items: flex-start; gap: .3rem; padding: .6rem; }
+  .open-account-benefits strong { font-size: .68rem; }
+  .open-account-benefits small { font-size: .6rem; }
+  .open-account-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .open-account-step:nth-child(2)::after,
+  .open-account-step:nth-child(2)::before { display: none; }
+}
+
+@media (max-width: 760px) {
+  .open-account-section { --open-account-overlap: 2rem; padding: calc(6.5rem + var(--open-account-overlap)) 0 2rem; }
+  .open-account-section::before { background-image: url("/Mint%20Green%20Global%20Growth%20Background.png"); background-position: center top; }
+  .open-account-inner { width: min(100% - 2rem, 600px); }
+  .open-account-hero { grid-template-areas: "copy" "visual" "actions"; grid-template-columns: minmax(0, 1fr); gap: 1.15rem; }
+  .open-account-copy h1 { max-width: 38rem; margin-top: 1rem; font-size: 2.65rem; line-height: 1; }
+  .open-account-description { margin-top: .9rem; font-size: .94rem; }
+  .open-account-visual { min-height: 0; aspect-ratio: 1.55; margin-top: 0; }
+  .open-account-visual::before { inset: 38% 2% 28%; }
+  .open-account-actions { align-items: stretch; gap: 1rem; }
+  .open-account-benefits { gap: .45rem; }
+  .open-account-benefits li { min-height: 5rem; align-items: center; padding: .55rem .35rem; text-align: center; }
+  .open-account-benefit-icon { width: 1.2rem; height: 1.2rem; }
+  .open-account-benefits li span { justify-items: center; }
+  .open-account-benefits strong { font-size: .62rem; }
+  .open-account-benefits small { font-size: .55rem; }
+  .open-account-cta { width: 100%; min-height: 3.5rem; }
+  .open-account-process { margin-top: 1.75rem; border-radius: 22px; padding: 1rem; }
+  .open-account-process h2 { margin-bottom: 1rem; font-size: 1.7rem; }
+}
+
+@media (max-width: 520px) {
+  .open-account-section { padding-top: calc(6rem + var(--open-account-overlap)); }
+  .open-account-inner { width: min(100% - 1.5rem, 460px); }
+  .open-account-copy h1 { font-size: 2.35rem; }
+  .open-account-copy h1 .open-account-title-line { font-size: .9em; white-space: normal; }
+  .open-account-description { font-size: .88rem; line-height: 1.5; }
+  .open-account-visual { aspect-ratio: 1.3; }
+  .open-account-benefits { gap: .35rem; }
+  .open-account-benefits li { min-height: 4.7rem; border-radius: 11px; }
+  .open-account-benefits strong { font-size: .56rem; }
+  .open-account-benefits small { font-size: .5rem; }
+  .open-account-process { padding: .9rem; }
+  .open-account-process h2 { font-size: 1.5rem; }
+  .open-account-steps { grid-template-columns: minmax(0, 1fr); gap: .85rem; }
+  .open-account-step { min-height: 7rem; align-items: flex-start; justify-content: center; padding: 1rem 1rem 1rem 5.2rem; text-align: left; }
+  .open-account-step-number { top: .85rem; left: .75rem; }
+  .open-account-step-icon { position: absolute; top: 50%; left: 1.75rem; width: 2.6rem; height: 2.6rem; transform: translateY(-50%); }
+  .open-account-step-icon svg { width: 1.25rem; height: 1.25rem; }
+  .open-account-step h3 { margin-top: 0; font-size: .9rem; }
+  .open-account-step p { margin-top: .25rem; font-size: .75rem; }
+  .open-account-step:not(:last-child)::after { top: auto; right: 50%; bottom: -.85rem; width: 2px; height: .85rem; background: linear-gradient(180deg, rgb(0 107 67 / 24%), rgb(0 200 117 / 56%)); }
+  .open-account-step:not(:last-child)::before { top: auto; right: calc(50% - 4px); bottom: -0.85rem; left: auto; animation-name: open-account-step-light-vertical; }
+  .open-account-step:nth-child(2)::before { animation-delay: .6s; }
+  .open-account-step:nth-child(3)::before { animation-delay: 1.2s; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .open-account-copy, .open-account-visual, .open-account-actions, .open-account-process, .open-account-visual::before, .open-account-step:not(:last-child)::before { animation: none; }
+  .open-account-cta, .open-account-cta svg, .open-account-step { transition: none; }
+}
+
+@keyframes open-account-step-light-vertical { 0%, 12% { opacity: 0; transform: translateY(0) scale(.6); } 35% { opacity: 1; transform: translateY(.3rem) scale(1); } 70% { opacity: .8; transform: translateY(.6rem) scale(.9); } 100% { opacity: 0; transform: translateY(.85rem) scale(.6); } }
+
 .trading-services-background {
   position: absolute;
   inset: 0;
@@ -21,9 +188,30 @@ section[id] { scroll-margin-top: 5rem; }
   background-position: center;
   background-size: cover;
   opacity: 0.7;
+  mask-image: linear-gradient(to bottom, transparent, #000 var(--trading-transition-size), #000 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 var(--trading-transition-size), #000 100%);
+}
+
+.trading-services-section {
+  --trading-transition-size: 7rem;
+  position: relative;
+  z-index: 1;
+  margin-top: calc(var(--trading-transition-size) * -1);
+  padding-top: calc(5rem + var(--trading-transition-size));
+  background: transparent;
+}
+
+@media (min-width: 768px) {
+  .trading-services-section { padding-top: calc(7rem + var(--trading-transition-size)); }
 }
 
 @media (max-width: 767px) {
+  .open-account-section { --open-account-overlap: 2rem; }
+  .open-account-section::before {
+    mask-image: linear-gradient(to bottom, transparent, #000 var(--open-account-overlap), #000 calc(100% - 5rem), transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 var(--open-account-overlap), #000 calc(100% - 5rem), transparent);
+  }
+  .trading-services-section { --trading-transition-size: 5rem; padding-top: calc(5rem + var(--trading-transition-size)); }
   .trading-services-background {
     inset: 0 0 auto;
     height: 100%;
