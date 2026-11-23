@@ -1,5 +1,6 @@
 import App from "../App";
+import { LocaleProvider } from "../components/LocaleProvider";
 
 export default function Page() {
-  return <App />;
+  return <LocaleProvider initialLocale="en"><App /></LocaleProvider>;
 }

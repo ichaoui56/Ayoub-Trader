@@ -308,21 +308,49 @@ function addCalendarMonths(date: Date, count: number) {
 }
 
 export async function grantPrivateRoomVip(formData: FormData) {
-  await requireTradingAdmin();
+  const admin = await requireTradingAdmin();
   const id = requestId(formData);
-  const request = await prisma.privateRoomRequest.findUnique({
-    where: { id },
-    include: { payments: { where: { status: ManualPaymentStatus.VERIFIED }, take: 1 } },
+  const durationSetting = await prisma.vipPlatformSetting.findUnique({ where: { key: "membershipDurationMonths" }, select: { value: true } });
+  const duration = Number(durationSetting?.value ?? "2");
+  if (!Number.isInteger(duration) || duration < 2 || duration > 12) throw new Error("Membership duration settings must be between two and twelve calendar months.");
+  await prisma.$transaction(async (transaction) => {
+    const request = await transaction.privateRoomRequest.findUnique({
+      where: { id },
+      include: { payments: { where: { status: ManualPaymentStatus.VERIFIED }, take: 1 } },
+    });
+    if (!request || request.status !== PrivateRoomRequestStatus.DEPOSIT_VERIFIED || !request.depositVerifiedAt) {
+      throw new Error("Verify the application before granting VIP access.");
+    }
+    if (request.brokerOption === "OWN_BROKER" && !request.payments.length) {
+      throw new Error("Verify the Own Broker payment before granting VIP access.");
+    }
+    const existingMembership = await transaction.vipMembership.findUnique({ where: { applicationId: request.id }, select: { id: true } });
+    if (existingMembership) throw new Error("This application already has a membership record.");
+    const now = new Date();
+    const expiresAt = addCalendarMonths(now, duration);
+    await transaction.vipMembership.create({
+      data: {
+        customerId: request.customerId,
+        applicationId: request.id,
+        brokerOption: request.brokerOption,
+        startsAt: now,
+        expiresAt,
+        activatedById: admin.id,
+      },
+    });
+    await transaction.privateRoomRequest.update({
+      where: { id },
+      data: { status: PrivateRoomRequestStatus.VIP_ACTIVE, vipGrantedAt: now, vipExpiresAt: expiresAt },
+    });
+    await transaction.vipNotification.create({
+      data: { customerId: request.customerId, title: "VIP membership activated", message: `Your membership is active until ${expiresAt.toLocaleDateString("en-US", { dateStyle: "long" })}. Room access will appear after the team assigns your rooms.` },
+    });
+    await transaction.vipAuditLog.create({
+      data: { actorId: admin.id, action: "VIP_MEMBERSHIP_ACTIVATED", subjectId: request.id, details: { membershipStart: now.toISOString(), membershipExpiry: expiresAt.toISOString(), durationMonths: duration } },
+    });
   });
-  if (!request || request.status !== PrivateRoomRequestStatus.DEPOSIT_VERIFIED || !request.depositVerifiedAt) {
-    throw new Error("Verify the broker deposit before granting VIP access.");
-  }
-  if (!request.payments.length) throw new Error("Verify the $80 fee payment before granting VIP access.");
-  const now = new Date();
-  await prisma.privateRoomRequest.update({
-    where: { id },
-    data: { status: PrivateRoomRequestStatus.VIP_ACTIVE, vipGrantedAt: now, vipExpiresAt: addCalendarMonths(now, 2) },
-  });
+  revalidatePath("/vip/dashboard");
+  revalidatePath("/vip/dashboard/membership");
   refreshTradingDashboard();
 }
 

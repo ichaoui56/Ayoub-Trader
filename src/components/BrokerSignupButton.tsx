@@ -7,7 +7,7 @@ export default function BrokerSignupButton({ href }: { href: string | null }) {
   const pathname = usePathname();
   const { t } = useLocale();
 
-  if (!href || pathname.startsWith("/dashboard")) return null;
+  if (!href || pathname.startsWith("/dashboard") || pathname.startsWith("/vip")) return null;
 
   return (
     <a

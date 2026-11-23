@@ -44,6 +44,23 @@ enum PrivateRoomRequestStatus {
   VIP_ACTIVE
   REJECTED
   EXPIRED
+  PROOF_REPORTED
+  UNDER_REVIEW
+  MORE_INFO_REQUIRED
+  CANCELLED
+  SUSPENDED
+}
+
+enum VipBrokerOption {
+  OUR_BROKER
+  OWN_BROKER
+}
+
+enum VipMembershipStatus {
+  ACTIVE
+  SUSPENDED
+  EXPIRED
+  ENDED
 }
 
 enum CopyTradingStatus {
@@ -60,6 +77,11 @@ enum CoachingPackage {
   STARTER
   ADVANCED
   PREMIUM
+}
+
+enum CoachingMeetingMode {
+  ONLINE
+  IN_PERSON
 }
 
 enum CoachingBookingStatus {
@@ -91,6 +113,20 @@ enum ManualPaymentService {
   COACHING
 }
 
+enum FinancialTransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  PROFIT
+  PROFIT_SHARE
+}
+
+enum FinancialTransactionStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  COMPLETED
+}
+
 enum CoachingSlotKind {
   RESERVED
   BLOCKED
@@ -99,208 +135,25 @@ enum CoachingSlotKind {
 model User {
   id           String   @id @default(cuid())
   username     String   @unique
+  email        String?  @unique
   passwordHash String
   role         UserRole @default(STAFF)
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   verifiedPayments ManualPayment[] @relation("PaymentVerifier")
+  activatedVipMemberships VipMembership[] @relation("VipMembershipActivator")
+  vipAuditLogs VipAuditLog[]
+  financialTransactionsCreated FinancialTransaction[] @relation("FinancialTransactionCreator")
+  financialTransactionsReviewed FinancialTransaction[] @relation("FinancialTransactionReviewer")
 
   @@index([role, isActive])
 }
 
-model TransferRoute {
-  id        String            @id @default(cuid())
-  from      String
-  fromFr    String?
-  to        String
-  toFr      String?
-  price     Float
-  notes     String            @default("")
-  notesFr   String            @default("")
-  currency  String            @default("EUR")
-  isActive  Boolean           @default(true)
-  sortOrder Int               @default(0)
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
-  requests  TransferRequest[]
-
-  @@unique([from, to])
-  @@index([isActive, sortOrder])
-}
-
-model PrivateTransferService {
-  id             String             @id @default(cuid())
-  name           String             @unique
-  nameFr         String?
-  kind           PrivateServiceKind @default(OUTING)
-  description    String
-  descriptionFr  String             @default("")
-  price          Float
-  currency       String             @default("EUR")
-  passengerLimit Int                @default(8)
-  duration       String             @default("À définir")
-  durationFr     String             @default("")
-  startTimes     String[]           @default([])
-  image          String             @default("")
-  imageAlt       String             @default("")
-  imageAltFr     String             @default("")
-  isActive       Boolean            @default(true)
-  sortOrder      Int                @default(0)
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
-  requests       TransferRequest[]
-
-  @@index([isActive, sortOrder])
-}
-
-model TransferLocation {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  nameFr      String?
-  isActive    Boolean  @default(true)
-  isDeparture Boolean  @default(true)
-  isArrival   Boolean  @default(true)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([isActive, sortOrder])
-}
-
-model TransferSetting {
-  key       String   @id
-  value     String
-  updatedAt DateTime @updatedAt
-}
-
-model ActivityCatalogItem {
-  id        String   @id @default(cuid())
-  slug      String   @unique
-  data      Json
-  isActive  Boolean  @default(true)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([isActive, sortOrder])
-}
-
-model ActivitySetting {
-  key       String   @id
-  value     String
-  updatedAt DateTime @updatedAt
-}
-
-model BlogCatalogItem {
-  id          String   @id @default(cuid())
-  slug        String   @unique
-  data        Json
-  isPublished Boolean  @default(false)
-  publishedAt DateTime @default(now())
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([isPublished, publishedAt, sortOrder])
-}
-
-model BlogSetting {
-  key       String   @id
-  value     String
-  updatedAt DateTime @updatedAt
-}
-
-model ConciergeSetting {
-  id        String   @id @default("homepage")
-  data      Json
-  updatedAt DateTime @updatedAt
-}
-
-model ActivityReservation {
-  id                    String                     @id @default(cuid())
-  status                ActivityReservationStatus  @default(NEW)
-  customerName          String
-  customerPhone         String
-  customerEmail         String?
-  hotelAddress          String?
-  notes                 String?
-  estimatedTotal        Float
-  currency              String                     @default("EUR")
-  priceNeedsConfirmation Boolean                   @default(false)
-  createdAt             DateTime                   @default(now())
-  updatedAt             DateTime                   @updatedAt
-  lines                 ActivityReservationLine[]
-
-  @@index([status, createdAt])
-}
-
-model ActivityReservationLine {
-  id               String                       @id @default(cuid())
-  reservationId    String
-  reservation      ActivityReservation          @relation(fields: [reservationId], references: [id], onDelete: Cascade)
-  activitySlug     String
-  activityTitle    String
-  activityLocation String
-  activityImage    String                       @default("")
-  rateLabel        String
-  rateUnit         String
-  rateBilling      String
-  ratePrice        Float
-  adults           Int
-  children         Int                           @default(0)
-  date             DateTime                      @db.Date
-  time             String
-  extras           Json
-  lineTotal        Float
-  slots            ConfirmedActivitySlot[]
-
-  @@index([activitySlug, date, time])
-}
-
-model ConfirmedActivitySlot {
-  id                String                 @id @default(cuid())
-  activitySlug      String
-  date              DateTime               @db.Date
-  time              String
-  reservationLineId String                 @unique
-  reservationLine   ActivityReservationLine @relation(fields: [reservationLineId], references: [id], onDelete: Cascade)
-
-  @@unique([activitySlug, date, time])
-}
-
-model TransferRequest {
-  id               String                  @id @default(cuid())
-  serviceType      TransferServiceType
-  status           TransferRequestStatus   @default(NEW)
-  serviceName      String
-  routeId          String?
-  route            TransferRoute?          @relation(fields: [routeId], references: [id], onDelete: SetNull)
-  privateServiceId String?
-  privateService   PrivateTransferService? @relation(fields: [privateServiceId], references: [id], onDelete: SetNull)
-  departure        String
-  arrival          String
-  priceAtRequest   Float?
-  currency         String                  @default("EUR")
-  serviceDate      DateTime
-  serviceTime      String?
-  passengerCount   Int
-  luggageCount     Int                     @default(0)
-  hotelAddress     String?
-  flightNumber     String?
-  customerName     String
-  customerPhone    String
-  customerEmail    String?
-  notes            String?
-  createdAt        DateTime                @default(now())
-  updatedAt        DateTime                @updatedAt
-
-  @@index([status, createdAt])
-  @@index([serviceDate])
-}
 
 model TradingCustomer {
   id                     String                    @id @default(cuid())
+  clientId               String                    @unique @default(dbgenerated("('VIP-' || to_char(CURRENT_DATE, 'YYYY') || '-' || replace(gen_random_uuid()::text, '-', ''))"))
   name                   String
   phone                  String                    @unique
   email                  String?
@@ -310,6 +163,11 @@ model TradingCustomer {
   copyTradingApplications CopyTradingApplication[]
   coachingBookings       CoachingBooking[]
   payments               ManualPayment[]
+  financialTransactions FinancialTransaction[]
+  account                TradingCustomerAccount?
+  memberships            VipMembership[]
+  roomAssignments        VipRoomAssignment[]
+  notifications          VipNotification[]
 
   @@index([name])
 }
@@ -319,6 +177,9 @@ model PrivateRoomRequest {
   customerId         String
   customer           TradingCustomer            @relation(fields: [customerId], references: [id], onDelete: Restrict)
   status             PrivateRoomRequestStatus  @default(SUBMITTED)
+  brokerOption       VipBrokerOption            @default(OUR_BROKER)
+  proofReportedAt    DateTime?
+  adminFeedback      String?
   depositProof       Bytes?
   depositProofMime   String?
   depositProofName   String?
@@ -328,9 +189,139 @@ model PrivateRoomRequest {
   createdAt          DateTime                  @default(now())
   updatedAt          DateTime                  @updatedAt
   payments           ManualPayment[]
+  memberships        VipMembership[]
 
   @@index([status, createdAt])
   @@index([customerId, createdAt])
+}
+
+model TradingCustomerAccount {
+  id                    String          @id @default(cuid())
+  customerId            String          @unique
+  customer              TradingCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  username              String          @unique
+  email                 String          @unique
+  passwordHash          String
+  failedLoginCount      Int             @default(0)
+  lockedUntil           DateTime?
+  emailVerifiedAt       DateTime?
+  verificationTokenHash String?
+  verificationExpiresAt DateTime?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  @@index([emailVerifiedAt])
+}
+
+model VipMembership {
+  id             String                   @id @default(cuid())
+  customerId     String
+  customer       TradingCustomer           @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  applicationId  String                   @unique
+  application    PrivateRoomRequest       @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  brokerOption   VipBrokerOption
+  status         VipMembershipStatus      @default(ACTIVE)
+  startsAt       DateTime
+  expiresAt      DateTime
+  activatedById  String?
+  activatedBy    User?                    @relation("VipMembershipActivator", fields: [activatedById], references: [id], onDelete: SetNull)
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+  assignments    VipRoomAssignment[]
+
+  @@index([customerId, status, expiresAt])
+  @@index([status, expiresAt])
+}
+
+model VipRoom {
+  id          String             @id @default(cuid())
+  slug        String             @unique
+  name        String
+  description String             @default("")
+  category    String             @default("General")
+  coverImage  String             @default("")
+  isPublished Boolean            @default(false)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  assignments VipRoomAssignment[]
+  posts       VipRoomPost[]
+  transactions FinancialTransaction[]
+
+  @@index([isPublished, category])
+}
+
+model VipRoomAssignment {
+  id           String          @id @default(cuid())
+  customerId   String
+  customer     TradingCustomer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  membershipId String
+  membership   VipMembership   @relation(fields: [membershipId], references: [id], onDelete: Restrict)
+  roomId       String
+  room         VipRoom         @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  assignedAt   DateTime        @default(now())
+  revokedAt    DateTime?
+
+  @@unique([membershipId, roomId])
+  @@index([customerId, revokedAt])
+  @@index([roomId, revokedAt])
+}
+
+model VipRoomPost {
+  id          String              @id @default(cuid())
+  roomId      String
+  room        VipRoom             @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  title       String
+  body        String
+  isPinned    Boolean             @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  attachments VipRoomAttachment[]
+
+  @@index([roomId, publishedAt, isPinned])
+}
+
+model VipRoomAttachment {
+  id        String      @id @default(cuid())
+  postId    String
+  post      VipRoomPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  filename  String
+  mimeType  String
+  bytes     Bytes
+  createdAt DateTime    @default(now())
+
+  @@index([postId])
+}
+
+model VipNotification {
+  id         String          @id @default(cuid())
+  customerId String
+  customer   TradingCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  title      String
+  message    String
+  readAt     DateTime?
+  createdAt  DateTime        @default(now())
+
+  @@index([customerId, readAt, createdAt])
+}
+
+model VipPlatformSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model VipAuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action     String
+  subjectId  String?
+  details    Json?
+  createdAt  DateTime @default(now())
+
+  @@index([action, createdAt])
+  @@index([subjectId, createdAt])
 }
 
 model CopyTradingApplication {
@@ -346,6 +337,7 @@ model CopyTradingApplication {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   payments       ManualPayment[]
+  financialTransactions FinancialTransaction[]
 
   @@index([status, createdAt])
   @@index([customerId, createdAt])
@@ -356,6 +348,8 @@ model CoachingBooking {
   customerId       String
   customer         TradingCustomer       @relation(fields: [customerId], references: [id], onDelete: Restrict)
   package          CoachingPackage
+  meetingMode      CoachingMeetingMode @default(ONLINE)
+  meetingCity      String?
   status           CoachingBookingStatus @default(PENDING)
   priceDh          Int
   startDate        DateTime              @db.Date
@@ -444,4 +438,30 @@ model ManualPayment {
   @@index([customerId, createdAt])
   @@index([copyTradingApplicationId])
   @@index([service, status])
+}
+
+model FinancialTransaction {
+  id                       String                      @id @default(cuid())
+  customerId               String
+  customer                 TradingCustomer             @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  roomId                   String?
+  room                     VipRoom?                    @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  copyTradingApplicationId String?
+  copyTradingApplication   CopyTradingApplication?      @relation(fields: [copyTradingApplicationId], references: [id], onDelete: Restrict)
+  createdById              String?
+  createdBy                User?                       @relation("FinancialTransactionCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  reviewedById             String?
+  reviewedBy               User?                       @relation("FinancialTransactionReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  type                     FinancialTransactionType
+  amount                   Decimal                     @db.Decimal(12, 2)
+  currency                 String                      @default("USD")
+  status                   FinancialTransactionStatus @default(PENDING)
+  reference                String?                     @unique
+  notes                    String                      @default("")
+  createdAt                DateTime                    @default(now())
+  updatedAt                DateTime                    @updatedAt
+
+  @@index([type, status, createdAt])
+  @@index([customerId, type, createdAt])
+  @@index([roomId, type, createdAt])
 }

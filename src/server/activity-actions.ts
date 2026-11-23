@@ -1,9 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { getActivityTranslation, type Activity, type ActivityBookingExtra, type ActivityBookingRate, type ActivityImage } from "../activities";
 import { mergeLocalizedContent } from "../i18n";
-import { prisma } from "./prisma";
 import { getDashboardUser } from "./dashboard-auth";
 
 function record(value: unknown, label: string): Record<string, unknown> {
@@ -247,42 +245,16 @@ async function requireActivityAdmin() {
   if (!process.env.DATABASE_URL) throw new Error("Set DATABASE_URL before managing activities.");
 }
 
-function refreshActivityPages(oldSlug?: string, newSlug?: string) {
-  revalidatePath("/", "page");
-  revalidatePath("/activities", "page");
-  if (oldSlug) revalidatePath(`/activities/${oldSlug}`, "page");
-  if (newSlug) revalidatePath(`/activities/${newSlug}`, "page");
-}
-
 export async function saveManagedActivity(id: string | null, input: unknown, isActive: boolean) {
   await requireActivityAdmin();
   if (typeof isActive !== "boolean") throw new Error("Activity visibility is invalid.");
-  const activity = parseActivity(input);
-  const data = JSON.parse(JSON.stringify(activity));
-  const jsonData = data as Parameters<typeof prisma.activityCatalogItem.create>[0]["data"]["data"];
-
-  if (id) {
-    const current = await prisma.activityCatalogItem.findUnique({ where: { id }, select: { slug: true, sortOrder: true } });
-    if (!current) throw new Error("This activity no longer exists.");
-    await prisma.activityCatalogItem.update({
-      where: { id },
-      data: { slug: activity.slug, data: jsonData, isActive },
-    });
-    refreshActivityPages(current.slug, activity.slug);
-    return;
-  }
-
-  const last = await prisma.activityCatalogItem.findFirst({ orderBy: { sortOrder: "desc" }, select: { sortOrder: true } });
-  await prisma.activityCatalogItem.create({
-    data: { slug: activity.slug, data: jsonData, isActive, sortOrder: (last?.sortOrder ?? -1) + 1 },
-  });
-  refreshActivityPages(undefined, activity.slug);
+  parseActivity(input);
+  void id;
+  throw new Error("Activity editing is disabled. Update the static activity catalog instead.");
 }
 
 export async function deleteManagedActivity(id: string) {
   await requireActivityAdmin();
-  const current = await prisma.activityCatalogItem.findUnique({ where: { id }, select: { slug: true } });
-  if (!current) throw new Error("This activity no longer exists.");
-  await prisma.activityCatalogItem.delete({ where: { id } });
-  refreshActivityPages(current.slug);
+  void id;
+  throw new Error("Activity editing is disabled. Update the static activity catalog instead.");
 }

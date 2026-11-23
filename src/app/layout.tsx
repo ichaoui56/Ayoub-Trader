@@ -1,14 +1,25 @@
 import type { Metadata, Viewport } from "next";
 import "../index.css";
+import "../trading-app.css";
+import { LocaleProvider } from "../components/LocaleProvider";
+import BrokerSignupButton from "../components/BrokerSignupButton";
+import { getBrokerReferralUrl } from "../lib/utils/broker-referral";
 
 export const metadata: Metadata = {
-  title: "Freight / Forward — Every mile, considered.",
-  description:
-    "Freight / Forward. An independent cinematic logistics concept — one connected journey from origin to destination.",
+  title: { default: "Ayoub Trader | Trading education and services", template: "%s | Ayoub Trader" },
+  description: "Trading education, private community access, copy trading applications, and recurring one-to-one coaching from Ayoub Trader.",
+  applicationName: "Ayoub Trader",
+  openGraph: {
+    type: "website",
+    siteName: "Ayoub Trader",
+    title: "Ayoub Trader | Trading education and services",
+    description: "Trading education, private community access, copy trading applications, and recurring coaching.",
+  },
+  robots: { index: true, follow: true },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0d1a11",
+  themeColor: "#07120b",
 };
 
 export default function RootLayout({
@@ -17,17 +28,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-scroll-behavior="smooth">
+    <html lang="en">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://media.scrollhaus.ai" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,600;0,800;1,800&family=Public+Sans:wght@400;500;600&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Cairo:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <LocaleProvider initialLocale="en">
+          {children}
+          <BrokerSignupButton href={getBrokerReferralUrl()} />
+        </LocaleProvider>
+      </body>
     </html>
   );
 }

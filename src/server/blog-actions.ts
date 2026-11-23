@@ -1,11 +1,8 @@
 "use server";
 
-import { Prisma } from "@prisma/client";
-import { revalidatePath } from "next/cache";
 import { getBlogTranslation, type BlogPost } from "../blogs";
 import { mergeLocalizedContent } from "../i18n";
 import { getDashboardUser } from "./dashboard-auth";
-import { prisma } from "./prisma";
 
 function record(value: unknown, label: string): Record<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
@@ -111,57 +108,16 @@ async function requireBlogAdmin() {
   if (!process.env.DATABASE_URL) throw new Error("Set DATABASE_URL before managing blog posts.");
 }
 
-function revalidateBlogPages(oldSlug?: string, newSlug?: string) {
-  revalidatePath("/", "page");
-  revalidatePath("/blog", "page");
-  revalidatePath("/blogs", "page");
-  if (oldSlug) {
-    revalidatePath(`/blog/${oldSlug}`, "page");
-    revalidatePath(`/blogs/${oldSlug}`, "page");
-  }
-  if (newSlug) {
-    revalidatePath(`/blog/${newSlug}`, "page");
-    revalidatePath(`/blogs/${newSlug}`, "page");
-  }
-}
-
 export async function saveManagedBlogPost(id: string | null, value: unknown, isPublished: boolean) {
   await requireBlogAdmin();
   if (typeof isPublished !== "boolean") throw new Error("Publication status is invalid.");
-  const post = parseBlogPost(value);
-  const current = id
-    ? await prisma.blogCatalogItem.findUnique({ where: { id }, select: { slug: true } })
-    : null;
-  if (id && !current) throw new Error("This blog post no longer exists.");
-
-  const duplicate = await prisma.blogCatalogItem.findFirst({
-    where: { slug: post.slug, ...(id ? { id: { not: id } } : {}) },
-    select: { id: true },
-  });
-  if (duplicate) throw new Error("That URL slug is already in use.");
-
-  const data = JSON.parse(JSON.stringify(post)) as Prisma.InputJsonValue;
-  const publishedAt = new Date(`${post.publishedAt}T00:00:00.000Z`);
-  if (id) {
-    await prisma.blogCatalogItem.update({
-      where: { id },
-      data: { slug: post.slug, data, isPublished, publishedAt },
-    });
-    revalidateBlogPages(current?.slug, post.slug);
-    return;
-  }
-
-  const last = await prisma.blogCatalogItem.findFirst({ orderBy: { sortOrder: "desc" }, select: { sortOrder: true } });
-  await prisma.blogCatalogItem.create({
-    data: { slug: post.slug, data, isPublished, publishedAt, sortOrder: (last?.sortOrder ?? -1) + 1 },
-  });
-  revalidateBlogPages(undefined, post.slug);
+  parseBlogPost(value);
+  void id;
+  throw new Error("Blog editing is disabled. Update the static blog catalog instead.");
 }
 
 export async function deleteManagedBlogPost(id: string) {
   await requireBlogAdmin();
-  const current = await prisma.blogCatalogItem.findUnique({ where: { id }, select: { slug: true } });
-  if (!current) throw new Error("This blog post no longer exists.");
-  await prisma.blogCatalogItem.delete({ where: { id } });
-  revalidateBlogPages(current.slug);
+  void id;
+  throw new Error("Blog editing is disabled. Update the static blog catalog instead.");
 }

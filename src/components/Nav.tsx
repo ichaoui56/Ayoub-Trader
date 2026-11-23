@@ -64,7 +64,7 @@ export default function Nav() {
               {t("Coaching plans")} <span className="ml-3" aria-hidden="true">↗</span>
             </Link>
             <div className="site-language-switch" role="group" aria-label={t("Choose language")}>
-              {(["en", "fr"] as const).map((option) => (
+              {(["en", "fr", "ar"] as const).map((option) => (
                 <button key={option} type="button" aria-pressed={locale === option} onClick={() => setLocale(option)}>
                   {option.toUpperCase()}
                 </button>

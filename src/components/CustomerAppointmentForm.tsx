@@ -1,0 +1,12 @@
+"use client";
+
+import { useActionState, useState } from "react";
+import { ArrowRight, CalendarDays } from "lucide-react";
+import { COACHING_PLANS, EMPTY_TRADING_ACTION_STATE, type CoachingPlanCode } from "../trading";
+import { createCustomerCoachingBooking } from "../server/customer-actions";
+
+export default function CustomerAppointmentForm() {
+  const [mode, setMode] = useState("ONLINE");
+  const [state, action, pending] = useActionState(createCustomerCoachingBooking, EMPTY_TRADING_ACTION_STATE);
+  return <section className="client-section client-appointment-form"><div className="client-section-heading"><div><p className="client-eyebrow">BOOK A MONTH</p><h2>Request recurring sessions</h2></div><CalendarDays size={18} /></div><p className="client-muted">Choose a daily start time. Eligible weekdays or daily sessions for your selected plan will be reserved for one calendar month. Payment remains external and the booking remains pending review.</p><form action={action} className="client-booking-form"><label>Plan<select name="package" defaultValue="STARTER">{(Object.keys(COACHING_PLANS) as CoachingPlanCode[]).map((code) => <option value={code} key={code}>{COACHING_PLANS[code].name} · {COACHING_PLANS[code].priceDh.toLocaleString("en-US")} DH</option>)}</select></label><label>Starting date<input name="startDate" type="date" min={new Date().toISOString().slice(0, 10)} required /></label><label>Daily start time<input name="startTime" type="time" step="900" required /></label><label>Meeting format<select name="meetingMode" value={mode} onChange={(event) => setMode(event.target.value)}><option value="ONLINE">Online</option><option value="IN_PERSON">In person</option></select></label>{mode === "IN_PERSON" && <label>City<input name="meetingCity" maxLength={100} required placeholder="Your city" /></label>}<button className="dash-primary-button" type="submit" disabled={pending}>{pending ? "Requesting…" : "Request schedule"}<ArrowRight size={14} /></button></form>{state.message && <p className={`client-form-message ${state.success ? "is-success" : "is-error"}`} role={state.success ? "status" : "alert"}>{state.message}{state.reference && <span> Reference {state.reference}</span>}</p>}</section>;
+}

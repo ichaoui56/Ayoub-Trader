@@ -1,0 +1,90 @@
+import { Archive, Check, CirclePlus, FileText, Settings2 } from "lucide-react";
+import {
+  activateVipMembership,
+  archiveVipRoom,
+  assignVipRooms,
+  publishVipRoomPost,
+  reviewVipApplication,
+  saveVipRoom,
+  saveVipSettings,
+  updateVipMembership,
+} from "../server/vip-actions";
+import VipRoomCoverUpload from "./VipRoomCoverUpload";
+import DownloadPrivateRoomProof from "./DownloadPrivateRoomProof";
+
+type VipAdminData = Awaited<ReturnType<typeof import("../server/vip-admin-data").getVipAdminData>>;
+const fieldClass = "vip-field min-h-10 w-full px-3 text-xs outline-none";
+
+function dateLabel(date: Date) {
+  return new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(date);
+}
+
+function SectionTitle({ title, count }: { title: string; count?: number }) {
+  return <div className="mb-4 flex items-baseline justify-between gap-3 border-b border-ink/15 pb-3"><h3 className="font-display text-2xl font-extrabold uppercase">{title}</h3>{typeof count === "number" && <span className="text-[10px] text-ink/50">{count}</span>}</div>;
+}
+
+export default function VipManagement({ data }: { data: VipAdminData }) {
+  const now = new Date();
+  const pending = data.applications.filter((application) => ["SUBMITTED", "PROOF_REPORTED", "UNDER_REVIEW", "MORE_INFO_REQUIRED"].includes(application.status)).length;
+  const activeMemberships = data.memberships.filter((membership) => membership.status === "ACTIVE" && membership.expiresAt > now).length;
+  const activeMembers = data.memberships.filter((membership) => membership.status === "ACTIVE" && membership.expiresAt > now);
+  const settings = data.settings;
+  return <section id="vip-management" className="vip-management-platform scroll-mt-20 border-t-2 border-[#b8a46e] py-10">
+    <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-signal">VIP Private Rooms</p><h2 className="mt-1 font-display text-3xl font-extrabold uppercase">Membership operations</h2></div><div className="flex gap-5 text-xs"><span><strong>{data.customers.length}</strong> clients</span><span><strong>{pending}</strong> pending</span><span><strong>{activeMemberships}</strong> active</span><span><strong>{data.rooms.filter((room) => room.isPublished).length}</strong> rooms</span></div></div>
+
+    <section className="mt-8"><SectionTitle title="Applications" count={data.applications.length} />
+      <div className="space-y-3">{data.applications.map((application) => {
+        const payment = application.payments[0];
+        const canVerify = application.brokerOption === "OUR_BROKER"
+          ? Boolean(application.hasDepositProof || application.proofReportedAt)
+          : payment?.status === "VERIFIED";
+        return <article key={application.id} className="border border-ink/10 bg-white p-4 sm:p-5">
+          <div className="flex flex-wrap items-start justify-between gap-4"><div><p className="font-mono text-[10px] text-ink/45">{application.id} · {application.customer.clientId}</p><h4 className="mt-1 text-sm font-bold">{application.customer.name}<span className="ml-2 font-normal text-ink/50">{application.customer.phone}</span></h4><p className="mt-1 text-[10px] text-ink/55">{application.brokerOption === "OUR_BROKER" ? "Our Broker" : "Own Broker"} · submitted {dateLabel(application.createdAt)} · {application.status.replaceAll("_", " ")}</p></div><span className={`border px-2 py-1 text-[9px] font-bold uppercase ${application.status === "VIP_ACTIVE" ? "border-signal/25 bg-cloud text-signal" : "border-ink/15 text-ink/60"}`}>{application.status.replaceAll("_", " ")}</span></div>
+          <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-ink/10 pt-3 text-[10px] text-ink/55">{application.hasDepositProof ? <DownloadPrivateRoomProof id={application.id} /> : application.proofReportedAt ? <span>Client reported proof sent {dateLabel(application.proofReportedAt)}</span> : <span>No proof recorded</span>}{payment && <span>Payment {payment.currency} {payment.amount.toFixed(2)} · {payment.status}</span>}{application.depositVerifiedAt && <span>Verified {dateLabel(application.depositVerifiedAt)}</span>}
+          </div>
+          {!["VIP_ACTIVE", "REJECTED", "CANCELLED", "EXPIRED"].includes(application.status) && <div className="mt-4 grid gap-2 sm:grid-cols-[minmax(12rem,1fr)_auto_auto_auto]">
+            <form action={reviewVipApplication} className="contents"><input type="hidden" name="id" value={application.id} /><input className={fieldClass} name="feedback" maxLength={1000} placeholder="Optional client feedback" /><button className="min-h-10 bg-signal px-3 text-[10px] font-bold text-white disabled:opacity-40" name="decision" value="verify" disabled={!canVerify || application.status === "DEPOSIT_VERIFIED"}><Check size={13} className="mr-1 inline" />Verify</button><button className="min-h-10 border border-ink/15 px-3 text-[10px] font-bold" name="decision" value="more-info">Request info</button><button className="min-h-10 border border-red-800/20 px-3 text-[10px] font-bold text-red-800" name="decision" value="reject">Reject</button></form>
+          </div>}
+          {application.status === "DEPOSIT_VERIFIED" && <form action={activateVipMembership} className="mt-4"><input type="hidden" name="id" value={application.id} /><button className="min-h-10 bg-[#172019] px-4 text-xs font-bold text-white">Activate membership</button></form>}
+        </article>;
+      })}{!data.applications.length && <p className="border border-dashed border-ink/15 bg-white p-5 text-xs text-ink/50">No VIP applications.</p>}</div>
+    </section>
+
+    <section className="mt-10"><SectionTitle title="Rooms and publishing" count={data.rooms.length} />
+      <div className="grid gap-6 xl:grid-cols-2">
+        <form action={saveVipRoom} className="space-y-3 border border-ink/10 bg-white p-4 sm:p-5"><h4 className="inline-flex items-center gap-2 text-xs font-bold uppercase"><CirclePlus size={15} /> Create a room</h4><div className="grid gap-3 sm:grid-cols-2"><label className="text-[10px] font-bold">Room name<input className={`${fieldClass} mt-1`} name="name" maxLength={120} required /></label><label className="text-[10px] font-bold">URL slug<input className={`${fieldClass} mt-1`} name="slug" placeholder="market-analysis" maxLength={80} required /></label><label className="text-[10px] font-bold">Category<input className={`${fieldClass} mt-1`} name="category" defaultValue="General" maxLength={80} required /></label><label className="text-[10px] font-bold">Publish room<span className="mt-2 flex items-center gap-2"><input type="checkbox" name="isPublished" defaultChecked /> Available for assignment</span></label></div><label className="block text-[10px] font-bold">Description<textarea className={`${fieldClass} mt-1 py-2`} name="description" rows={3} maxLength={1000} /></label><VipRoomCoverUpload /><button className="min-h-10 bg-ink px-4 text-xs font-bold text-white">Create room</button></form>
+
+        <form action={publishVipRoomPost} className="space-y-3 border border-ink/10 bg-white p-4 sm:p-5"><h4 className="inline-flex items-center gap-2 text-xs font-bold uppercase"><FileText size={15} /> Publish room content</h4><label className="block text-[10px] font-bold">Published room<select className={`${fieldClass} mt-1`} name="roomId" required defaultValue=""><option value="" disabled>Select a room</option>{data.rooms.filter((room) => room.isPublished).map((room) => <option key={room.id} value={room.id}>{room.name}</option>)}</select></label><label className="block text-[10px] font-bold">Title<input className={`${fieldClass} mt-1`} name="title" maxLength={180} required /></label><label className="block text-[10px] font-bold">Analysis / announcement<textarea className={`${fieldClass} mt-1 py-2`} name="body" rows={6} maxLength={20000} required /></label><div className="flex flex-wrap gap-5 text-[10px] font-semibold"><label className="inline-flex items-center gap-2"><input type="checkbox" name="isPinned" /> Pin post</label><label className="inline-flex items-center gap-2"><input type="checkbox" name="publish" defaultChecked /> Publish now</label></div><button className="min-h-10 bg-ink px-4 text-xs font-bold text-white">Save post</button></form>
+        <form action={publishVipRoomPost} className="space-y-3 border border-ink/10 bg-white p-4 sm:p-5"><h4 className="inline-flex items-center gap-2 text-xs font-bold uppercase"><FileText size={15} /> Publish room content</h4><label className="block text-[10px] font-bold">Published room<select className={`${fieldClass} mt-1`} name="roomId" required defaultValue=""><option value="" disabled>Select a room</option>{data.rooms.filter((room) => room.isPublished).map((room) => <option key={room.id} value={room.id}>{room.name}</option>)}</select></label><label className="block text-[10px] font-bold">Title<input className={`${fieldClass} mt-1`} name="title" maxLength={180} required /></label><label className="block text-[10px] font-bold">Analysis / announcement<textarea className={`${fieldClass} mt-1 py-2`} name="body" rows={6} maxLength={20000} required /></label><label className="block text-[10px] font-bold">Images or PDF attachments<input className={`${fieldClass} mt-1 py-2 file:mr-3 file:border-0 file:bg-ink file:px-3 file:py-2 file:text-[10px] file:font-bold file:text-white`} type="file" name="attachments" accept="image/jpeg,image/png,image/webp,application/pdf" multiple /><span className="mt-1 block font-normal text-ink/50">Up to five files · 5 MB combined · stored privately with this post</span></label><div className="flex flex-wrap gap-5 text-[10px] font-semibold"><label className="inline-flex items-center gap-2"><input type="checkbox" name="isPinned" /> Pin post</label><label className="inline-flex items-center gap-2"><input type="checkbox" name="publish" defaultChecked /> Publish now</label></div><button className="min-h-10 bg-ink px-4 text-xs font-bold text-white">Save post</button></form>
+      </div>
+      <div className="mt-4 space-y-3">{data.rooms.map((room) => <article key={room.id} className="border border-ink/10 bg-white p-4">
+        <form action={saveVipRoom} className="grid gap-3 lg:grid-cols-[1fr_1fr_0.8fr_1fr_auto] lg:items-end"><input type="hidden" name="id" value={room.id} /><label className="text-[10px] font-bold">Name<input className={`${fieldClass} mt-1`} name="name" defaultValue={room.name} maxLength={120} required /></label><label className="text-[10px] font-bold">Slug<input className={`${fieldClass} mt-1`} name="slug" defaultValue={room.slug} maxLength={80} required /></label><label className="text-[10px] font-bold">Category<input className={`${fieldClass} mt-1`} name="category" defaultValue={room.category} maxLength={80} required /></label><label className="text-[10px] font-bold">Visibility<span className="mt-2 flex items-center gap-2"><input type="checkbox" name="isPublished" defaultChecked={room.isPublished} /> Published</span></label><button className="min-h-10 bg-ink px-3 text-[10px] font-bold text-white">Save room</button><label className="text-[10px] font-bold lg:col-span-3">Description<textarea className={`${fieldClass} mt-1 py-2`} name="description" defaultValue={room.description} rows={2} maxLength={1000} /></label><div className="lg:col-span-2"><VipRoomCoverUpload key={`${room.id}-${room.coverImage}`} initialImage={room.coverImage} /></div></form>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-ink/10 pt-3"><span className="text-[10px] text-ink/50">{room._count.assignments} assignments · {room._count.posts} published posts</span><form action={archiveVipRoom}><input type="hidden" name="id" value={room.id} /><button className="inline-flex min-h-9 items-center gap-2 text-[10px] font-bold text-red-800" disabled={!room.isPublished}><Archive size={13} />Archive room</button></form></div>
+      </article>)}</div>
+    </section>
+
+    <section className="mt-10"><SectionTitle title="Room assignments" count={activeMembers.length} />
+      <div className="space-y-3">{activeMembers.map((membership) => <form key={membership.id} action={assignVipRooms} className="flex flex-wrap items-start justify-between gap-4 border border-ink/10 bg-white p-4 sm:p-5"><input type="hidden" name="membershipId" value={membership.id} /><div className="min-w-52"><p className="text-xs font-bold">{membership.customer.name} <span className="ml-1 font-mono text-[9px] text-ink/50">{membership.customer.clientId}</span></p><p className="mt-1 text-[10px] text-ink/55">Expires {dateLabel(membership.expiresAt)} · {membership.brokerOption === "OWN_BROKER" ? "Own Broker" : "Our Broker"}</p></div><fieldset className="flex min-w-0 flex-1 flex-wrap gap-x-4 gap-y-2"><legend className="sr-only">Assigned VIP rooms</legend>{data.rooms.filter((room) => room.isPublished).map((room) => <label key={room.id} className="inline-flex items-center gap-2 text-[10px] font-semibold"><input type="checkbox" name="roomIds" value={room.id} defaultChecked={membership.assignments.some((assignment) => assignment.roomId === room.id)} />{room.name}</label>)}</fieldset><button className="min-h-9 bg-ink px-3 text-[10px] font-bold text-white">Save assignment</button></form>)}{!activeMembers.length && <p className="border border-dashed border-ink/15 bg-white p-5 text-xs text-ink/50">Activate a membership before assigning rooms.</p>}</div>
+    </section>
+
+    <section className="mt-10"><SectionTitle title="Membership controls" count={data.memberships.length} />
+      <div className="divide-y divide-ink/10 border-y border-ink/10 bg-white">{data.memberships.map((membership) => <div key={membership.id} className="flex flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-5"><div><p className="text-xs font-bold">{membership.customer.name} · {membership.customer.clientId}</p><p className="mt-1 text-[10px] text-ink/55">{membership.status} · expires {dateLabel(membership.expiresAt)}</p></div><div className="flex flex-wrap items-center gap-2">{membership.status === "ACTIVE" && <form action={updateVipMembership}><input type="hidden" name="id" value={membership.id} /><button className="min-h-9 border border-ink/15 px-3 text-[10px] font-bold" name="decision" value="suspend">Suspend</button></form>}{membership.status === "SUSPENDED" && <form action={updateVipMembership}><input type="hidden" name="id" value={membership.id} /><button className="min-h-9 border border-ink/15 px-3 text-[10px] font-bold" name="decision" value="reactivate">Reactivate</button></form>}<form action={updateVipMembership} className="flex items-center gap-1"><input type="hidden" name="id" value={membership.id} /><label className="sr-only" htmlFor={`extend-${membership.id}`}>Months to extend</label><input id={`extend-${membership.id}`} className="min-h-9 w-14 border border-ink/15 px-2 text-xs" type="number" name="months" min="1" max="12" defaultValue="2" /><button className="min-h-9 bg-ink px-3 text-[10px] font-bold text-white" name="decision" value="extend">Extend</button></form></div></div>)}</div>
+    </section>
+
+    <section className="mt-10"><SectionTitle title="VIP settings" />
+      <form action={saveVipSettings} className="grid gap-4 border border-ink/10 bg-white p-4 sm:grid-cols-2 sm:p-6">
+        <label className="text-[10px] font-bold">Broker name<input className={`${fieldClass} mt-1`} name="brokerName" defaultValue={settings.brokerName ?? "Ayoub Trader Broker"} required /></label>
+        <label className="text-[10px] font-bold">Broker logo HTTPS URL<input className={`${fieldClass} mt-1`} name="brokerLogo" defaultValue={settings.brokerLogo ?? ""} /></label>
+        <label className="text-[10px] font-bold">Referral URL<input className={`${fieldClass} mt-1`} name="brokerReferralUrl" defaultValue={settings.brokerReferralUrl ?? process.env.AYOUB_BROKER_REFERRAL_URL ?? ""} /></label>
+        <label className="text-[10px] font-bold">WhatsApp number<input className={`${fieldClass} mt-1`} name="whatsappNumber" defaultValue={settings.whatsappNumber ?? process.env.AYOUB_WHATSAPP_NUMBER ?? ""} required /></label>
+        <label className="text-[10px] font-bold">Broker deposit requirements<textarea className={`${fieldClass} mt-1 py-2`} name="depositRequirements" defaultValue={settings.depositRequirements ?? "Complete the broker deposit required for VIP eligibility."} rows={3} required /></label>
+        <label className="text-[10px] font-bold">Own Broker payment instructions<textarea className={`${fieldClass} mt-1 py-2`} name="ownBrokerPaymentInstructions" defaultValue={settings.ownBrokerPaymentInstructions ?? ""} rows={3} required /></label>
+        <label className="text-[10px] font-bold">Own Broker price<input className={`${fieldClass} mt-1`} name="ownBrokerPrice" type="number" min="0.01" max="10000" step="0.01" defaultValue={settings.ownBrokerPrice ?? "80"} required /></label>
+        <label className="text-[10px] font-bold">Currency code<input className={`${fieldClass} mt-1`} name="ownBrokerCurrency" defaultValue={settings.ownBrokerCurrency ?? "USD"} maxLength={3} required /></label>
+        <label className="text-[10px] font-bold">Duration in calendar months<input className={`${fieldClass} mt-1`} name="membershipDurationMonths" type="number" min="2" max="12" defaultValue={settings.membershipDurationMonths ?? "2"} required /><span className="mt-1 block font-normal text-ink/50">Minimum two months; applied from activation.</span></label>
+        <label className="text-[10px] font-bold">Support email<input className={`${fieldClass} mt-1`} name="supportEmail" type="email" defaultValue={settings.supportEmail ?? ""} /></label>
+        <button className="inline-flex min-h-11 items-center justify-center gap-2 bg-ink px-5 text-xs font-bold text-white sm:col-span-2 sm:justify-self-start"><Settings2 size={15} /> Save VIP settings</button>
+      </form>
+    </section>
+  </section>;
+}

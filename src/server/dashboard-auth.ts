@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { prisma } from "./prisma";
 
 const sessionCookie = "morocco-transfer-admin";
+const sessionDuration = 60 * 60 * 8;
 
 function safeEqual(first: string, second: string) {
   const firstBuffer = Buffer.from(first);
@@ -39,7 +40,7 @@ export async function getDashboardUser(request?: Request) {
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, username: true, role: true, isActive: true },
+      select: { id: true, username: true, email: true, role: true, isActive: true },
     });
     if (user?.isActive) return user;
   }
@@ -53,4 +54,25 @@ export async function getActiveAdmin(request?: Request) {
 
 export function getDashboardSessionSignature(userId: string, expiresAt: string) {
   return sessionSignature(userId, expiresAt);
+}
+
+export async function setDashboardSession(userId: string) {
+  const expiresAt = String(Math.floor(Date.now() / 1000) + sessionDuration);
+  (await cookies()).set(sessionCookie, `${userId}.${expiresAt}.${sessionSignature(userId, expiresAt)}`, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    path: "/",
+    maxAge: sessionDuration,
+  });
+}
+
+export async function clearDashboardSession() {
+  (await cookies()).set(sessionCookie, "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    path: "/",
+    maxAge: 0,
+  });
 }

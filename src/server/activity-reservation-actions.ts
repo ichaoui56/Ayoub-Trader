@@ -1,11 +1,8 @@
 "use server";
 
-import { Prisma, type ActivityReservationStatus } from "@prisma/client";
-import { revalidatePath } from "next/cache";
+import type { ActivityReservationStatus } from "@prisma/client";
 import { getPublicActivityCatalog } from "./activity-catalog";
 import { getDashboardUser } from "./dashboard-auth";
-import { prisma } from "./prisma";
-import { sendActivityReservationNotification } from "./reservation-email";
 
 function record(value: unknown, label: string): Record<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
@@ -163,55 +160,15 @@ export async function submitActivityReservation(value: unknown) {
     };
   });
 
-  const occupiedSlot = await prisma.confirmedActivitySlot.findFirst({
-    where: {
-      OR: lines.map((line) => ({
-        activitySlug: line.activitySlug,
-        date: line.date,
-        time: line.time,
-      })),
-    },
-    select: { id: true },
-  });
-  if (occupiedSlot) {
-    throw new Error("That activity time has just been confirmed and is no longer available. Refresh and choose another time.");
-  }
-
-  const reservation = await prisma.activityReservation.create({
-    data: {
-      customerName,
-      customerPhone,
-      customerEmail: customerEmail || null,
-      hotelAddress: hotelAddress || null,
-      notes: notes || null,
-      estimatedTotal,
-      priceNeedsConfirmation,
-      lines: {
-        create: lines.map((line) => ({
-          ...line,
-          extras: line.extras as Prisma.InputJsonValue,
-        })),
-      },
-    },
-    select: { id: true, currency: true, createdAt: true },
-  });
-
-  await sendActivityReservationNotification({
-    id: reservation.id,
-    customerName,
-    customerPhone,
-    customerEmail: customerEmail || null,
-    hotelAddress: hotelAddress || null,
-    notes: notes || null,
-    estimatedTotal,
-    currency: reservation.currency,
-    priceNeedsConfirmation,
-    createdAt: reservation.createdAt,
-    lines,
-  });
-
-  revalidatePath("/dashboard/activity-reservations");
-  return { id: reservation.id };
+  void customerName;
+  void customerPhone;
+  void customerEmail;
+  void hotelAddress;
+  void notes;
+  void estimatedTotal;
+  void priceNeedsConfirmation;
+  void lines;
+  throw new Error("Activity reservations are unavailable because their database tables were removed. Please contact support.");
 }
 
 export async function updateActivityReservationStatus(
@@ -222,55 +179,6 @@ export async function updateActivityReservationStatus(
   if (!id || id.length > 40 || !["NEW", "CONFIRMED", "COMPLETED", "CANCELLED"].includes(status)) {
     throw new Error("The reservation update is invalid.");
   }
-
-  try {
-    await prisma.$transaction(async (transaction) => {
-      const reservation = await transaction.activityReservation.findUnique({
-        where: { id },
-        include: { lines: true },
-      });
-      if (!reservation) throw new Error("This activity reservation no longer exists.");
-
-      if (status === "CONFIRMED" || status === "COMPLETED") {
-        for (const line of reservation.lines) {
-          const slot = await transaction.confirmedActivitySlot.findUnique({
-            where: {
-              activitySlug_date_time: {
-                activitySlug: line.activitySlug,
-                date: line.date,
-                time: line.time,
-              },
-            },
-          });
-          if (slot && slot.reservationLineId !== line.id) {
-            throw new Error(`The ${line.time} time for ${line.activityTitle} is already confirmed.`);
-          }
-          if (!slot) {
-            await transaction.confirmedActivitySlot.create({
-              data: {
-                activitySlug: line.activitySlug,
-                date: line.date,
-                time: line.time,
-                reservationLineId: line.id,
-              },
-            });
-          }
-        }
-      } else {
-        await transaction.confirmedActivitySlot.deleteMany({
-          where: { reservationLineId: { in: reservation.lines.map((line) => line.id) } },
-        });
-      }
-
-      await transaction.activityReservation.update({ where: { id }, data: { status } });
-    });
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      throw new Error("That activity time was just confirmed by another request. Refresh and choose a different time.");
-    }
-    throw error;
-  }
-
-  revalidatePath("/dashboard/activity-reservations");
-  revalidatePath("/activities");
+  void id;
+  throw new Error("Activity reservations are unavailable because their database tables were removed.");
 }

@@ -1,6 +1,6 @@
 import type { Locale } from "./i18n";
 
-export type LocalizedText = Record<Locale, string>;
+export type LocalizedText = Partial<Record<Locale, string>> & { en: string; fr: string };
 
 export type ConciergeValue = {
   title: LocalizedText;
@@ -91,6 +91,7 @@ function localized(value: unknown, fallback: LocalizedText): LocalizedText {
   return {
     en: typeof input.en === "string" ? input.en : fallback.en,
     fr: typeof input.fr === "string" ? input.fr : fallback.fr,
+    ar: typeof input.ar === "string" ? input.ar : fallback.ar,
   };
 }
 

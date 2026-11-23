@@ -17,7 +17,13 @@ export function LocaleProvider({ children, initialLocale }: { children: ReactNod
   const [locale, setCurrentLocale] = useState(initialLocale);
 
   useEffect(() => {
+    const saved = document.cookie.split(";").map((item) => item.trim()).find((item) => item.startsWith("morocco-locale="))?.split("=")[1];
+    if (saved === "fr" || saved === "ar" || saved === "en") setCurrentLocale(saved);
+  }, []);
+
+  useEffect(() => {
     document.documentElement.lang = locale;
+    document.documentElement.dir = locale === "ar" ? "rtl" : "ltr";
   }, [locale]);
 
   function setLocale(nextLocale: Locale) {

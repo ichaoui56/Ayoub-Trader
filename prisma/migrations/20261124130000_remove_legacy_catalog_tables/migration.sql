@@ -1,0 +1,13 @@
+DROP TABLE IF EXISTS "TransferRequest";
+DROP TABLE IF EXISTS "ConfirmedActivitySlot";
+DROP TABLE IF EXISTS "ActivityReservationLine";
+DROP TABLE IF EXISTS "ActivityReservation";
+DROP TABLE IF EXISTS "TransferRoute";
+DROP TABLE IF EXISTS "PrivateTransferService";
+DROP TABLE IF EXISTS "TransferLocation";
+DROP TABLE IF EXISTS "TransferSetting";
+DROP TABLE IF EXISTS "ActivityCatalogItem";
+DROP TABLE IF EXISTS "ActivitySetting";
+DROP TABLE IF EXISTS "BlogCatalogItem";
+DROP TABLE IF EXISTS "BlogSetting";
+DROP TABLE IF EXISTS "ConciergeSetting";

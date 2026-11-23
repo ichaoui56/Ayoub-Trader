@@ -6,33 +6,36 @@ import { CHAPTERS, MEDIA } from "../content";
 import { clamp, usePrefersReducedMotion, useScrollFilm, windowOpacity } from "../hooks";
 import Chapter from "./Chapter";
 import { translate, type Locale } from "../i18n";
+import { useLocale } from "./LocaleProvider";
 
 function HeroCopy({ opacity = 1 }: { opacity?: number }) {
+  const { t } = useLocale();
   return (
     <div
       className="hero-copy absolute inset-x-5 top-[54%] text-paper md:left-[7vw] md:right-auto"
       style={{ opacity, transform: `translateY(calc(-50% + ${(1 - opacity) * -20}px))` }}
     >
       <p className="mb-4 flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.22em] text-paper/90 md:mb-6">
-        <span className="h-px w-7 bg-signal" /> Trading education
+        <span className="h-px w-7 bg-signal" /> {t("Trading education")}
       </p>
       <h2 className="hero-title font-display font-extrabold uppercase">
-        <span className="block whitespace-nowrap">Build skill.</span>
-        <span className="block whitespace-nowrap text-signal">Trade with</span>
-        <span className="block whitespace-nowrap">a clear plan.</span>
-        <span className="block whitespace-nowrap text-signal">Stay disciplined.</span>
+        <span className="block whitespace-nowrap">{t("Build skill.")}</span>
+        <span className="block whitespace-nowrap text-signal">{t("Trade with")}</span>
+        <span className="block whitespace-nowrap">{t("a clear plan.")}</span>
+        <span className="block whitespace-nowrap text-signal">{t("Stay disciplined.")}</span>
       </h2>
       <p className="mt-5 max-w-md text-sm leading-relaxed text-paper/90 [text-shadow:0_1px_8px_rgb(0_0_0/35%)] md:mt-7 md:text-base">
-        Coaching, private community access, and broker-authorized copy trading. Every application is reviewed before access is activated.
+        {t("Coaching, private community access, and broker-authorized copy trading. Every application is reviewed before access is activated.")}
       </p>
       <Link href="/coaching" className="mt-6 inline-flex items-center gap-5 bg-signal px-5 py-3 text-[11px] font-bold uppercase tracking-wide text-paper transition-colors hover:bg-paper hover:text-ink md:mt-8">
-        Explore coaching <span aria-hidden="true">↓</span>
+        {t("Explore coaching")} <span aria-hidden="true">↓</span>
       </Link>
     </div>
   );
 }
 
 export default function ScrollFilm({ locale }: { locale: Locale }) {
+  const { t } = useLocale();
   const reduced = usePrefersReducedMotion();
   const runway = useRef<HTMLElement>(null);
   const video = useRef<HTMLVideoElement>(null);
@@ -101,7 +104,7 @@ export default function ScrollFilm({ locale }: { locale: Locale }) {
           </div>
         )}
         {loadError && (
-          <p className="absolute bottom-5 right-5 z-20 text-xs text-paper/80">Film unavailable; showing Ayoub Trader mark</p>
+          <p className="absolute bottom-5 right-5 z-20 text-xs text-paper/80">{t("Film unavailable; showing Ayoub Trader mark")}</p>
         )}
         <div className="absolute inset-0 bg-gradient-to-r from-ink/80 via-ink/20 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-ink/35 via-transparent to-ink/20" />
@@ -121,10 +124,10 @@ export default function ScrollFilm({ locale }: { locale: Locale }) {
         })}
 
         <div className="hero-scroll-hint absolute bottom-6 left-5 flex items-center gap-3 text-xs text-paper/80 md:left-[6vw]" style={{ opacity: clamp((0.06 - p) / 0.03) }}>
-          <span className="block h-px w-10 bg-signal" /> Scroll to explore
+          <span className="block h-px w-10 bg-signal" /> {t("Scroll to explore")}
         </div>
         <p className="absolute bottom-6 right-5 hidden text-right text-xs text-paper/70 md:block md:right-[4vw]">
-          Ayoub Trader.<br />Trade with discipline.
+          Ayoub Trader.<br />{t("Trade with discipline.")}
         </p>
 
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-cloud" style={{ opacity: clamp((p - 0.82) / 0.18) }} />

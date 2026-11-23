@@ -1,9 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { getDashboardUser } from "./dashboard-auth";
-import { prisma } from "./prisma";
-import { siteSeoSettingKey } from "./site-seo";
 import type { SiteSeoSettings } from "../seo";
 
 function record(value: unknown): Record<string, unknown> {
@@ -114,16 +111,6 @@ function parseSettings(value: unknown): SiteSeoSettings {
 export async function saveSiteSeoSettings(value: unknown) {
   const user = await getDashboardUser();
   if (!user || user.role !== "ADMIN") throw new Error("Only an administrator can manage website SEO settings.");
-  if (!process.env.DATABASE_URL) throw new Error("Set DATABASE_URL before managing website SEO settings.");
-  const settings = parseSettings(value);
-  await prisma.transferSetting.upsert({
-    where: { key: siteSeoSettingKey },
-    create: { key: siteSeoSettingKey, value: JSON.stringify(settings) },
-    update: { value: JSON.stringify(settings) },
-  });
-  revalidatePath("/", "layout");
-  revalidatePath("/sitemap.xml");
-  revalidatePath("/robots.txt");
-  revalidatePath("/dashboard/seo");
-  return { ok: true as const };
+  parseSettings(value);
+  throw new Error("SEO settings are static. Update the defaults in src/seo.ts.");
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
+import { useLocale } from "./LocaleProvider";
 
 const services = [
   {
@@ -39,6 +40,7 @@ const services = [
 ];
 
 export default function TradingServicesSection() {
+  const { t } = useLocale();
   const section = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -198,11 +200,11 @@ export default function TradingServicesSection() {
       <div className="relative mx-auto max-w-[1440px]">
         <div className="flex flex-wrap items-end justify-between gap-8 border-b border-ink/15 pb-8 md:pb-10">
           <div>
-            <p className="flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.2em] text-[#079653]"><span className="h-px w-8 bg-[#079653]" /> Ways to work together</p>
-            <h2 className="mt-5 max-w-3xl font-display text-5xl font-extrabold uppercase leading-[0.88] text-[#062D30] sm:text-6xl md:text-7xl">One market.<br /><span className="text-[#079653]">Three paths.</span></h2>
+            <p className="flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.2em] text-[#079653]"><span className="h-px w-8 bg-[#079653]" /> {t("Ways to work together")}</p>
+            <h2 className="mt-5 max-w-3xl font-display text-5xl font-extrabold uppercase leading-[0.88] text-[#062D30] sm:text-6xl md:text-7xl">{t("One market.")}<br /><span className="text-[#079653]">{t("Three paths.")}</span></h2>
             <div aria-hidden="true" className="mt-4 h-[3px] w-24 rounded-full bg-gradient-to-r from-[#079653] to-[#10B981]" />
           </div>
-          <div className=" p-5 bg-white rounded-xl"><p className="mb-1 max-w-md border-l-2 border-[#079653] pl-5 text-sm leading-6 text-[#718078] md:text-base">Choose the support that fits your goals. Account access and service activation are always reviewed manually.</p></div>
+          <div className=" p-5 bg-white rounded-xl"><p className="mb-1 max-w-md border-l-2 border-[#079653] pl-5 text-sm leading-6 text-[#718078] md:text-base">{t("Choose the support that fits your goals. Account access and service activation are always reviewed manually.")}</p></div>
         </div>
 
         <div className="mt-8 grid gap-4 md:mt-10 md:grid-cols-2 xl:grid-cols-3" style={{ perspective: "1200px" }}>
@@ -222,13 +224,13 @@ export default function TradingServicesSection() {
                 />
                 <div className="relative z-10 flex items-center gap-3">
                   <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-[#079653] font-display text-sm font-bold text-white shadow-[0_5px_12px_rgb(7_150_83/20%)]">{service.n}</span>
-                  <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-[#718078]">{service.category}</span>
+                  <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-[#718078]">{t(service.category)}</span>
                   <span aria-hidden="true" className="h-px w-8 bg-[#079653]/30" />
                 </div>
                 <div className="relative z-10 mt-5 grid grid-cols-[minmax(0,1fr)_minmax(112px,0.8fr)] items-center gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(144px,0.8fr)] sm:gap-4">
                   <div className="min-w-0">
-                    <h3 className="font-display text-2xl font-extrabold uppercase leading-[0.95] text-[#062D30] sm:text-3xl">{service.name}</h3>
-                    <p className="mt-3 text-[13px] leading-5 text-[#718078]">{service.description}</p>
+                    <h3 className="font-display text-2xl font-extrabold uppercase leading-[0.95] text-[#062D30] sm:text-3xl">{t(service.name)}</h3>
+                    <p className="mt-3 text-[13px] leading-5 text-[#718078]">{t(service.description)}</p>
                   </div>
                   <div data-card-art aria-hidden="true" className="relative mx-auto aspect-square w-full max-w-[190px]">
                     <span className="absolute left-1/2 top-1/2 aspect-square w-[82%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#079653]/20 bg-gradient-to-br from-white via-[#E6F5ED] to-[#D4F1E1] shadow-[inset_0_2px_12px_rgb(255_255_255/80%),0_10px_28px_rgb(7_150_83/12%)]" />
@@ -247,13 +249,13 @@ export default function TradingServicesSection() {
                   {service.benefits.map((benefit) => (
                     <li key={benefit} className="flex items-center gap-2.5">
                       <span aria-hidden="true" className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-[#079653] text-[10px] font-bold leading-none text-white">✓</span>
-                      {benefit}
+                      {t(benefit)}
                     </li>
                   ))}
                 </ul>
                 <div className="relative z-10 mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-[#062D30]/10 pt-4">
                   <span className="inline-flex min-h-10 items-center rounded-full bg-[#062D30] px-4 font-display text-base font-bold text-white sm:text-lg">{service.detail}</span>
-                  <span className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.12em] text-[#42574D] transition-colors duration-300 group-hover:text-[#079653] group-focus-visible:text-[#079653]">Explore <span aria-hidden="true" className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#E6F5ED] text-sm text-[#062D30] transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-0.5 group-hover:bg-[#10B981] group-hover:text-white motion-reduce:transition-none">↗</span></span>
+                  <span className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.12em] text-[#42574D] transition-colors duration-300 group-hover:text-[#079653] group-focus-visible:text-[#079653]">{t("Explore")} <span aria-hidden="true" className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#E6F5ED] text-sm text-[#062D30] transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-0.5 group-hover:bg-[#10B981] group-hover:text-white motion-reduce:transition-none">↗</span></span>
                 </div>
               </Link>
             </div>

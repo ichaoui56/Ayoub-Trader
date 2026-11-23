@@ -1,10 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { Prisma } from "@prisma/client";
 import { getDashboardUser } from "./dashboard-auth";
-import { prisma } from "./prisma";
-import { conciergeSettingId } from "./concierge";
 import type { ConciergeSectionSettings, LocalizedText } from "../concierge";
 
 function object(value: unknown, label: string): Record<string, unknown> {
@@ -25,6 +21,7 @@ function localized(value: unknown, label: string, maxLength: number): LocalizedT
   return {
     en: text(input.en, `${label} (English)`, maxLength),
     fr: text(input.fr, `${label} (French)`, maxLength),
+    ar: typeof input.ar === "string" ? text(input.ar, `${label} (Arabic)`, maxLength, false) : "",
   };
 }
 
@@ -89,14 +86,6 @@ function parseSettings(value: unknown): ConciergeSectionSettings {
 export async function saveConciergeSettings(value: unknown) {
   const user = await getDashboardUser();
   if (!user || user.role !== "ADMIN") throw new Error("Only an administrator can manage the Concierge section.");
-  if (!process.env.DATABASE_URL) throw new Error("Set DATABASE_URL before managing the Concierge section.");
-  const settings = parseSettings(value);
-  await prisma.conciergeSetting.upsert({
-    where: { id: conciergeSettingId },
-    create: { id: conciergeSettingId, data: settings as Prisma.InputJsonValue },
-    update: { data: settings as Prisma.InputJsonValue },
-  });
-  revalidatePath("/");
-  revalidatePath("/dashboard/concierge");
-  return { ok: true as const };
+  parseSettings(value);
+  throw new Error("Concierge settings are static. Update the defaults in src/concierge.ts.");
 }

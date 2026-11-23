@@ -1,16 +1,6 @@
 import "server-only";
 
 import { cache } from "react";
-import { normalizeConciergeSettings, getDefaultConciergeSettings, type ConciergeSectionSettings } from "../concierge";
-import { prisma } from "./prisma";
+import { getDefaultConciergeSettings, type ConciergeSectionSettings } from "../concierge";
 
-const conciergeSettingId = "homepage";
-
-export const getConciergeSettings = cache(async (): Promise<ConciergeSectionSettings> => {
-  const defaults = getDefaultConciergeSettings();
-  if (!process.env.DATABASE_URL) return defaults;
-  const row = await prisma.conciergeSetting.findUnique({ where: { id: conciergeSettingId } });
-  return row ? normalizeConciergeSettings(row.data) : defaults;
-});
-
-export { conciergeSettingId };
+export const getConciergeSettings = cache(async (): Promise<ConciergeSectionSettings> => getDefaultConciergeSettings());

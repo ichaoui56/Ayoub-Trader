@@ -14,6 +14,8 @@ import { signOutTransferDashboard } from "../server/transfer-actions";
 import type { TradingDashboardData } from "../server/trading-data";
 import { minuteToTime } from "../trading";
 import CoachingAvailabilityForm from "./CoachingAvailabilityForm";
+import VipManagement from "./VipManagement";
+import DownloadPrivateRoomProof from "./DownloadPrivateRoomProof";
 
 function dateLabel(value: string) {
   return new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(`${value}T00:00:00.000Z`));
@@ -44,10 +46,12 @@ function SectionHeading({ id, index, title, count }: { id: string; index: string
 
 export default function TradingDashboard({
   data,
+  vipData,
   username,
   authorizationConfigured,
 }: {
   data: TradingDashboardData;
+  vipData: Awaited<ReturnType<typeof import("../server/vip-admin-data").getVipAdminData>>;
   username: string;
   authorizationConfigured: boolean;
 }) {
@@ -64,7 +68,7 @@ export default function TradingDashboard({
 
       <div className="sticky top-0 z-30 border-b border-ink/10 bg-white/95 backdrop-blur">
         <nav aria-label="Dashboard modules" className="mx-auto flex max-w-[1600px] gap-5 overflow-x-auto px-5 py-3 text-xs font-bold whitespace-nowrap md:px-8">
-          {["customers", "private-rooms", "copy-trading", "coaching", "reservations", "availability", "payments"].map((id) => <a key={id} href={`#${id}`} className="capitalize text-ink/60 transition-colors hover:text-signal">{id.replaceAll("-", " ")}</a>)}
+          {["customers", "private-rooms", "vip-management", "copy-trading", "coaching", "reservations", "availability", "payments"].map((id) => <a key={id} href={`#${id}`} className="capitalize text-ink/60 transition-colors hover:text-signal">{id.replaceAll("-", " ")}</a>)}
         </nav>
       </div>
 
@@ -93,7 +97,7 @@ export default function TradingDashboard({
             return <tr key={request.id}>
               <td className="py-4 pr-4"><strong className="block">{request.customer.name}</strong><span className="mt-1 block text-ink/50">{request.customer.phone}</span><span className="mt-2 block"><WhatsApp phone={request.customer.phone} service="private rooms" /></span></td>
               <td className="py-4 pr-4">{dateLabel(request.createdAt.slice(0, 10))}</td>
-              <td className="py-4 pr-4">{request.hasDepositProof ? <Link className="font-semibold text-signal underline underline-offset-4" href={`/api/trading/private-rooms/${request.id}/deposit-proof`}>Download private proof ↗</Link> : "Missing"}</td>
+              <td className="py-4 pr-4">{request.hasDepositProof ? <DownloadPrivateRoomProof id={request.id} /> : "Missing"}</td>
               <td className="py-4 pr-4"><Status value={request.status} /></td>
               <td className="py-4 pr-4">{payment ? <Status value={payment.status} /> : "No record"}</td>
               <td className="py-4"><div className="flex flex-wrap gap-2">{request.status === "SUBMITTED" && <><form action={reviewPrivateRoomDeposit}><HiddenId id={request.id} /><button name="decision" value="verify" className="min-h-9 bg-signal px-3 font-bold text-white">Verify deposit</button></form><form action={reviewPrivateRoomDeposit}><HiddenId id={request.id} /><button name="decision" value="reject" className="min-h-9 border border-ink/20 px-3 font-bold">Reject</button></form></>}{request.status === "DEPOSIT_VERIFIED" && payment?.status === "VERIFIED" && <form action={grantPrivateRoomVip}><HiddenId id={request.id} /><button className="min-h-9 bg-ink px-3 font-bold text-white">Grant 2-month VIP</button></form>}</div>{request.vipExpiresAt && <p className="mt-2 text-[10px] text-ink/50">VIP expiry: {dateLabel(request.vipExpiresAt.slice(0, 10))}</p>}</td>
@@ -143,6 +147,7 @@ export default function TradingDashboard({
           <p className="mb-4 text-xs text-ink/55">Payments take place outside the website. Verifying a payment records the manual review; service activation remains a separate action.</p>
           <div className="overflow-x-auto"><table className="w-full min-w-[800px] text-left text-xs"><thead className="text-[10px] uppercase tracking-wide text-ink/45"><tr><th className="py-3 pr-4">Customer</th><th className="py-3 pr-4">Service</th><th className="py-3 pr-4">Amount</th><th className="py-3 pr-4">Payment state</th><th className="py-3 pr-4">Submitted</th><th className="py-3">Review</th></tr></thead><tbody className="divide-y divide-ink/10">{data.payments.map((payment) => <tr key={payment.id}><td className="py-3 pr-4">{payment.customer.name}<span className="mt-1 block text-ink/50">{payment.customer.phone}</span></td><td className="py-3 pr-4">{payment.service.replaceAll("_", " ")}</td><td className="py-3 pr-4">{payment.currency} {payment.amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}</td><td className="py-3 pr-4"><Status value={payment.status} /></td><td className="py-3 pr-4">{dateLabel(payment.createdAt.slice(0, 10))}</td><td className="py-3">{payment.status === "PENDING" && <div className="flex gap-2"><form action={reviewManualPayment}><HiddenId id={payment.id} /><button name="decision" value="verify" className="min-h-9 bg-signal px-3 font-bold text-white">Verify payment</button></form><form action={reviewManualPayment}><HiddenId id={payment.id} /><button name="decision" value="reject" className="min-h-9 border border-ink/20 px-3 font-bold">Reject</button></form></div>}<span className="block mt-1"><WhatsApp phone={payment.customer.phone} service="payment" /></span></td></tr>)}</tbody></table>{!data.payments.length && <p className="py-6 text-sm text-ink/50">No manual payment records.</p>}</div>
         </section>
+        <VipManagement data={vipData} />
       </div>
     </main>
   );
