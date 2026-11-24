@@ -1,5 +1,7 @@
+"use client";
+
 import Link from "next/link";
-import { ArrowDownLeft, ArrowLeftRight, ArrowRight, ArrowUpRight, BadgeCheck, Bell, CalendarDays, ChartNoAxesCombined, CircleHelp, LockKeyhole, LogOut, Wallet } from "lucide-react";
+import { ArrowDownLeft, ArrowLeftRight, ArrowRight, ArrowUpRight, BadgeCheck, Bell, CalendarDays, ChartNoAxesCombined, CircleHelp, DoorOpen, LockKeyhole, LogOut, Wallet } from "lucide-react";
 import { reportVipProofSent } from "../server/vip-actions";
 import { signOutVipClient } from "../server/vip-actions";
 import type { getCustomerAppData } from "../server/platform-queries";
@@ -7,6 +9,7 @@ import CustomerAppointmentForm from "./CustomerAppointmentForm";
 import VipApplicationForm from "./VipApplicationForm";
 import VipProfileForm from "./VipProfileForm";
 import VipAttachmentDownload from "./VipAttachmentDownload";
+import CopyTradingRequestForm from "./CopyTradingRequestForm";
 import { useLocale } from "./LocaleProvider";
 
 type CustomerData = Awaited<ReturnType<typeof getCustomerAppData>>;
@@ -43,7 +46,39 @@ export function CustomerHomePage({ data }: { data: CustomerData }) {
 
 export function CustomerRoomsPage({ data }: { data: CustomerData }) {
   const activeRooms = new Set(data.memberships.filter((membership) => membership.status === "ACTIVE" && new Date(membership.expiresAt) > new Date()).flatMap((membership) => membership.assignments.map(({ room }) => room.slug)));
-  return <div className="client-page"><div className="client-welcome"><div><p className="client-eyebrow">MEMBERSHIP ACCESS</p><h1>Rooms</h1><p>Room access is based on your active assignments.</p></div><LockKeyhole size={22} className="client-accent-icon" /></div><div className="client-room-list">{data.rooms.map((room) => { const authorized = activeRooms.has(room.slug); return <article className={`client-room-card ${authorized ? "is-authorized" : ""}`} key={room.id}><div className="client-room-card-top"><div><p className="client-eyebrow">{room.category.toUpperCase()} ROOM</p><h2>{room.name}</h2></div><MemberChip active={authorized} /></div><p>{room.description || "Private market updates and member information."}</p><div className="client-room-card-footer"><span>{authorized ? <Link href={`/app/rooms/${room.slug}`}>Open member posts <ArrowRight size={13} /></Link> : "No active assignment"}</span>{authorized && <BadgeCheck size={17} />}</div></article>; })}</div><section className="client-section"><div className="client-section-heading"><div><p className="client-eyebrow">MEMBERSHIP HISTORY</p><h2>My memberships</h2></div></div>{data.memberships.length ? <div className="client-list">{data.memberships.map((membership) => <div className="client-list-row" key={membership.id}><span className="client-transaction-mark"><LockKeyhole size={15} /></span><div><strong>{membership.brokerOption.replaceAll("_", " ")}</strong><small>{membership.assignments.map(({ room }) => room.name).join(", ") || "Rooms pending assignment"}</small></div><b className="client-status-text">{membership.status}</b></div>)}</div> : <div className="client-empty"><CircleHelp size={20} /><strong>No membership yet</strong><span>Approved access will be shown here.</span></div>}</section><section className="client-section"><div className="client-section-heading"><div><p className="client-eyebrow">APPLICATIONS</p><h2>Application history</h2></div></div>{data.applications.length ? <div className="client-list">{data.applications.map((application) => <article className="client-application-row" key={application.id}><div><strong>{application.brokerOption.replaceAll("_", " ")} · {application.status.replaceAll("_", " ")}</strong><small>{dateLabel(application.createdAt)} · {application.id}</small>{application.adminFeedback && <small>Team note: {application.adminFeedback}</small>}</div>{application.payments[0] && <span className="dash-badge">{application.payments[0].currency} {application.payments[0].amount.toFixed(2)} · {application.payments[0].status}</span>}{["SUBMITTED", "PROOF_REPORTED", "UNDER_REVIEW", "MORE_INFO_REQUIRED"].includes(application.status) && <form action={reportVipProofSent}><input type="hidden" name="id" value={application.id} /><button className="platform-row-action">Report proof sent <ArrowRight size={13} /></button></form>}</article>)}</div> : <div className="client-empty"><CircleHelp size={20} /><strong>No applications yet</strong><span>Submit an application for private room access below.</span></div>}</section><section className="client-section"><VipApplicationForm settings={data.settings} /></section></div>;
+  return <div className="client-page"><div className="client-welcome"><div><p className="client-eyebrow">MEMBERSHIP ACCESS</p><h1>Rooms</h1><p>Room access is based on your active assignments.</p></div><LockKeyhole size={22} className="client-accent-icon" /></div><div className="client-room-list">{data.rooms.map((room) => { const authorized = activeRooms.has(room.slug); return <article className={`client-room-card ${authorized ? "is-authorized" : "is-restricted"}`} key={room.id}>{room.coverImage ? <div className="client-room-cover" style={{ backgroundImage: `linear-gradient(180deg, rgba(3,11,10,.05), rgba(3,11,10,.92)), url("${room.coverImage.replaceAll('"', '%22')}")` }} /> : <div className="client-room-cover is-placeholder"><DoorOpen size={24} /></div>}<div className="client-room-card-body"><div className="client-room-card-top"><div><p className="client-eyebrow">{room.category.toUpperCase()} ROOM</p><h2>{room.name}</h2></div><MemberChip active={authorized} /></div><p>{room.description || "Private market updates and member information."}</p><div className="client-room-card-meta"><span>{room._count.posts} {room._count.posts === 1 ? "update" : "updates"}</span><span>{authorized ? "Access active" : "Membership required"}</span></div><div className="client-room-card-footer">{authorized ? <Link href={`/app/rooms/${room.slug}`}>Open room <ArrowRight size={14} /></Link> : <span><LockKeyhole size={13} />Restricted</span>}<BadgeCheck size={17} /></div></div></article>; })}</div><section className="client-section"><div className="client-section-heading"><div><p className="client-eyebrow">MEMBERSHIP HISTORY</p><h2>My memberships</h2></div></div>{data.memberships.length ? <div className="client-list">{data.memberships.map((membership) => <div className="client-list-row" key={membership.id}><span className="client-transaction-mark"><LockKeyhole size={15} /></span><div><strong>{membership.brokerOption.replaceAll("_", " ")}</strong><small>{membership.assignments.map(({ room }) => room.name).join(", ") || "Rooms pending assignment"}</small></div><b className="client-status-text">{membership.status}</b></div>)}</div> : <div className="client-empty"><CircleHelp size={20} /><strong>No membership yet</strong><span>Approved access will be shown here.</span></div>}</section><section className="client-section"><div className="client-section-heading"><div><p className="client-eyebrow">APPLICATIONS</p><h2>Application history</h2></div></div>{data.applications.length ? <div className="client-list">{data.applications.map((application) => <article className="client-application-row" key={application.id}><div><strong>{application.brokerOption.replaceAll("_", " ")} · {application.status.replaceAll("_", " ")}</strong><small>{dateLabel(application.createdAt)} · {application.id}</small>{application.adminFeedback && <small>Team note: {application.adminFeedback}</small>}</div>{application.payments[0] && <span className="dash-badge">{application.payments[0].currency} {application.payments[0].amount.toFixed(2)} · {application.payments[0].status}</span>}{["SUBMITTED", "PROOF_REPORTED", "UNDER_REVIEW", "MORE_INFO_REQUIRED"].includes(application.status) && <form action={reportVipProofSent}><input type="hidden" name="id" value={application.id} /><button className="platform-row-action">Report proof sent <ArrowRight size={13} /></button></form>}</article>)}</div> : <div className="client-empty"><CircleHelp size={20} /><strong>No applications yet</strong><span>Submit an application for private room access below.</span></div>}</section><section className="client-section"><VipApplicationForm settings={data.settings} /></section></div>;
+}
+
+export function CustomerCopyTradingPage({ data }: { data: CustomerData }) {
+  const application = data.copyTradingApplications[0];
+  const unlocked = application?.status === "ACTIVE" || application?.status === "AUTHORIZED";
+
+  return (
+    <div className="client-page">
+      <div className="client-welcome">
+        <div><p className="client-eyebrow">COPY TRADING</p><h1>{unlocked ? "Copy trading active" : "Copy trading"}</h1><p>{unlocked ? "Your approved account is ready for copy trading." : "Submit your trading account for administrator review."}</p></div>
+        <LockKeyhole size={22} className="client-accent-icon" />
+      </div>
+
+      {unlocked ? (
+        <section className="client-section">
+          <div className="client-section-heading"><div><p className="client-eyebrow">APPROVED ACCOUNT</p><h2>{application?.brokerName}</h2></div><span className="client-status is-active">ACTIVE</span></div>
+          <dl className="client-profile-panel"><div><dt>Trading server</dt><dd>{application?.serverName ?? "Configured by administrator"}</dd></div><div><dt>Status</dt><dd>{application?.status}</dd></div></dl>
+        </section>
+      ) : (
+        <section className="client-copy-lock">
+          <div className="client-copy-lock-heading"><span><LockKeyhole size={20} /></span><div><p className="client-eyebrow">ACCESS LOCKED</p><h2>Complete account authorization</h2></div></div>
+          {application ? (
+            <div className="client-copy-status">
+              <strong>{application.status.replaceAll("_", " ")}</strong>
+              <span>Submitted {dateLabel(application.createdAt)}</span>
+              <p>{application.status === "REJECTED" || application.status === "PAUSED" ? "The administrator may ask you to submit corrected account details." : "Your request is waiting for administrator review."}</p>
+            </div>
+          ) : <CopyTradingRequestForm />}
+        </section>
+      )}
+    </div>
+  );
 }
 
 export function CustomerTransactionsPage({ data }: { data: CustomerData }) {
@@ -59,7 +94,27 @@ export function CustomerProfilePage({ data }: { data: CustomerData }) {
 export function CustomerRoomDetailPage({ data, slug }: { data: CustomerData; slug: string }) {
   const room = data.assignedRooms.find((entry) => entry.slug === slug);
   if (!room) return <div className="client-page"><div className="client-empty client-empty-large"><LockKeyhole size={23} /><strong>Room access unavailable</strong><span>This room is not assigned to an active membership on your account.</span><Link href="/app/rooms">Back to rooms <ArrowRight size={14} /></Link></div></div>;
-  return <div className="client-page"><div className="client-welcome"><div><p className="client-eyebrow">{room.category.toUpperCase()} ROOM</p><h1>{room.name}</h1><p>{room.description}</p></div><LockKeyhole size={22} className="client-accent-icon" /></div>{room.posts.length ? room.posts.map((post) => <article className="client-post" key={post.id}><div className="client-section-heading"><div><p className="client-eyebrow">{post.isPinned ? "PINNED UPDATE" : "ROOM UPDATE"}</p><h2>{post.title}</h2></div><time>{post.publishedAt ? dateLabel(post.publishedAt) : ""}</time></div><div className="client-post-body">{post.body}</div>{post.attachments.length > 0 && <div className="client-post-attachments">{post.attachments.map((attachment) => <VipAttachmentDownload key={attachment.id} id={attachment.id} filename={attachment.filename} mimeType={attachment.mimeType} />)}</div>}</article>) : <div className="client-empty client-empty-large"><ChartNoAxesCombined size={22} /><strong>No published updates</strong><span>New room posts will appear here.</span></div>}<Link className="client-back-link" href="/app/rooms">Back to rooms <ArrowRight size={14} /></Link></div>;
+
+  const posts = [...room.posts].sort((a, b) => new Date(a.publishedAt ?? a.createdAt).getTime() - new Date(b.publishedAt ?? b.createdAt).getTime());
+  return (
+    <div className="client-page">
+      <div className="client-welcome"><div><p className="client-eyebrow">{room.category.toUpperCase()} ROOM</p><h1>{room.name}</h1><p>{room.description}</p></div><LockKeyhole size={22} className="client-accent-icon" /></div>
+      <section className="client-room-chat" aria-label={`${room.name} conversation`}>
+        <header className="client-room-chat-head"><div><span>Ayoub Trader</span><small>Admin updates</small></div><BadgeCheck size={17} /></header>
+        <div className="client-room-chat-feed">
+          {posts.length ? posts.map((post) => (
+            <article className={`client-room-message ${post.isPinned ? "is-pinned" : ""}`} key={post.id}>
+              <div className="client-room-message-meta"><strong>{post.isPinned ? "Pinned update" : "Admin update"}</strong><time>{post.publishedAt ? dateLabel(post.publishedAt) : ""}</time></div>
+              <h2>{post.title}</h2>
+              <div className="client-room-message-body">{post.body}</div>
+              {post.attachments.length > 0 && <div className="client-post-attachments">{post.attachments.map((attachment) => <VipAttachmentDownload key={attachment.id} id={attachment.id} filename={attachment.filename} mimeType={attachment.mimeType} />)}</div>}
+            </article>
+          )) : <div className="client-empty client-empty-large"><ChartNoAxesCombined size={22} /><strong>No published updates</strong><span>New room posts will appear here.</span></div>}
+        </div>
+      </section>
+      <Link className="client-back-link" href="/app/rooms">Back to rooms <ArrowRight size={14} /></Link>
+    </div>
+  );
 }
 
 export function CustomerAppointmentsPage({ data }: { data: CustomerData }) {

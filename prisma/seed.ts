@@ -1,5 +1,5 @@
 import { randomBytes, scrypt as scryptCallback } from "node:crypto";
-import { PrismaClient, UserRole } from "@prisma/client";
+import { PrismaClient, PrivateRoomRequestStatus, VipBrokerOption, VipMembershipStatus, UserRole } from "@prisma/client";
 
 const prisma = new PrismaClient();
 const vipSeedSettings = {
@@ -41,6 +41,12 @@ async function seed() {
   }
   const adminPasswordHash = adminPassword ? await hashPassword(adminPassword) : null;
 
+  const demoPassword = process.env.VIP_DEMO_PASSWORD ?? "TraderDemo123!";
+  if (demoPassword.length < 10) {
+    throw new Error("VIP_DEMO_PASSWORD must be at least 10 characters.");
+  }
+  const demoPasswordHash = await hashPassword(demoPassword);
+
   await prisma.$transaction(async (transaction) => {
     if (adminPasswordHash) {
       await transaction.user.upsert({
@@ -67,15 +73,91 @@ async function seed() {
         update: {},
       });
     }
+
+    const demoTraders = [
+      { name: "Adam El Mansouri", phone: "+212600000001", email: "adam.trader@example.com", username: "adam.trader", roomSlug: "vip" },
+      { name: "Sara Benali", phone: "+212600000002", email: "sara.trader@example.com", username: "sara.trader", roomSlug: "pro" },
+      { name: "Yassine Amrani", phone: "+212600000003", email: "yassine.trader@example.com", username: "yassine.trader", roomSlug: "standard" },
+    ];
+
+    for (const trader of demoTraders) {
+      const customer = await transaction.tradingCustomer.upsert({
+        where: { phone: trader.phone },
+        create: { name: trader.name, phone: trader.phone, email: trader.email },
+        update: { name: trader.name, email: trader.email },
+      });
+
+      await transaction.tradingCustomerAccount.upsert({
+        where: { customerId: customer.id },
+        create: {
+          customerId: customer.id,
+          username: trader.username,
+          email: trader.email,
+          passwordHash: demoPasswordHash,
+          emailVerifiedAt: new Date(),
+        },
+        update: {
+          username: trader.username,
+          email: trader.email,
+          passwordHash: demoPasswordHash,
+          emailVerifiedAt: new Date(),
+          failedLoginCount: 0,
+          lockedUntil: null,
+        },
+      });
+
+      let application = await transaction.privateRoomRequest.findFirst({
+        where: { customerId: customer.id },
+        orderBy: { createdAt: "desc" },
+      });
+      if (!application) {
+        application = await transaction.privateRoomRequest.create({
+          data: {
+            customerId: customer.id,
+            status: PrivateRoomRequestStatus.VIP_ACTIVE,
+            brokerOption: VipBrokerOption.OUR_BROKER,
+            depositVerifiedAt: new Date(),
+            vipGrantedAt: new Date(),
+            vipExpiresAt: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000),
+          },
+        });
+      }
+
+      const startsAt = new Date();
+      const expiresAt = new Date(Date.now() + 180 * 24 * 60 * 60 * 1000);
+      const membership = await transaction.vipMembership.upsert({
+        where: { applicationId: application.id },
+        create: {
+          customerId: customer.id,
+          applicationId: application.id,
+          brokerOption: VipBrokerOption.OUR_BROKER,
+          status: VipMembershipStatus.ACTIVE,
+          startsAt,
+          expiresAt,
+        },
+        update: { status: VipMembershipStatus.ACTIVE, startsAt, expiresAt },
+      });
+
+      const room = await transaction.vipRoom.findUnique({ where: { slug: trader.roomSlug } });
+      if (room) {
+        await transaction.vipRoomAssignment.upsert({
+          where: { membershipId_roomId: { membershipId: membership.id, roomId: room.id } },
+          create: { customerId: customer.id, membershipId: membership.id, roomId: room.id },
+          update: { revokedAt: null },
+        });
+      }
+    }
   }, { timeout: 15_000 });
 
-  const [adminCount, vipSettings] = await Promise.all([
+  const [adminCount, vipSettings, demoCustomerCount] = await Promise.all([
     prisma.user.count({ where: { username: adminUsername, role: UserRole.ADMIN } }),
     prisma.vipPlatformSetting.count(),
+    prisma.tradingCustomer.count({ where: { phone: { in: ["+212600000001", "+212600000002", "+212600000003"] } } }),
   ]);
 
   console.log("Database seed complete (existing records preserved):");
   console.log(`VIP platform settings: ${vipSettings}`);
+  console.log(`Demo trading customers: ${demoCustomerCount}`);
   console.log(`Admin user: ${adminCount ? "present" : adminPasswordHash ? "not seeded" : "skipped (set TRANSFER_ADMIN_PASSWORD to seed)"}`);
 }
 

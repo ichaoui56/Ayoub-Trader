@@ -1,6 +1,6 @@
 "use server";
 
-import { createHash } from "node:crypto";
+import { createCipheriv, createHash, randomBytes } from "node:crypto";
 import { ManualPaymentService, Prisma, PrivateRoomRequestStatus, UserRole, VipBrokerOption } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -17,6 +17,7 @@ import {
 import { sendVipVerificationEmail } from "./vip-email";
 
 export type VipAuthActionState = { success: boolean; message: string };
+export type CopyTradingRequestState = { success: boolean; message: string };
 
 function formString(data: FormData, key: string, label: string, maxLength: number) {
   const value = data.get(key);
@@ -24,6 +25,61 @@ function formString(data: FormData, key: string, label: string, maxLength: numbe
   const cleaned = value.trim();
   if (!cleaned || cleaned.length > maxLength) throw new Error(`${label} is invalid.`);
   return cleaned;
+}
+
+function encryptCopyTradingSecret(value: string) {
+  const secret = process.env.COPY_TRADING_CREDENTIAL_SECRET ?? process.env.VIP_CLIENT_SECRET ?? process.env.TRANSFER_DASHBOARD_SECRET;
+  if (!secret || secret.length < 32) throw new Error("Copy-trading credential encryption is not configured.");
+  const key = createHash("sha256").update(secret).digest();
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", key, iv);
+  const encrypted = Buffer.concat([cipher.update(value, "utf8"), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return [iv.toString("base64url"), encrypted.toString("base64url"), tag.toString("base64url")].join(".");
+}
+
+export async function submitCopyTradingRequest(_state: CopyTradingRequestState, data: FormData): Promise<CopyTradingRequestState> {
+  try {
+    const client = await getVipClient();
+    if (!client) return { success: false, message: "Sign in to submit copy-trading access." };
+
+    const brokerName = formString(data, "brokerName", "Broker name", 120);
+    const brokerLogin = formString(data, "brokerLogin", "Broker login", 120);
+    const brokerPassword = formString(data, "brokerPassword", "Broker password", 256);
+    const serverName = formString(data, "serverName", "Trading server", 120);
+    const serverIp = formString(data, "serverIp", "Server IP", 80);
+
+    const existing = await prisma.copyTradingApplication.findFirst({
+      where: { customerId: client.id, status: { in: ["NEW", "UNDER_REVIEW", "AUTHORIZATION_PENDING", "AUTHORIZED", "ACTIVE"] } },
+      select: { id: true },
+    });
+    if (existing) return { success: false, message: "You already have a copy-trading request in progress." };
+
+    await prisma.$transaction(async (transaction) => {
+      const application = await transaction.copyTradingApplication.create({
+        data: {
+          customerId: client.id,
+          brokerName,
+          accountBalance: new Prisma.Decimal("0"),
+          brokerLogin,
+          brokerPasswordEncrypted: encryptCopyTradingSecret(brokerPassword),
+          serverName,
+          serverIp,
+        },
+        select: { id: true },
+      });
+      await transaction.vipNotification.create({
+        data: { customerId: client.id, title: "Copy trading submitted", message: "Your request is under review. We will notify you after the administrator checks it." },
+      });
+      await transaction.vipAuditLog.create({
+        data: { actorId: null, action: "COPY_TRADING_REQUEST_SUBMITTED", subjectId: application.id, details: { customerId: client.id, brokerName, serverName } },
+      });
+    });
+    revalidatePath("/app/copy-trading");
+    return { success: true, message: "Request submitted successfully. Copy trading will unlock after administrator approval." };
+  } catch (error) {
+    return { success: false, message: error instanceof Error ? error.message : "We could not submit the request." };
+  }
 }
 
 function normalizePhone(value: string) {

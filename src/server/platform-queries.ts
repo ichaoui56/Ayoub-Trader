@@ -210,7 +210,7 @@ export async function getPlatformCoachingSchedule() {
 export async function getCustomerAppData() {
   const client = await getVipClient();
   if (!client) throw new Error("Sign in required.");
-  const [memberships, transactions, bookings, notifications, rooms, applications, assignedRooms, settings] = await Promise.all([
+  const [memberships, transactions, bookings, notifications, rooms, applications, assignedRooms, copyTradingApplications, settings] = await Promise.all([
     prisma.vipMembership.findMany({
       where: { customerId: client.id }, orderBy: { createdAt: "desc" },
       include: { assignments: { where: { revokedAt: null }, include: { room: { select: { id: true, slug: true, name: true, description: true, coverImage: true } } } } },
@@ -221,6 +221,7 @@ export async function getCustomerAppData() {
     prisma.vipRoom.findMany({ where: { isPublished: true }, orderBy: { name: "asc" }, select: { id: true, slug: true, name: true, category: true, description: true, coverImage: true, _count: { select: { posts: { where: { publishedAt: { not: null } } } } } } }),
     prisma.privateRoomRequest.findMany({ where: { customerId: client.id }, orderBy: { createdAt: "desc" }, take: 30, select: { id: true, status: true, brokerOption: true, createdAt: true, proofReportedAt: true, adminFeedback: true, payments: { orderBy: { createdAt: "desc" }, take: 1, select: { status: true, amount: true, currency: true } } } }),
     prisma.vipRoomAssignment.findMany({ where: { customerId: client.id, revokedAt: null, room: { isPublished: true }, membership: { status: "ACTIVE", expiresAt: { gt: new Date() } } }, include: { room: { include: { posts: { where: { publishedAt: { not: null } }, orderBy: [{ isPinned: "desc" }, { publishedAt: "desc" }], take: 30, include: { attachments: { select: { id: true, filename: true, mimeType: true } } } } } } } }),
+    prisma.copyTradingApplication.findMany({ where: { customerId: client.id }, orderBy: { createdAt: "desc" }, take: 20, select: { id: true, brokerName: true, serverName: true, status: true, reviewedAt: true, authorizedAt: true, activatedAt: true, createdAt: true } }),
     getVipPublicSettings(),
   ]);
   return {
@@ -232,6 +233,7 @@ export async function getCustomerAppData() {
     rooms,
     applications: applications.map((application) => ({ ...application, createdAt: application.createdAt.toISOString(), proofReportedAt: application.proofReportedAt?.toISOString() ?? null, payments: application.payments.map((payment) => ({ ...payment, amount: Number(payment.amount) })) })),
     assignedRooms: assignedRooms.map(({ room }) => ({ ...room, createdAt: room.createdAt.toISOString(), updatedAt: room.updatedAt.toISOString(), posts: room.posts.map((post) => ({ ...post, createdAt: post.createdAt.toISOString(), updatedAt: post.updatedAt.toISOString(), publishedAt: post.publishedAt?.toISOString() ?? null })) })),
+    copyTradingApplications: copyTradingApplications.map((application) => ({ ...application, reviewedAt: application.reviewedAt?.toISOString() ?? null, authorizedAt: application.authorizedAt?.toISOString() ?? null, activatedAt: application.activatedAt?.toISOString() ?? null, createdAt: application.createdAt.toISOString() })),
     settings,
   };
 }

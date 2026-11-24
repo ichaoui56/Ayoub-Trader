@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowDownLeft, ArrowLeftRight, ArrowRight, ArrowUpRight, ChartNoAxesCombined, CircleHelp, DoorOpen, Plus, Users } from "lucide-react";
+import { ArrowDownLeft, ArrowLeftRight, ArrowRight, ArrowUpRight, CalendarDays, ChartNoAxesCombined, CircleHelp, DoorOpen, Ellipsis, Plus, Users } from "lucide-react";
 import { createFinancialTransaction, recordCopyTradingProfitShare, reviewFinancialTransaction } from "../server/financial-actions";
 import type { getPlatformCoachingSchedule, getPlatformRoomData, getPlatformRooms, getPlatformUserDetail, getPlatformUsers, getFinancialLedger } from "../server/platform-queries";
 
@@ -32,7 +32,53 @@ export function PlatformUserDetailPage({ user }: { user: PlatformUser }) {
 }
 
 export function PlatformRoomsPage({ rooms }: { rooms: PlatformRooms }) {
-  return <div className="platform-page"><div className="rooms-index-heading"><PageTitle eyebrow="Trading management" title="Private rooms" detail="Manage your private trading spaces." /><div className="rooms-index-actions"><Link className="rooms-operations-link" href="/dashboard/rooms/operations">Membership operations <ArrowRight size={14} /></Link><Link className="dash-primary-button" href="/dashboard/rooms/new"><Plus size={15} />Add room</Link></div></div>{rooms.length ? <div className="dash-room-cards">{rooms.map((room) => <Link className="dash-room-card" href={`/dashboard/rooms/${room.slug}`} key={room.id}>{room.coverImage ? <span className="dash-room-cover" style={{ backgroundImage: `url("${room.coverImage.replaceAll('"', '%22')}")` }} /> : <span className="dash-room-cover is-placeholder"><DoorOpen size={20} /></span>}<span className="dash-eyebrow">{room.category.toUpperCase()} ROOM</span><h2>{room.name}</h2><p>{room.description || "No description added."}</p><div><strong>{room.membersCount}</strong><span>active members</span></div><span className="dash-room-card-link">Manage room <ArrowRight size={14} /></span></Link>)}</div> : <section className="dash-panel"><div className="dash-empty-state"><DoorOpen size={22} /><strong>No private rooms</strong><span>Add your first room to get started.</span><Link className="rooms-empty-action" href="/dashboard/rooms/new">Add room <Plus size={14} /></Link></div></section>}</div>;
+  const activeMembers = rooms.reduce((total, room) => total + room.membersCount, 0);
+  const publishedRooms = rooms.filter((room) => room.isPublished).length;
+
+  return <div className="platform-page private-rooms-page">
+    <div className="rooms-index-heading">
+      <PageTitle eyebrow="Trading management" title="Private Rooms" detail="Manage your private trading spaces." />
+      <div className="rooms-index-actions">
+        <Link className="rooms-operations-link" href="/dashboard/rooms/operations">Membership operations <ArrowRight size={14} /></Link>
+        <Link className="dash-primary-button rooms-add-button" href="/dashboard/rooms/new"><Plus size={16} />Add Room</Link>
+      </div>
+    </div>
+
+    <section className="private-room-kpis" aria-label="Private room overview">
+      <article><span className="private-room-kpi-icon"><DoorOpen size={18} /></span><div><strong>{rooms.length}</strong><span>Total rooms</span></div><span className="private-room-kpi-pulse" /></article>
+      <article><span className="private-room-kpi-icon"><Users size={18} /></span><div><strong>{activeMembers}</strong><span>Active members</span></div><span className="private-room-kpi-pulse" /></article>
+      <article><span className="private-room-kpi-icon"><ChartNoAxesCombined size={18} /></span><div><strong>{publishedRooms}</strong><span>Published rooms</span></div><span className="private-room-kpi-pulse" /></article>
+    </section>
+
+    {rooms.length ? <div className="dash-room-cards">{rooms.map((room, index) => <article className={`dash-room-card ${room.isPublished ? "is-published" : "is-hidden"}`} key={room.id}>
+      <div className="dash-room-card-media">
+        {room.coverImage
+          ? <span className="dash-room-cover" style={{ backgroundImage: `linear-gradient(180deg, rgba(3,11,10,.08), rgba(3,11,10,.82)), url("${room.coverImage.replaceAll('"', '%22')}")` }} />
+          : <span className={`dash-room-cover is-placeholder room-fallback-${index % 4}`}><span className="room-fallback-orbit" /><span className="room-fallback-icon"><DoorOpen size={30} /></span></span>}
+        <span className={`dash-room-status ${room.isPublished ? "is-live" : ""}`}>{room.isPublished ? "Published" : "Hidden"}</span>
+      </div>
+      <div className="dash-room-card-body">
+        <span className="dash-eyebrow"><i />{room.category.toUpperCase()} ROOM</span>
+        <h2>{room.name}</h2>
+        <p>{room.description || "No description added."}</p>
+        <div className="dash-room-card-stats">
+          <div><span className="dash-room-stat-icon"><Users size={16} /></span><p><strong>{room.membersCount}</strong><span>Active members</span></p></div>
+          <div><span className="dash-room-stat-icon"><CalendarDays size={16} /></span><p><strong>{formattedDate(room.updatedAt)}</strong><span>Last updated</span></p></div>
+        </div>
+        <div className="dash-room-card-actions">
+          <Link className="dash-room-card-link" href={`/dashboard/rooms/${room.slug}`}>Manage room <ArrowRight size={15} /></Link>
+          <Link className="dash-room-card-menu" href={`/dashboard/rooms/${room.slug}/edit`} aria-label={`Edit ${room.name}`} title="Edit room"><Ellipsis size={18} /></Link>
+        </div>
+      </div>
+    </article>)}
+      <Link className="private-room-create-card" href="/dashboard/rooms/new">
+        <span className="private-room-create-icon"><Plus size={24} /></span>
+        <span className="private-room-create-title">Create New Room</span>
+        <span className="private-room-create-detail">Add a new private room for your members.</span>
+        <span className="dash-primary-button rooms-add-button"><Plus size={16} />Add Room</span>
+      </Link>
+    </div> : <div className="dash-room-cards"><section className="dash-panel rooms-empty-panel"><div className="dash-empty-state"><DoorOpen size={24} /><strong>No private rooms</strong><span>Create the first room and start assigning active members.</span></div></section><Link className="private-room-create-card" href="/dashboard/rooms/new"><span className="private-room-create-icon"><Plus size={24} /></span><span className="private-room-create-title">Create New Room</span><span className="private-room-create-detail">Add a new private room for your members.</span><span className="dash-primary-button rooms-add-button"><Plus size={16} />Add Room</span></Link></div>}
+  </div>;
 }
 
 export function PlatformRoomPage({ room }: { room: PlatformRoom }) {

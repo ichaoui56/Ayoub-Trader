@@ -133,63 +133,62 @@ enum CoachingSlotKind {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  username     String   @unique
-  email        String?  @unique
-  passwordHash String
-  role         UserRole @default(STAFF)
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  verifiedPayments ManualPayment[] @relation("PaymentVerifier")
-  activatedVipMemberships VipMembership[] @relation("VipMembershipActivator")
-  vipAuditLogs VipAuditLog[]
-  financialTransactionsCreated FinancialTransaction[] @relation("FinancialTransactionCreator")
+  id                            String                 @id @default(cuid())
+  username                      String                 @unique
+  email                         String?                @unique
+  passwordHash                  String
+  role                          UserRole               @default(STAFF)
+  isActive                      Boolean                @default(true)
+  createdAt                     DateTime               @default(now())
+  updatedAt                     DateTime               @updatedAt
+  verifiedPayments              ManualPayment[]        @relation("PaymentVerifier")
+  activatedVipMemberships       VipMembership[]        @relation("VipMembershipActivator")
+  vipAuditLogs                  VipAuditLog[]
+  financialTransactionsCreated  FinancialTransaction[] @relation("FinancialTransactionCreator")
   financialTransactionsReviewed FinancialTransaction[] @relation("FinancialTransactionReviewer")
 
   @@index([role, isActive])
 }
 
-
 model TradingCustomer {
-  id                     String                    @id @default(cuid())
-  clientId               String                    @unique @default(dbgenerated("('VIP-' || to_char(CURRENT_DATE, 'YYYY') || '-' || replace(gen_random_uuid()::text, '-', ''))"))
-  name                   String
-  phone                  String                    @unique
-  email                  String?
-  createdAt              DateTime                  @default(now())
-  updatedAt              DateTime                  @updatedAt
-  privateRoomRequests    PrivateRoomRequest[]
+  id                      String                   @id @default(cuid())
+  clientId                String                   @unique @default(dbgenerated("('VIP-' || to_char(CURRENT_DATE, 'YYYY') || '-' || replace(gen_random_uuid()::text, '-', ''))"))
+  name                    String
+  phone                   String                   @unique
+  email                   String?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  privateRoomRequests     PrivateRoomRequest[]
   copyTradingApplications CopyTradingApplication[]
-  coachingBookings       CoachingBooking[]
-  payments               ManualPayment[]
-  financialTransactions FinancialTransaction[]
-  account                TradingCustomerAccount?
-  memberships            VipMembership[]
-  roomAssignments        VipRoomAssignment[]
-  notifications          VipNotification[]
+  coachingBookings        CoachingBooking[]
+  payments                ManualPayment[]
+  financialTransactions   FinancialTransaction[]
+  account                 TradingCustomerAccount?
+  memberships             VipMembership[]
+  roomAssignments         VipRoomAssignment[]
+  notifications           VipNotification[]
 
   @@index([name])
 }
 
 model PrivateRoomRequest {
-  id                 String                    @id @default(cuid())
-  customerId         String
-  customer           TradingCustomer            @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  status             PrivateRoomRequestStatus  @default(SUBMITTED)
-  brokerOption       VipBrokerOption            @default(OUR_BROKER)
-  proofReportedAt    DateTime?
-  adminFeedback      String?
-  depositProof       Bytes?
-  depositProofMime   String?
-  depositProofName   String?
-  depositVerifiedAt  DateTime?
-  vipGrantedAt       DateTime?
-  vipExpiresAt       DateTime?
-  createdAt          DateTime                  @default(now())
-  updatedAt          DateTime                  @updatedAt
-  payments           ManualPayment[]
-  memberships        VipMembership[]
+  id                String                   @id @default(cuid())
+  customerId        String
+  customer          TradingCustomer          @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  status            PrivateRoomRequestStatus @default(SUBMITTED)
+  brokerOption      VipBrokerOption          @default(OUR_BROKER)
+  proofReportedAt   DateTime?
+  adminFeedback     String?
+  depositProof      Bytes?
+  depositProofMime  String?
+  depositProofName  String?
+  depositVerifiedAt DateTime?
+  vipGrantedAt      DateTime?
+  vipExpiresAt      DateTime?
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  payments          ManualPayment[]
+  memberships       VipMembership[]
 
   @@index([status, createdAt])
   @@index([customerId, createdAt])
@@ -214,37 +213,37 @@ model TradingCustomerAccount {
 }
 
 model VipMembership {
-  id             String                   @id @default(cuid())
-  customerId     String
-  customer       TradingCustomer           @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  applicationId  String                   @unique
-  application    PrivateRoomRequest       @relation(fields: [applicationId], references: [id], onDelete: Restrict)
-  brokerOption   VipBrokerOption
-  status         VipMembershipStatus      @default(ACTIVE)
-  startsAt       DateTime
-  expiresAt      DateTime
-  activatedById  String?
-  activatedBy    User?                    @relation("VipMembershipActivator", fields: [activatedById], references: [id], onDelete: SetNull)
-  createdAt      DateTime                 @default(now())
-  updatedAt      DateTime                 @updatedAt
-  assignments    VipRoomAssignment[]
+  id            String              @id @default(cuid())
+  customerId    String
+  customer      TradingCustomer     @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  applicationId String              @unique
+  application   PrivateRoomRequest  @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  brokerOption  VipBrokerOption
+  status        VipMembershipStatus @default(ACTIVE)
+  startsAt      DateTime
+  expiresAt     DateTime
+  activatedById String?
+  activatedBy   User?               @relation("VipMembershipActivator", fields: [activatedById], references: [id], onDelete: SetNull)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  assignments   VipRoomAssignment[]
 
   @@index([customerId, status, expiresAt])
   @@index([status, expiresAt])
 }
 
 model VipRoom {
-  id          String             @id @default(cuid())
-  slug        String             @unique
-  name        String
-  description String             @default("")
-  category    String             @default("General")
-  coverImage  String             @default("")
-  isPublished Boolean            @default(false)
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
-  assignments VipRoomAssignment[]
-  posts       VipRoomPost[]
+  id           String                 @id @default(cuid())
+  slug         String                 @unique
+  name         String
+  description  String                 @default("")
+  category     String                 @default("General")
+  coverImage   String                 @default("")
+  isPublished  Boolean                @default(false)
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  assignments  VipRoomAssignment[]
+  posts        VipRoomPost[]
   transactions FinancialTransaction[]
 
   @@index([isPublished, category])
@@ -312,57 +311,62 @@ model VipPlatformSetting {
 }
 
 model VipAuditLog {
-  id         String   @id @default(cuid())
-  actorId    String?
-  actor      User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
-  action     String
-  subjectId  String?
-  details    Json?
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action    String
+  subjectId String?
+  details   Json?
+  createdAt DateTime @default(now())
 
   @@index([action, createdAt])
   @@index([subjectId, createdAt])
 }
 
 model CopyTradingApplication {
-  id             String           @id @default(cuid())
-  customerId     String
-  customer       TradingCustomer  @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  brokerName     String
-  accountBalance Decimal          @db.Decimal(12, 2)
-  status         CopyTradingStatus @default(NEW)
-  reviewedAt     DateTime?
-  authorizedAt   DateTime?
-  activatedAt    DateTime?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  payments       ManualPayment[]
-  financialTransactions FinancialTransaction[]
+  id                      String                 @id @default(cuid())
+  customerId              String
+  customer                TradingCustomer        @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  brokerName              String
+  accountBalance          Decimal                @db.Decimal(12, 2)
+  brokerLogin             String?
+  brokerPasswordEncrypted String?
+  serverName              String?
+  serverIp                String?
+  internalNote            String?
+  status                  CopyTradingStatus      @default(NEW)
+  reviewedAt              DateTime?
+  authorizedAt            DateTime?
+  activatedAt             DateTime?
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+  payments                ManualPayment[]
+  financialTransactions   FinancialTransaction[]
 
   @@index([status, createdAt])
   @@index([customerId, createdAt])
 }
 
 model CoachingBooking {
-  id               String                @id @default(cuid())
-  customerId       String
-  customer         TradingCustomer       @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  package          CoachingPackage
-  meetingMode      CoachingMeetingMode @default(ONLINE)
-  meetingCity      String?
-  status           CoachingBookingStatus @default(PENDING)
-  priceDh          Int
-  startDate        DateTime              @db.Date
-  endDate          DateTime              @db.Date
-  dailyStartMinute Int
-  durationMinutes  Int
-  expectedSessions Int
+  id                String                @id @default(cuid())
+  customerId        String
+  customer          TradingCustomer       @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  package           CoachingPackage
+  meetingMode       CoachingMeetingMode   @default(ONLINE)
+  meetingCity       String?
+  status            CoachingBookingStatus @default(PENDING)
+  priceDh           Int
+  startDate         DateTime              @db.Date
+  endDate           DateTime              @db.Date
+  dailyStartMinute  Int
+  durationMinutes   Int
+  expectedSessions  Int
   remainingSessions Int
-  activatedAt      DateTime?
-  createdAt        DateTime              @default(now())
-  updatedAt        DateTime              @updatedAt
-  sessions         CoachingSession[]
-  payments         ManualPayment[]
+  activatedAt       DateTime?
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  sessions          CoachingSession[]
+  payments          ManualPayment[]
 
   @@index([status, createdAt])
   @@index([customerId, createdAt])
@@ -370,16 +374,16 @@ model CoachingBooking {
 }
 
 model CoachingSession {
-  id               String                 @id @default(cuid())
-  bookingId        String
-  booking          CoachingBooking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  date             DateTime               @db.Date
-  startMinute      Int
-  durationMinutes  Int
-  status           CoachingSessionStatus  @default(SCHEDULED)
-  createdAt        DateTime               @default(now())
-  updatedAt        DateTime               @updatedAt
-  timeSlots        CoachingTimeSlot[]
+  id              String                @id @default(cuid())
+  bookingId       String
+  booking         CoachingBooking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  date            DateTime              @db.Date
+  startMinute     Int
+  durationMinutes Int
+  status          CoachingSessionStatus @default(SCHEDULED)
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  timeSlots       CoachingTimeSlot[]
 
   @@unique([bookingId, date])
   @@index([date, startMinute])
@@ -387,26 +391,26 @@ model CoachingSession {
 }
 
 model CoachingAvailabilityBlock {
-  id          String              @id @default(cuid())
-  date        DateTime            @db.Date
+  id          String             @id @default(cuid())
+  date        DateTime           @db.Date
   startMinute Int
   endMinute   Int
-  reason      String              @default("")
-  createdAt   DateTime            @default(now())
+  reason      String             @default("")
+  createdAt   DateTime           @default(now())
   timeSlots   CoachingTimeSlot[]
 
   @@index([date, startMinute])
 }
 
 model CoachingTimeSlot {
-  id         String                   @id @default(cuid())
-  date       DateTime                 @db.Date
-  quarter    Int
-  kind       CoachingSlotKind
-  sessionId  String?
-  session    CoachingSession?         @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  blockId    String?
-  block      CoachingAvailabilityBlock? @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  id        String                     @id @default(cuid())
+  date      DateTime                   @db.Date
+  quarter   Int
+  kind      CoachingSlotKind
+  sessionId String?
+  session   CoachingSession?           @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  blockId   String?
+  block     CoachingAvailabilityBlock? @relation(fields: [blockId], references: [id], onDelete: Cascade)
 
   @@unique([date, quarter])
   @@index([sessionId])
@@ -414,25 +418,25 @@ model CoachingTimeSlot {
 }
 
 model ManualPayment {
-  id                   String                @id @default(cuid())
-  customerId           String
-  customer             TradingCustomer       @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  service              ManualPaymentService
-  privateRoomRequestId String?
-  privateRoomRequest   PrivateRoomRequest?   @relation(fields: [privateRoomRequestId], references: [id], onDelete: Cascade)
+  id                       String                  @id @default(cuid())
+  customerId               String
+  customer                 TradingCustomer         @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  service                  ManualPaymentService
+  privateRoomRequestId     String?
+  privateRoomRequest       PrivateRoomRequest?     @relation(fields: [privateRoomRequestId], references: [id], onDelete: Cascade)
   copyTradingApplicationId String?
-  copyTradingApplication CopyTradingApplication? @relation(fields: [copyTradingApplicationId], references: [id], onDelete: Cascade)
-  coachingBookingId    String?
-  coachingBooking      CoachingBooking?      @relation(fields: [coachingBookingId], references: [id], onDelete: Cascade)
-  amount               Decimal               @db.Decimal(10, 2)
-  currency             String
-  status               ManualPaymentStatus   @default(PENDING)
-  note                 String                @default("")
-  verifiedAt           DateTime?
-  verifiedById         String?
-  verifiedBy           User?                 @relation("PaymentVerifier", fields: [verifiedById], references: [id], onDelete: SetNull)
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
+  copyTradingApplication   CopyTradingApplication? @relation(fields: [copyTradingApplicationId], references: [id], onDelete: Cascade)
+  coachingBookingId        String?
+  coachingBooking          CoachingBooking?        @relation(fields: [coachingBookingId], references: [id], onDelete: Cascade)
+  amount                   Decimal                 @db.Decimal(10, 2)
+  currency                 String
+  status                   ManualPaymentStatus     @default(PENDING)
+  note                     String                  @default("")
+  verifiedAt               DateTime?
+  verifiedById             String?
+  verifiedBy               User?                   @relation("PaymentVerifier", fields: [verifiedById], references: [id], onDelete: SetNull)
+  createdAt                DateTime                @default(now())
+  updatedAt                DateTime                @updatedAt
 
   @@index([status, createdAt])
   @@index([customerId, createdAt])
@@ -441,25 +445,25 @@ model ManualPayment {
 }
 
 model FinancialTransaction {
-  id                       String                      @id @default(cuid())
+  id                       String                     @id @default(cuid())
   customerId               String
-  customer                 TradingCustomer             @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  customer                 TradingCustomer            @relation(fields: [customerId], references: [id], onDelete: Restrict)
   roomId                   String?
-  room                     VipRoom?                    @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  room                     VipRoom?                   @relation(fields: [roomId], references: [id], onDelete: SetNull)
   copyTradingApplicationId String?
-  copyTradingApplication   CopyTradingApplication?      @relation(fields: [copyTradingApplicationId], references: [id], onDelete: Restrict)
+  copyTradingApplication   CopyTradingApplication?    @relation(fields: [copyTradingApplicationId], references: [id], onDelete: Restrict)
   createdById              String?
-  createdBy                User?                       @relation("FinancialTransactionCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy                User?                      @relation("FinancialTransactionCreator", fields: [createdById], references: [id], onDelete: SetNull)
   reviewedById             String?
-  reviewedBy               User?                       @relation("FinancialTransactionReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedBy               User?                      @relation("FinancialTransactionReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
   type                     FinancialTransactionType
-  amount                   Decimal                     @db.Decimal(12, 2)
-  currency                 String                      @default("USD")
+  amount                   Decimal                    @db.Decimal(12, 2)
+  currency                 String                     @default("USD")
   status                   FinancialTransactionStatus @default(PENDING)
-  reference                String?                     @unique
-  notes                    String                      @default("")
-  createdAt                DateTime                    @default(now())
-  updatedAt                DateTime                    @updatedAt
+  reference                String?                    @unique
+  notes                    String                     @default("")
+  createdAt                DateTime                   @default(now())
+  updatedAt                DateTime                   @updatedAt
 
   @@index([type, status, createdAt])
   @@index([customerId, type, createdAt])
